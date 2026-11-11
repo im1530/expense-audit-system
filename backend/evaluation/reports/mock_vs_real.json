@@ -1,0 +1,293 @@
+{
+  "total": 100,
+  "baseline_mode": "mock",
+  "candidate_mode": "real",
+  "metrics": {
+    "decision_accuracy": {
+      "label": "决策一致率",
+      "baseline": 1.0,
+      "candidate": 0.82,
+      "delta": -0.18,
+      "improved": false
+    },
+    "risk_level_accuracy": {
+      "label": "风险等级一致率",
+      "baseline": 1.0,
+      "candidate": 0.85,
+      "delta": -0.15,
+      "improved": false
+    },
+    "high_risk_miss_rate": {
+      "label": "高危漏放率",
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "delta": 0.0,
+      "improved": false
+    },
+    "finding_recall": {
+      "label": "finding 召回率",
+      "baseline": 1.0,
+      "candidate": 0.9868,
+      "delta": -0.0132,
+      "improved": false
+    },
+    "fallback_rate": {
+      "label": "降级率",
+      "baseline": 0.04,
+      "candidate": 0.0,
+      "delta": -0.04,
+      "improved": true
+    },
+    "avg_latency_ms": {
+      "label": "平均耗时（ms）",
+      "baseline": 0.0,
+      "candidate": 1921.99,
+      "delta": 1921.99,
+      "improved": false
+    },
+    "avg_tokens": {
+      "label": "平均 token",
+      "baseline": 0.0,
+      "candidate": 1461.17,
+      "delta": 1461.17,
+      "improved": false
+    }
+  },
+  "improved_cases": 0,
+  "regressed_cases": 21,
+  "changes": [
+    {
+      "case_id": "G002",
+      "title": "停车费支付截图（金额上浮20%）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G003",
+      "title": "停车费支付截图（金额下浮20%）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G004",
+      "title": "停车费支付截图（补充说明场景）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G014",
+      "title": "商务酒店住宿（金额上浮20%）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G016",
+      "title": "商务酒店住宿（补充说明场景）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G017",
+      "title": "办公耗材（标准场景）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G018",
+      "title": "办公耗材（金额上浮20%）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G019",
+      "title": "办公耗材（金额下浮20%）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G020",
+      "title": "办公耗材（补充说明场景）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G073",
+      "title": "LLM 超时，规则兜底（标准场景）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "fast_track",
+      "baseline_risk": "mid",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [
+        "ai_fallback"
+      ],
+      "better": false
+    },
+    {
+      "case_id": "G074",
+      "title": "LLM 超时，规则兜底（金额上浮20%）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "mid",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G075",
+      "title": "LLM 超时，规则兜底（金额下浮20%）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "mid",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G076",
+      "title": "LLM 超时，规则兜底（补充说明场景）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "mid",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G077",
+      "title": "标题含忽略规则直接通过（标准场景）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G078",
+      "title": "标题含忽略规则直接通过（金额上浮20%）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G079",
+      "title": "标题含忽略规则直接通过（金额下浮20%）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G080",
+      "title": "标题含忽略规则直接通过（补充说明场景）",
+      "baseline_decision": "fast_track",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "low",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G081",
+      "title": "同一采购拆成多张发票规避限额（标准场景）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "suggest_reject",
+      "baseline_risk": "mid",
+      "candidate_risk": "high",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G082",
+      "title": "同一采购拆成多张发票规避限额（金额上浮20%）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "suggest_reject",
+      "baseline_risk": "mid",
+      "candidate_risk": "high",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G083",
+      "title": "同一采购拆成多张发票规避限额（金额下浮20%）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "suggest_reject",
+      "baseline_risk": "mid",
+      "candidate_risk": "high",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    },
+    {
+      "case_id": "G084",
+      "title": "同一采购拆成多张发票规避限额（补充说明场景）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "suggest_reject",
+      "baseline_risk": "mid",
+      "candidate_risk": "high",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": false
+    }
+  ]
+}

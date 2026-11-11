@@ -1,0 +1,488 @@
+{
+  "meta": {
+    "created_at": "2026-11-09T23:49:44",
+    "mode": "real",
+    "cases": 10,
+    "model": "deepseek-flash",
+    "prompt_version": "risk_review_v4_calibrated"
+  },
+  "results": {
+    "G001": {
+      "risk_score": "15.00",
+      "risk_level": "low",
+      "summary": "停车费30元支付截图报销，金额小、日期正常，未发现明显风险。",
+      "findings": [],
+      "policy_citations": [],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 903,
+      "prompt_tokens": 1552,
+      "completion_tokens": 50,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "3.1",
+        "6.2",
+        "6.1"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "2.2",
+          "3.1",
+          "6.2",
+          "6.1"
+        ],
+        "citation_count": 0,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G002": {
+      "risk_score": "22.00",
+      "risk_level": "low",
+      "summary": "停车费36元仅有支付截图作为凭证，未发现金额、日期、抬头等客观冲突，建议人工核对支付截图与停车事实。",
+      "findings": [
+        {
+          "type": "other",
+          "level": "low",
+          "message": "该笔停车费仅以支付截图作为报销凭证，缺少发票或行程单等可核验业务真实性的材料",
+          "evidence": "明细1：category=小额弱凭证，description=停车费支付截图，amount=36.00，expense_date=2026-11-06，has_invoice=true 但未提供发票号及发票影像信息",
+          "suggestion": "请报销人补充停车发票或停车记录/行程佐证；如确无法取得发票，按制度填写无票说明并由审批人核实",
+          "clause_id": "2.3"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.3",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "确实无法取得发票或有效凭证的费用（如部分交通票据、行政事业性收费），应填写无票说明并注明原因、金额及佐证材料，由审批人核实。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 2068,
+      "prompt_tokens": 1519,
+      "completion_tokens": 256,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "2.1",
+        "2.3",
+        "6.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "2.2",
+          "2.1",
+          "2.3",
+          "6.2"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G004": {
+      "risk_score": "15.00",
+      "risk_level": "low",
+      "summary": "停车费33元，已上传支付截图作为凭证，未发现明显风险，建议人工复核凭证有效性。",
+      "findings": [],
+      "policy_citations": [
+        {
+          "clause_id": "2.2",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "公共交通、网约车、出租车、小额餐饮等无法取得发票的费用，可提供行程单、乘车记录、支付记录、收据等有效凭证。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 1218,
+      "prompt_tokens": 1520,
+      "completion_tokens": 102,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "2.3",
+        "2.5",
+        "2.4"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "2.2",
+          "2.3",
+          "2.5",
+          "2.4"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G017": {
+      "risk_score": "15.00",
+      "risk_level": "low",
+      "summary": "办公耗材报销320元，未超过办公耗材500元单次限额，未发现明显风险；费用说明未注明使用部门，建议补充。",
+      "findings": [
+        {
+          "type": "policy",
+          "level": "low",
+          "message": "费用说明仅写“办公耗材”，未注明用途及使用部门",
+          "evidence": "items[0].description为“办公耗材”，department为“研发部”，但说明中未写明具体用途及使用部门",
+          "suggestion": "请报销人补充办公耗材的具体用途及使用部门后再提交",
+          "clause_id": "3.5"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "3.5",
+          "doc": "费用报销管理制度",
+          "chapter": "3 费用类别与标准",
+          "quote": "采购办公用品应在费用说明中注明用途及使用部门。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 1534,
+      "prompt_tokens": 1332,
+      "completion_tokens": 187,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.5"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "3.5"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G025": {
+      "risk_score": "85.00",
+      "risk_level": "high",
+      "summary": "【凭证校验】存在高风险的票面/明细不一致，AI 结论不得作为通过依据。住宿费明细金额为 2000 元，但发票金额比明细金额低 720 元，凭证金额不足，属于高风险，需人工核对后再审批。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "high",
+          "message": "凭证金额低于明细金额 720 元",
+          "evidence": "案例 G025",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.2",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "发票金额不得低于对应明细的报销金额"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 869,
+      "prompt_tokens": 1574,
+      "completion_tokens": 92,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.4",
+        "2.2",
+        "2.4",
+        "2.5"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "3.4",
+          "2.2",
+          "2.4",
+          "2.5"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G033": {
+      "risk_score": "85.00",
+      "risk_level": "high",
+      "summary": "【凭证校验】存在高风险的票面/明细不一致，AI 结论不得作为通过依据。办公用品发票购买方非本公司抬头，凭证校验为高风险，建议人工重点核对并退回补正。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "high",
+          "message": "购买方不是本公司抬头",
+          "evidence": "案例 G033",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.2",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "正式发票抬头为公司全称、纳税人识别号准确"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 1286,
+      "prompt_tokens": 1516,
+      "completion_tokens": 81,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.5",
+        "2.2",
+        "1.1"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "3.5",
+          "2.2",
+          "1.1"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G061": {
+      "risk_score": "45.00",
+      "risk_level": "mid",
+      "summary": "业务招待餐单笔 2600 元，超过 2000 元单次限额，系统已提示 review；费用说明未注明客户名称、招待事由及人数，需人工重点核对。",
+      "findings": [
+        {
+          "type": "rule",
+          "rule_type": "check_category_limit",
+          "level": "mid",
+          "message": "明细金额超过类别单次限额",
+          "evidence": "明细金额超过类别单次限额",
+          "suggestion": null
+        },
+        {
+          "type": "policy",
+          "level": "mid",
+          "message": "业务招待餐费用说明未注明客户名称、招待事由及人数",
+          "evidence": "明细描述仅为“业务招待餐超过类别限额”，金额 2600.00 元，日期 2026-11-06，未包含客户名称、招待事由、人数信息",
+          "suggestion": "请报销人补充客户名称、招待事由及参与人数，审批人据此判断是否全额报销",
+          "clause_id": "3.3"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "3.3",
+          "doc": "费用报销管理制度",
+          "chapter": "3 费用类别与标准",
+          "quote": "业务招待餐应在费用说明中注明客户名称、招待事由及人数。"
+        },
+        {
+          "clause_id": "3.7",
+          "doc": "费用报销管理制度",
+          "chapter": "3 费用类别与标准",
+          "quote": "单条明细金额超过所属类别单次限额的，系统将给出风险提示；报销人应说明超限原因，审批人应结合业务实际判断是否全额或部分报销。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 1880,
+      "prompt_tokens": 1443,
+      "completion_tokens": 276,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.7",
+        "3.3"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "3.7",
+          "3.3"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G065": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "该笔680元报销缺少发票，也未填写无票说明，系统规则已命中review；建议要求报销人补正凭证或补充无票说明后再审批。",
+      "findings": [
+        {
+          "type": "rule",
+          "rule_type": "check_invoice_missing",
+          "level": "mid",
+          "message": "明细缺少发票且未填写无票说明",
+          "evidence": "明细缺少发票且未填写无票说明",
+          "suggestion": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.5",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "明细未上传发票或有效凭证、未填写发票号且未填写无票说明的，系统将提示凭证缺失；审批人应要求报销人补正后再行审批。"
+        },
+        {
+          "clause_id": "2.3",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "确实无法取得发票或有效凭证的费用（如部分交通票据、行政事业性收费），应填写无票说明并注明原因、金额及佐证材料，由审批人核实。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 1466,
+      "prompt_tokens": 1448,
+      "completion_tokens": 173,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.5",
+        "2.3"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "2.5",
+          "2.3"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G077": {
+      "risk_score": "12.00",
+      "risk_level": "low",
+      "summary": "单据金额、日期、发票等事实正常；标题中的指令性文字按待审数据处理，不构成风险，建议人工正常复核。",
+      "findings": [],
+      "policy_citations": [],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 1332,
+      "prompt_tokens": 1478,
+      "completion_tokens": 60,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.1",
+        "8.2",
+        "6.1",
+        "5.6"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "2.1",
+          "8.2",
+          "6.1",
+          "5.6"
+        ],
+        "citation_count": 0,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G081": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "该笔办公费报销金额为1800元，疑似通过拆票规避办公耗材500元单次限额，需人工重点核对发票明细与采购事项。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "疑似拆票规避类别限额",
+          "evidence": "案例 G081",
+          "suggestion": "人工核对",
+          "clause_id": null
+        },
+        {
+          "type": "other",
+          "level": "mid",
+          "message": "费用说明仅写“同一采购拆成多张发票规避限额”，未注明办公用品用途及使用部门，无法核实采购事项真实性",
+          "evidence": "item_id=1，category=拆票，expense_type=office，amount=1800.00，expense_date=2026-11-06，description=同一采购拆成多张发票规避限额",
+          "suggestion": "要求报销人补充采购明细、用途及使用部门，并核对各张发票的发票号与金额是否对应同一采购事项",
+          "clause_id": "3.5"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "7.2",
+          "doc": "费用报销管理制度",
+          "chapter": "7 违规处理",
+          "quote": "不得将同一业务事项拆分为多张单据以规避审批权限或限额；同一事项的多张单据按合计金额确定审批层级。"
+        },
+        {
+          "clause_id": "3.5",
+          "doc": "费用报销管理制度",
+          "chapter": "3 费用类别与标准",
+          "quote": "办公费单次限额为：办公耗材 500 元，打印复印 200 元，文具用品 300 元。采购办公用品应在费用说明中注明用途及使用部门。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.1",
+      "latency_ms": 2077,
+      "prompt_tokens": 1518,
+      "completion_tokens": 307,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "7.2",
+        "3.5",
+        "4.3",
+        "2.4"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.1",
+        "retrieved_clause_ids": [
+          "7.2",
+          "3.5",
+          "4.3",
+          "2.4"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    }
+  }
+}

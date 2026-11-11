@@ -1,0 +1,58 @@
+# Web 框架：FastAPI，提供路由、接口、自动文档
+fastapi>=0.104.0
+
+# ASGI 服务器：负责运行 FastAPI 应用；[standard] 附带自动重载等增强组件
+uvicorn[standard]>=0.24.0
+
+# 配置管理：从 .env 读取并校验配置项（config.py 使用）
+pydantic-settings>=2.0.0
+
+# 加载 .env 环境变量文件（pydantic-settings 的底层依赖）
+python-dotenv>=1.0.0
+
+# MySQL 数据库驱动：SQLAlchemy 通过它连接 MySQL（纯 Python，免编译）
+pymysql>=1.1.0
+
+# ORM 框架：用 Python 类操作数据库，不用手写裸 SQL（配合 pymysql 驱动连 MySQL）
+sqlalchemy>=2.0.0
+
+# 密码哈希工具（依赖 bcrypt 做单向加密）
+passlib[bcrypt]>=1.7.4
+
+# 固定 4.0.1：passlib 1.7.4 与 bcrypt>=4.1 不兼容，会报 72 字节错误，不可升级
+bcrypt==4.0.1
+
+# JWT 登录认证：签发/解析令牌
+python-jose[cryptography]>=3.3.0
+
+# 表单解析：OAuth2PasswordRequestForm 登录表单需要
+python-multipart>=0.0.9
+
+# ===== Phase C：凭证/发票识别 =====
+# 图片解码、EXIF 方向纠正、缩放与压缩（Phase C 预处理）
+Pillow>=11.0.0
+# PDF 渲染：自带 PDFium，不依赖 poppler/LibreOffice（Phase C PDF 转图片）
+pypdfium2>=4.30.0
+
+# ===== Phase D：工作流编排 =====
+# LangGraph：节点、条件边、checkpoint（Phase D）
+langgraph>=1.2.0
+
+# ===== 制度检索（可选）：Chroma + Embedding =====
+# 向量检索后端；默认 POLICY_RETRIEVER=bm25 时不会导入。自带 ONNX MiniLM 模型，无需 GPU。
+chromadb>=1.5,<2
+
+
+# ===== Phase F：异步任务队列 =====
+# Celery：把 AI 预审等耗时任务交给独立 worker 执行；[redis] 附带 redis-py 客户端
+# 说明：chromadb → kubernetes 要求 python-dateutil>=3，而 celery 5.7 把 dateutil 钉在 2.9，
+#       两者冲突，因此固定在 5.6.3（兼容 dateutil 4.x）；升级前需先确认 celery 已放宽该约束。
+# 已验证组合（2026-11-11，pip check 无冲突）：celery 5.6.3 + kombu 5.7.0 + amqp 5.4.2
+#       + billiard 4.3.2 + vine 5.1.0 + python-dateutil 4.0.0；装成 celery 5.7 会把 dateutil
+#       拖回 2.9 并让 kubernetes 元数据校验失败，属已知回归，不要升。
+celery[redis]>=5.6.3,<5.7
+
+# 附件落盘加密（Fernet）；python-jose[cryptography] 已间接安装，这里显式声明
+cryptography>=42.0
+
+

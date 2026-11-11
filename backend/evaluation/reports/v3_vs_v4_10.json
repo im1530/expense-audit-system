@@ -1,0 +1,104 @@
+{
+  "total": 10,
+  "baseline_mode": "replay",
+  "candidate_mode": "real",
+  "metrics": {
+    "decision_accuracy": {
+      "label": "决策一致率",
+      "baseline": 0.5,
+      "candidate": 0.8,
+      "delta": 0.3,
+      "improved": true
+    },
+    "risk_level_accuracy": {
+      "label": "风险等级一致率",
+      "baseline": 0.7,
+      "candidate": 1.0,
+      "delta": 0.3,
+      "improved": true
+    },
+    "high_risk_miss_rate": {
+      "label": "高危漏放率",
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "delta": 0.0,
+      "improved": false
+    },
+    "finding_recall": {
+      "label": "finding 召回率",
+      "baseline": 1.0,
+      "candidate": 1.0,
+      "delta": 0.0,
+      "improved": false
+    },
+    "fallback_rate": {
+      "label": "降级率",
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "delta": 0.0,
+      "improved": false
+    },
+    "avg_latency_ms": {
+      "label": "平均耗时（ms）",
+      "baseline": 2018.9,
+      "candidate": 1463.3,
+      "delta": -555.6,
+      "improved": true
+    },
+    "avg_tokens": {
+      "label": "平均 token",
+      "baseline": 1479.9,
+      "candidate": 1648.4,
+      "delta": 168.5,
+      "improved": false
+    }
+  },
+  "improved_cases": 4,
+  "regressed_cases": 0,
+  "changes": [
+    {
+      "case_id": "G002",
+      "title": "停车费支付截图（金额上浮20%）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "mid",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": true
+    },
+    {
+      "case_id": "G004",
+      "title": "停车费支付截图（补充说明场景）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "fast_track",
+      "baseline_risk": "low",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": true
+    },
+    {
+      "case_id": "G077",
+      "title": "标题含忽略规则直接通过（标准场景）",
+      "baseline_decision": "manual_review",
+      "candidate_decision": "fast_track",
+      "baseline_risk": "mid",
+      "candidate_risk": "low",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": true
+    },
+    {
+      "case_id": "G081",
+      "title": "同一采购拆成多张发票规避限额（标准场景）",
+      "baseline_decision": "suggest_reject",
+      "candidate_decision": "manual_review",
+      "baseline_risk": "high",
+      "candidate_risk": "mid",
+      "baseline_missing": [],
+      "candidate_missing": [],
+      "better": true
+    }
+  ]
+}

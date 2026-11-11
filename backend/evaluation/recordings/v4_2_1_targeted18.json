@@ -1,0 +1,976 @@
+{
+  "meta": {
+    "created_at": "2026-11-11T23:50:18",
+    "mode": "real",
+    "cases": 18,
+    "model": "deepseek-flash",
+    "prompt_version": "risk_review_v4_2_citation_guard"
+  },
+  "results": {
+    "G021": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "住宿费1200元仅有支付截图，无发票且未填写无票说明，凭证强度不足，需人工核对。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "弱凭证金额超过免复核阈值，需要人工核对",
+          "evidence": "案例 G021",
+          "suggestion": "人工核对",
+          "clause_id": null
+        },
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "住宿费明细未上传发票或有效凭证，且未填写无票说明",
+          "evidence": "明细1：住宿费1200.00元，expense_date 2026-11-06，has_invoice=false，no_invoice_reason为空",
+          "suggestion": "要求报销人补充酒店发票或有效凭证；确无法取得的，应填写无票说明并由审批人核实",
+          "clause_id": "2.5"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.5",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "明细未上传发票或有效凭证、未填写发票号且未填写无票说明的，系统将提示凭证缺失；审批人应要求报销人补正后再行审批。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1287,
+      "prompt_tokens": 2169,
+      "completion_tokens": 221,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.7",
+        "3.4",
+        "2.2",
+        "2.5"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "3.7",
+          "3.4",
+          "2.2",
+          "2.5"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G022": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "住宿费1440元仅有支付截图、无发票，凭证强度不足，需人工核对；未发现其他新风险。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "弱凭证金额超过免复核阈值，需要人工核对",
+          "evidence": "案例 G022",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.2",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "报销应提供合法有效的发票或有效凭证"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1566,
+      "prompt_tokens": 2163,
+      "completion_tokens": 82,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.4",
+        "3.7",
+        "6.1",
+        "2.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "3.4",
+          "3.7",
+          "6.1",
+          "2.2"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G023": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "住宿费960元仅有支付截图、无发票，凭证强度不足，需人工核对；未发现其他新风险。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "弱凭证金额超过免复核阈值，需要人工核对",
+          "evidence": "案例 G023",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1696,
+      "prompt_tokens": 2161,
+      "completion_tokens": 56,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.4",
+        "3.7",
+        "6.1",
+        "2.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "3.4",
+          "3.7",
+          "6.1",
+          "2.2"
+        ],
+        "citation_count": 0,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G024": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "住宿费明细 1320 元仅有支付截图，无发票且未填写无票说明，凭证强度不足，需人工核对。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "弱凭证金额超过免复核阈值，需要人工核对",
+          "evidence": "案例 G024",
+          "suggestion": "人工核对",
+          "clause_id": null
+        },
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "住宿费明细未上传发票，也未填写无票说明，仅以支付截图作为凭证，凭证强度不足。",
+          "evidence": "明细 1：category=弱凭证超限，expense_type=accommodation，amount=1320.00，expense_date=2026-11-06，has_invoice=false，no_invoice_reason 为空。",
+          "suggestion": "要求报销人补充酒店正式发票；确实无法取得发票的，应填写无票说明并提供入住单、支付记录等辅助凭证，再由审批人判断。",
+          "clause_id": "2.5"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.5",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "明细未上传发票或有效凭证、未填写发票号且未填写无票说明的，系统将提示凭证缺失；审批人应要求报销人补正后再行审批。"
+        },
+        {
+          "clause_id": "2.2",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "报销应提供合法有效的发票或有效凭证：正式发票抬头为公司全称、纳税人识别号准确，发票金额不得低于对应明细的报销金额"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 2255,
+      "prompt_tokens": 2170,
+      "completion_tokens": 307,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.7",
+        "3.4",
+        "2.5",
+        "2.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "3.7",
+          "3.4",
+          "2.5",
+          "2.2"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G030": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "餐饮发票金额高于明细金额120元，凭证校验已给出中风险结论，需人工核对差额原因。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "凭证金额高于明细金额 120 元",
+          "evidence": "案例 G030",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.4",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "发票内容应与费用类别、发生日期、业务事项相符"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1241,
+      "prompt_tokens": 2146,
+      "completion_tokens": 82,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "2.4",
+        "2.1",
+        "3.7"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.2",
+          "2.4",
+          "2.1",
+          "3.7"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G032": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "餐饮发票金额高于明细金额120元，凭证校验结论为mid，需人工核对差额原因；未发现其他新风险。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "凭证金额高于明细金额 120 元",
+          "evidence": "案例 G032",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.4",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "发票内容应与费用类别、发生日期、业务事项相符"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1513,
+      "prompt_tokens": 2145,
+      "completion_tokens": 86,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "2.4",
+        "2.1",
+        "2.3"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.2",
+          "2.4",
+          "2.1",
+          "2.3"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G034": {
+      "risk_score": "85.00",
+      "risk_level": "high",
+      "summary": "【凭证校验】存在高风险的票面/明细不一致，AI 结论不得作为通过依据。发票购买方非本公司抬头，凭证校验为高风险，建议人工重点核对并驳回。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "high",
+          "message": "购买方不是本公司抬头",
+          "evidence": "案例 G034",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.2",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "正式发票抬头为公司全称、纳税人识别号准确"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1237,
+      "prompt_tokens": 2152,
+      "completion_tokens": 77,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "3.5",
+        "7.1",
+        "2.4"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.2",
+          "3.5",
+          "7.1",
+          "2.4"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G049": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "支付截图中的同一订单号重复出现，存在重复报销疑点，需人工核对是否为两次真实消费。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "同一订单号重复出现",
+          "evidence": "案例 G049",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销。"
+        },
+        {
+          "clause_id": "4.3",
+          "doc": "费用报销管理制度",
+          "chapter": "4 报销时限与重复报销",
+          "quote": "同一报销人、同一费用发生日期、同一费用类别且金额相同的费用，在 60 天内重复出现的，系统将提示疑似重复报销；报销人应确认是否为两次真实消费，审批人应重点核对。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1554,
+      "prompt_tokens": 2108,
+      "completion_tokens": 161,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "4.3",
+        "1.2",
+        "6.1",
+        "5.6"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "4.3",
+          "1.2",
+          "6.1",
+          "5.6"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G052": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "同一订单号支付截图重复出现，系统凭证校验已提示需人工核对；未发现其他新风险。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "同一订单号重复出现",
+          "evidence": "案例 G052",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1347,
+      "prompt_tokens": 2109,
+      "completion_tokens": 89,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "4.3",
+        "1.2",
+        "6.1",
+        "5.6"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "4.3",
+          "1.2",
+          "6.1",
+          "5.6"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G066": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "明细缺少发票且未填写无票说明，规则引擎已命中 review；未发现规则未覆盖的新风险，建议人工核实后要求补正凭证。",
+      "findings": [
+        {
+          "type": "rule",
+          "rule_type": "check_invoice_missing",
+          "level": "mid",
+          "message": "明细缺少发票且未填写无票说明",
+          "evidence": "明细缺少发票且未填写无票说明",
+          "suggestion": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.5",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "明细未上传发票或有效凭证、未填写发票号且未填写无票说明的，系统将提示凭证缺失；审批人应要求报销人补正后再行审批。"
+        },
+        {
+          "clause_id": "2.3",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "确实无法取得发票或有效凭证的费用（如部分交通票据、行政事业性收费），应填写无票说明并注明原因、金额及佐证材料，由审批人核实。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1559,
+      "prompt_tokens": 2182,
+      "completion_tokens": 171,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.5",
+        "2.3",
+        "2.2",
+        "2.4"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.5",
+          "2.3",
+          "2.2",
+          "2.4"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G081": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "该报销单疑似将同一采购拆分为多张发票以规避类别限额，需人工重点核对；未发现其他新风险。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "疑似拆票规避类别限额",
+          "evidence": "案例 G081",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "7.2",
+          "doc": "费用报销管理制度",
+          "chapter": "7 违规处理",
+          "quote": "不得将同一业务事项拆分为多张单据以规避审批权限或限额；同一事项的多张单据按合计金额确定审批层级。"
+        },
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1300,
+      "prompt_tokens": 2136,
+      "completion_tokens": 138,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "7.2",
+        "2.4",
+        "1.2",
+        "2.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "7.2",
+          "2.4",
+          "1.2",
+          "2.2"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G082": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "该报销疑似将同一采购拆分为多张发票以规避类别限额，系统凭证校验已给出中风险结论，建议人工重点核对发票明细与采购事项的对应关系。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "疑似拆票规避类别限额",
+          "evidence": "案例 G082",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "7.2",
+          "doc": "费用报销管理制度",
+          "chapter": "7 违规处理",
+          "quote": "不得将同一业务事项拆分为多张单据以规避审批权限或限额；同一事项的多张单据按合计金额确定审批层级。"
+        },
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1656,
+      "prompt_tokens": 2138,
+      "completion_tokens": 148,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "7.2",
+        "2.4",
+        "1.2",
+        "2.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "7.2",
+          "2.4",
+          "1.2",
+          "2.2"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G083": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "该报销疑似将同一采购拆分为多张发票以规避限额，系统凭证校验已给出中风险结论，建议人工重点核对。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "疑似拆票规避类别限额",
+          "evidence": "案例 G083",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "7.2",
+          "doc": "费用报销管理制度",
+          "chapter": "7 违规处理",
+          "quote": "不得将同一业务事项拆分为多张单据以规避审批权限或限额；同一事项的多张单据按合计金额确定审批层级。"
+        },
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1603,
+      "prompt_tokens": 2138,
+      "completion_tokens": 139,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "7.2",
+        "2.4",
+        "1.2",
+        "2.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "7.2",
+          "2.4",
+          "1.2",
+          "2.2"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G084": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "该报销疑似将同一采购拆分为多张发票以规避类别限额，需人工重点核对；未发现其他新风险。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "疑似拆票规避类别限额",
+          "evidence": "案例 G084",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "7.2",
+          "doc": "费用报销管理制度",
+          "chapter": "7 违规处理",
+          "quote": "不得将同一业务事项拆分为多张单据以规避审批权限或限额；同一事项的多张单据按合计金额确定审批层级。"
+        },
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1411,
+      "prompt_tokens": 2137,
+      "completion_tokens": 137,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "7.2",
+        "2.4",
+        "1.2",
+        "2.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "7.2",
+          "2.4",
+          "1.2",
+          "2.2"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G090": {
+      "risk_score": "85.00",
+      "risk_level": "high",
+      "summary": "【凭证校验】存在高风险的票面/明细不一致，AI 结论不得作为通过依据。发票票面含测试/示例字样，疑似非真实业务，且金额较常规上浮20%，存在虚报风险，建议人工重点核对并驳回。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "high",
+          "message": "票面含测试/示例字样，疑似非真实业务",
+          "evidence": "案例 G090",
+          "suggestion": "人工核对",
+          "clause_id": null
+        },
+        {
+          "type": "invoice",
+          "level": "high",
+          "message": "发票票面含测试/示例字样，疑似非真实业务，且报销金额较常规上浮20%",
+          "evidence": "费用类别为“测试单据”，说明为“发票抬头或备注为测试单据”，金额1200.00，费用日期2026-11-06；document_findings 已判定票面含测试/示例字样",
+          "suggestion": "要求报销人提供真实业务发票及业务佐证，核实金额上浮依据；无法证明真实性的应驳回",
+          "clause_id": "7.1"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "7.1",
+          "doc": "费用报销管理制度",
+          "chapter": "7 违规处理",
+          "quote": "虚构业务、伪造或篡改发票、虚报金额的，审批人应驳回"
+        },
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 2215,
+      "prompt_tokens": 2145,
+      "completion_tokens": 266,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "1.2",
+        "2.4",
+        "7.1"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.2",
+          "1.2",
+          "2.4",
+          "7.1"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G091": {
+      "risk_score": "85.00",
+      "risk_level": "high",
+      "summary": "【凭证校验】存在高风险的票面/明细不一致，AI 结论不得作为通过依据。发票票面含测试/示例字样，疑似非真实业务，且费用类别为“测试单据”，存在虚假报销风险，建议人工重点核对并驳回。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "high",
+          "message": "票面含测试/示例字样，疑似非真实业务",
+          "evidence": "案例 G091",
+          "suggestion": "人工核对",
+          "clause_id": null
+        },
+        {
+          "type": "invoice",
+          "level": "high",
+          "message": "费用类别为“测试单据”，说明与票面均指向测试/示例性质，疑似非真实业务支出",
+          "evidence": "item_id=1，category=测试单据，description=发票抬头或备注为测试单据，amount=800.00，expense_date=2026-11-06",
+          "suggestion": "要求报销人提供真实业务证明及合规发票，无法证明真实性的应驳回",
+          "clause_id": "7.1"
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "7.1",
+          "doc": "费用报销管理制度",
+          "chapter": "7 违规处理",
+          "quote": "虚构业务、伪造或篡改发票、虚报金额的，审批人应驳回"
+        },
+        {
+          "clause_id": "1.2",
+          "doc": "费用报销管理制度",
+          "chapter": "1 总则",
+          "quote": "报销人应对单据及凭证的真实性负责，不得虚报、重复报销或拆分报销。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 2018,
+      "prompt_tokens": 2143,
+      "completion_tokens": 248,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "1.2",
+        "2.4",
+        "7.1"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.2",
+          "1.2",
+          "2.4",
+          "7.1"
+        ],
+        "citation_count": 2,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G097": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "报销单 EVAL-G097 金额 1500 元，系统凭证校验提示超标采购未附事前审批记录，需人工重点核对；未发现其他新风险。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "超标采购未附事前审批记录",
+          "evidence": "案例 G097",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1081,
+      "prompt_tokens": 2088,
+      "completion_tokens": 68,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.7",
+        "7.2",
+        "2.5",
+        "6.1"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "3.7",
+          "7.2",
+          "2.5",
+          "6.1"
+        ],
+        "citation_count": 0,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G100": {
+      "risk_score": "55.00",
+      "risk_level": "mid",
+      "summary": "单据金额1650元，凭证校验提示超标采购未附事前审批记录，需人工重点核对审批合规性。",
+      "findings": [
+        {
+          "type": "invoice",
+          "level": "mid",
+          "message": "超标采购未附事前审批记录",
+          "evidence": "案例 G100",
+          "suggestion": "人工核对",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_2_citation_guard",
+      "policy_version": "v1.2",
+      "latency_ms": 1339,
+      "prompt_tokens": 2089,
+      "completion_tokens": 62,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "3.7",
+        "2.5",
+        "6.1",
+        "7.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "3.7",
+          "2.5",
+          "6.1",
+          "7.2"
+        ],
+        "citation_count": 0,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "mode": "real",
+  "total": 5,
+  "decision_accuracy": 1.0,
+  "risk_level_accuracy": 1.0,
+  "high_risk_total": 2,
+  "high_risk_missed": 0,
+  "high_risk_miss_rate": 0.0,
+  "fallback_rate": 0.0,
+  "finding_recall": 1.0,
+  "must_not_violations": 0,
+  "avg_latency_ms": 2110.6,
+  "avg_tokens": 1446.2,
+  "results": [
+    {
+      "case_id": "G001",
+      "title": "停车费支付截图（标准场景）",
+      "category": "小额弱凭证",
+      "expected_risk_level": "low",
+      "actual_risk_level": "low",
+      "expected_decision": "fast_track",
+      "actual_decision": "fast_track",
+      "decision_reason": "低风险、无风险提示，可由审批人快速确认",
+      "risk_match": true,
+      "decision_match": true,
+      "required_findings": [],
+      "actual_findings": [],
+      "missing_findings": [],
+      "must_not_violated": false,
+      "is_fallback": false,
+      "is_high_risk": false,
+      "is_high_risk_missed": false,
+      "latency_ms": 1757,
+      "prompt_tokens": 1272,
+      "completion_tokens": 104,
+      "mode": "real"
+    },
+    {
+      "case_id": "G025",
+      "title": "酒店住宿费，发票金额低于明细（标准场景）",
+      "category": "金额不符",
+      "expected_risk_level": "high",
+      "actual_risk_level": "high",
+      "expected_decision": "suggest_reject",
+      "actual_decision": "suggest_reject",
+      "decision_reason": "存在高风险项 1 条：凭证金额低于明细金额 720 元",
+      "risk_match": true,
+      "decision_match": true,
+      "required_findings": [
+        "amount_short"
+      ],
+      "actual_findings": [
+        "amount_short",
+        "category_limit"
+      ],
+      "missing_findings": [],
+      "must_not_violated": false,
+      "is_fallback": false,
+      "is_high_risk": true,
+      "is_high_risk_missed": false,
+      "latency_ms": 2301,
+      "prompt_tokens": 1294,
+      "completion_tokens": 267,
+      "mode": "real"
+    },
+    {
+      "case_id": "G033",
+      "title": "办公用品发票购买方为其他公司（标准场景）",
+      "category": "抬头错误",
+      "expected_risk_level": "high",
+      "actual_risk_level": "high",
+      "expected_decision": "suggest_reject",
+      "actual_decision": "suggest_reject",
+      "decision_reason": "存在高风险项 1 条：购买方不是本公司抬头",
+      "risk_match": true,
+      "decision_match": true,
+      "required_findings": [
+        "buyer_mismatch"
+      ],
+      "actual_findings": [
+        "buyer_mismatch"
+      ],
+      "missing_findings": [],
+      "must_not_violated": false,
+      "is_fallback": false,
+      "is_high_risk": true,
+      "is_high_risk_missed": false,
+      "latency_ms": 2115,
+      "prompt_tokens": 1236,
+      "completion_tokens": 200,
+      "mode": "real"
+    },
+    {
+      "case_id": "G061",
+      "title": "业务招待餐超过类别限额（标准场景）",
+      "category": "超限",
+      "expected_risk_level": "mid",
+      "actual_risk_level": "mid",
+      "expected_decision": "manual_review",
+      "actual_decision": "manual_review",
+      "decision_reason": "存在 3 条风险提示，需人工复核",
+      "risk_match": true,
+      "decision_match": true,
+      "required_findings": [
+        "category_limit"
+      ],
+      "actual_findings": [
+        "amount_over",
+        "category_limit"
+      ],
+      "missing_findings": [],
+      "must_not_violated": false,
+      "is_fallback": false,
+      "is_high_risk": false,
+      "is_high_risk_missed": false,
+      "latency_ms": 2611,
+      "prompt_tokens": 1163,
+      "completion_tokens": 357,
+      "mode": "real"
+    },
+    {
+      "case_id": "G065",
+      "title": "无发票、无发票号、无无票说明（标准场景）",
+      "category": "凭证缺失",
+      "expected_risk_level": "mid",
+      "actual_risk_level": "mid",
+      "expected_decision": "manual_review",
+      "actual_decision": "manual_review",
+      "decision_reason": "存在 1 条风险提示，需人工复核",
+      "risk_match": true,
+      "decision_match": true,
+      "required_findings": [
+        "invoice_missing"
+      ],
+      "actual_findings": [
+        "invoice_missing"
+      ],
+      "missing_findings": [],
+      "must_not_violated": false,
+      "is_fallback": false,
+      "is_high_risk": false,
+      "is_high_risk_missed": false,
+      "latency_ms": 1769,
+      "prompt_tokens": 1168,
+      "completion_tokens": 170,
+      "mode": "real"
+    }
+  ],
+  "meta": {
+    "created_at": "2026-11-09T19:53:11",
+    "mode": "real",
+    "cases": 5,
+    "model": "deepseek-flash",
+    "prompt_version": "risk_review_v3_policy"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "created_at": "2026-11-10T21:02:10",
+    "mode": "real",
+    "cases": 2,
+    "model": "deepseek-flash",
+    "prompt_version": "risk_review_v4_calibrated"
+  },
+  "results": {
+    "G001": {
+      "risk_score": "15.00",
+      "risk_level": "low",
+      "summary": "停车费30元支付截图报销，金额小、日期正常，未发现明显风险，建议人工复核凭证有效性。",
+      "findings": [],
+      "policy_citations": [],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.2",
+      "latency_ms": 1413,
+      "prompt_tokens": 1552,
+      "completion_tokens": 56,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "3.1",
+        "6.2",
+        "6.1"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.2",
+          "3.1",
+          "6.2",
+          "6.1"
+        ],
+        "citation_count": 0,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    },
+    "G002": {
+      "risk_score": "22.00",
+      "risk_level": "low",
+      "summary": "停车费36元仅有支付截图作为凭证，未发现金额、日期、抬头等客观冲突，建议人工核对支付记录真实性。",
+      "findings": [
+        {
+          "type": "other",
+          "level": "low",
+          "message": "该笔停车费仅以支付截图作为报销凭证，未见发票或行程单等佐证材料，凭证强度偏弱",
+          "evidence": "明细1：停车费支付截图，金额36.00元，费用日期2026-11-06，has_invoice=true但无发票号、无发票影像信息，no_invoice_reason为空",
+          "suggestion": "请报销人补充停车发票或停车记录、支付流水截图等佐证材料，由审批人核实支付真实性",
+          "clause_id": null
+        }
+      ],
+      "policy_citations": [
+        {
+          "clause_id": "2.2",
+          "doc": "费用报销管理制度",
+          "chapter": "2 报销单据与凭证",
+          "quote": "公共交通、网约车、出租车、小额餐饮等无法取得发票的费用，可提供行程单、乘车记录、支付记录、收据等有效凭证。"
+        }
+      ],
+      "is_fallback": false,
+      "model": "deepseek-flash",
+      "prompt_version": "risk_review_v4_calibrated",
+      "policy_version": "v1.2",
+      "latency_ms": 1970,
+      "prompt_tokens": 1519,
+      "completion_tokens": 236,
+      "cost": "0.000000",
+      "retrieved_clause_ids": [
+        "2.2",
+        "2.1",
+        "2.3",
+        "6.2"
+      ],
+      "citation_stats": {
+        "policy_version": "v1.2",
+        "retrieved_clause_ids": [
+          "2.2",
+          "2.1",
+          "2.3",
+          "6.2"
+        ],
+        "citation_count": 1,
+        "dropped": [],
+        "unverified_policy_findings": 0
+      },
+      "error": null
+    }
+  }
+}

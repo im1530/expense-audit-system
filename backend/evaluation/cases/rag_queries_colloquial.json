@@ -1,0 +1,22 @@
+[
+  {"query_id": "C001", "query": "赶时间打了车去机场", "expense_types": ["transportation"], "role": "employee", "amount": "200", "expected": ["3.1", "3.2"]},
+  {"query_id": "C002", "query": "住了一晚全季，房费多少算超标", "expense_types": ["accommodation"], "role": "employee", "amount": "600", "expected": ["3.4"]},
+  {"query_id": "C003", "query": "加班点了咖啡和外卖", "expense_types": ["meal"], "role": "employee", "amount": "90", "expected": ["3.3"]},
+  {"query_id": "C004", "query": "买了个移动硬盘和机械键盘", "expense_types": ["office"], "role": "employee", "amount": "900", "expected": ["3.5"]},
+  {"query_id": "C005", "query": "供应商开了张专票过来", "expense_types": [], "role": "employee", "amount": "1500", "expected": ["2.2"]},
+  {"query_id": "C006", "query": "打车去机场接客户，要写清楚从哪到哪吗", "expense_types": ["transportation"], "role": "employee", "amount": "180", "expected": ["3.2"]},
+  {"query_id": "C007", "query": "钱付了但票还没拿到", "expense_types": [], "role": "employee", "amount": "600", "expected": ["2.5"]},
+  {"query_id": "C008", "query": "上个月出差的票这个月才交", "expense_types": [], "role": "employee", "amount": "800", "expected": ["4.1", "4.2"]},
+  {"query_id": "C009", "query": "同一个订单号付了两次", "expense_types": [], "role": "employee", "amount": "350", "expected": ["4.3"]},
+  {"query_id": "C010", "query": "我自己的单子我能自己批吗", "expense_types": [], "role": "employee", "amount": "100", "expected": ["5.5"]},
+  {"query_id": "C011", "query": "把一单拆成三张来报", "expense_types": [], "role": "employee", "amount": "3000", "expected": ["7.2"]},
+  {"query_id": "C012", "query": "报销的钱什么时候能到账", "expense_types": [], "role": "employee", "amount": "500", "expected": ["6.2"]},
+  {"query_id": "C013", "query": "请客户吃饭花了三千", "expense_types": ["meal"], "role": "employee", "amount": "3000", "expected": ["3.3", "3.7"]},
+  {"query_id": "C014", "query": "发票号填错了怎么办", "expense_types": [], "role": "employee", "amount": "500", "expected": ["2.4"]},
+  {"query_id": "C015", "query": "帮公司买的打印机放办公室", "expense_types": ["office"], "role": "employee", "amount": "1800", "expected": ["3.5"]},
+  {"query_id": "C016", "query": "机票买成商务舱了", "expense_types": ["transportation"], "role": "employee", "amount": "6000", "expected": ["3.1"]},
+  {"query_id": "C017", "query": "发票抬头开成个人了", "expense_types": [], "role": "employee", "amount": "1200", "expected": ["2.2"]},
+  {"query_id": "C018", "query": "出差住宿的发票日期和入住日期不一样", "expense_types": ["accommodation"], "role": "employee", "amount": "900", "expected": ["2.4"]},
+  {"query_id": "C019", "query": "部门经理批完还要谁批", "expense_types": [], "role": "employee", "amount": "5000", "expected": ["5.1"]},
+  {"query_id": "C020", "query": "老板自己报销谁审核", "expense_types": [], "role": "boss", "amount": "5000", "expected": ["5.4"]}
+]
