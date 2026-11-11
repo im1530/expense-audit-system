@@ -32,7 +32,7 @@ from app.core.security import verify_password, create_user_token
 # 建号/改密逻辑（注册与管理端共用，唯一性/部门规则/密码哈希都在服务层）
 from app.services.auth_service import create_user, change_password
 # 允许"待改密"状态通过的用户依赖：改密接口自己必须能用，否则死锁
-from app.api.deps import get_current_user_allow_pending_password
+from app.api.deps import get_current_user_allow_pending_password, get_current_user
 from sqlalchemy import or_
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -253,5 +253,31 @@ def update_ai_consent(
         payload.consent,
         current_user.ai_consent_version,
     )
+    return current_user
+
+
+
+# 当前登录用户信息接口
+@router.get(
+    "/me",                              # 接口路径；拼上总前缀后完整为 /api/v1/auth/me
+    response_model=UserResponse,        # 返回用户信息（自动过滤密码字段）
+    tags=["认证"],                       # 在 /api/docs 文档里归到"认证"分组
+    summary="获取当前登录用户信息",        # 接口标题
+)
+def read_current_user(
+        current_user: User = Depends(get_current_user),   # 从令牌解析出的当前用户
+):
+    """
+    返回当前访问令牌对应的用户信息
+        用途：
+            - 前端登录后只有令牌（JWT 里只放 sub），需要它来渲染"我是谁、什么角色"；
+            - 角色/部门/授权状态会随管理员修改而变化，前端每次进入应用重新拉一次即可，
+              不必把角色写进令牌（写死的话改角色要等令牌过期才生效）。
+        边界：
+            - 只返回自己的信息，不接受任何用户ID参数，避免越权查询；
+            - 待改密用户会被 get_current_user 拦下（403），与其它业务接口一致。
+        :param current_user: 当前登录用户
+        :return: 用户信息
+    """
     return current_user
 

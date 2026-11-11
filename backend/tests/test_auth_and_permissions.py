@@ -14,10 +14,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import get_current_user, get_current_user_allow_pending_password
 from app.api.v1.admin_user import list_users
-from app.api.v1.auth import login
+from app.api.v1.auth import login, read_current_user
 from app.api.v1.report import report_overview
 from app.core.security import create_user_token
 from app.schemas.common import PageParams
+from app.schemas.user import UserResponse
 from tests.support import BaseTestCase, TEST_PASSWORD, make_request
 
 
@@ -170,6 +171,27 @@ class AuthAndPermissionTest(BaseTestCase, unittest.TestCase):
         overview = report_overview(start_date=None, end_date=None, department_id=None,
                                    db=self.db, current_user=finance)
         self.assertEqual(overview["total_count"], 0)     # 种子数据里还没有单据
+
+
+
+    # ---------- 当前用户信息 ----------
+    def test_me_returns_current_user(self):
+        """当前用户接口返回自己的资料（前端登录后渲染角色用）"""
+        employee = self.fx["users"]["employee"]
+
+        me = read_current_user(current_user=employee)
+        self.assertEqual(me.id, employee.id)
+        self.assertEqual(me.username, employee.username)
+        self.assertEqual(me.role, employee.role)
+
+    def test_me_hides_password_hash(self):
+        """响应模型会剔除密码哈希字段"""
+        employee = self.fx["users"]["employee"]
+
+        me = read_current_user(current_user=employee)
+        dumped = UserResponse.model_validate(me).model_dump()
+        self.assertNotIn("password_hash", dumped)                   # 绝不把密码哈希发到前端
+        self.assertEqual(dumped["role"], employee.role.value)        # 角色以字符串返回
 
 
 

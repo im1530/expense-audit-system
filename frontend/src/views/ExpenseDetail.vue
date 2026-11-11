@@ -1,0 +1,427 @@
+<template>
+  <div v-loading="loading">
+    <!-- 主单信息 -->
+    <el-card shadow="never" class="page-card">
+      <template #header>
+        <div class="card-header">
+          <div class="title-line">
+            <span class="title">{{ expense.title }}</span>
+            <el-tag :type="EXPENSE_STATUS[expense.status]?.type" size="small">
+              {{ EXPENSE_STATUS[expense.status]?.label || expense.status }}
+            </el-tag>
+            <el-tag v-if="expense.risk_level" :type="RISK_LEVEL[expense.risk_level]?.type" size="small" effect="plain">
+              AI {{ RISK_LEVEL[expense.risk_level]?.label }} {{ expense.risk_score || '' }}
+            </el-tag>
+          </div>
+          <div class="actions">
+            <el-button v-if="expense.status === 'draft'" type="success" @click="onSubmit">提交送审</el-button>
+            <el-button v-if="expense.status === 'pending'" type="warning" @click="onRecall">撤回</el-button>
+            <el-button v-if="expense.status === 'rejected'" type="primary" @click="onResubmit">重新提交</el-button>
+            <el-button
+              v-if="expense.status === 'approved' && isFinance"
+              type="success"
+              @click="onPay"
+            >
+              确认支付
+            </el-button>
+            <el-button v-if="canApproveNow" type="primary" @click="router.push('/approvals')">去审批</el-button>
+          </div>
+        </div>
+      </template>
+
+      <el-descriptions :column="3" border size="small">
+        <el-descriptions-item label="单号">{{ expense.expense_no }}</el-descriptions-item>
+        <el-descriptions-item label="总金额">
+          <span class="amount">{{ formatMoney(expense.total_amount) }}</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="当前层级">
+          {{ expense.current_level ? `第 ${expense.current_level} 级` : '-' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ formatTime(expense.created_at) }}</el-descriptions-item>
+        <el-descriptions-item label="提交时间">{{ formatTime(expense.submitted_at) }}</el-descriptions-item>
+        <el-descriptions-item label="支付时间">{{ formatTime(expense.paid_at) }}</el-descriptions-item>
+        <el-descriptions-item label="说明" :span="3">{{ expense.description || '-' }}</el-descriptions-item>
+      </el-descriptions>
+    </el-card>
+
+    <!-- 明细 + 发票 -->
+    <el-card shadow="never" class="page-card" style="margin-top: 16px">
+      <template #header>
+        <div class="card-header">
+          <span>费用明细</span>
+          <el-button v-if="canUpload" size="small" type="primary" plain @click="openUpload">上传发票</el-button>
+        </div>
+      </template>
+      <el-table :data="expense.items || []" border size="small">
+        <el-table-column label="类别" width="150">
+          <template #default="{ row }">{{ row.category_name || row.category_id }}</template>
+        </el-table-column>
+        <el-table-column prop="description" label="说明" min-width="180" />
+        <el-table-column label="金额" width="120" align="right">
+          <template #default="{ row }"><span class="amount">{{ formatMoney(row.amount) }}</span></template>
+        </el-table-column>
+        <el-table-column label="发生日期" width="120">
+          <template #default="{ row }">{{ formatDate(row.expense_date) }}</template>
+        </el-table-column>
+        <el-table-column prop="invoice_no" label="发票号" width="150">
+          <template #default="{ row }">{{ row.invoice_no || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="发票" width="110">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="loadInvoices(row)">查看附件</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <!-- AI 预审结论 -->
+    <el-card shadow="never" class="page-card" style="margin-top: 16px">
+      <template #header>
+        <div class="card-header">
+          <span>AI 预审结论</span>
+          <div>
+            <el-button size="small" @click="openTrace">查看工作流轨迹</el-button>
+            <el-button size="small" type="primary" plain :loading="reviewing" @click="onTriggerReview">
+              重新预审
+            </el-button>
+          </div>
+        </div>
+      </template>
+
+      <el-empty v-if="!review" description="还没有预审结果" :image-size="70">
+        <el-button type="primary" size="small" @click="onTriggerReview">立即预审</el-button>
+      </el-empty>
+
+      <div v-else>
+        <el-alert
+          :type="review.status === 'failed' ? 'error' : review.is_fallback ? 'warning' : 'info'"
+          :closable="false"
+          show-icon
+          :title="reviewTitle"
+        />
+        <p class="summary">{{ review.summary }}</p>
+
+        <el-table v-if="(review.findings || []).length" :data="review.findings" border size="small">
+          <el-table-column prop="level" label="级别" width="80">
+            <template #default="{ row }">
+              <el-tag size="small" :type="RISK_LEVEL[row.level]?.type">{{ RISK_LEVEL[row.level]?.label || row.level }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="type" label="类型" width="100" />
+          <el-table-column prop="message" label="提示" min-width="220" />
+          <el-table-column prop="suggestion" label="建议" width="160" />
+        </el-table>
+
+        <div v-if="(review.policy_citations || []).length" class="citations">
+          <div class="section-title">制度引用</div>
+          <div v-for="item in review.policy_citations" :key="item.clause_id" class="citation">
+            <el-tag size="small" type="info">{{ item.clause_id }}</el-tag>
+            <span class="citation-text">「{{ item.quote }}」</span>
+          </div>
+        </div>
+      </div>
+    </el-card>
+
+    <!-- 审批轨迹 -->
+    <el-card shadow="never" class="page-card" style="margin-top: 16px">
+      <template #header><span>审批轨迹</span></template>
+      <el-timeline v-if="(history || []).length">
+        <el-timeline-item
+          v-for="item in history"
+          :key="item.id"
+          :timestamp="formatTime(item.created_at)"
+          :type="APPROVAL_STATUS[item.status]?.type"
+        >
+          <b>{{ item.approver_name || '系统' }}</b>
+          <span class="muted">（第 {{ item.level }} 级）</span>
+          <el-tag size="small" :type="APPROVAL_STATUS[item.status]?.type" style="margin-left: 8px">
+            {{ APPROVAL_STATUS[item.status]?.label || item.status }}
+          </el-tag>
+          <div class="muted">{{ item.comment || '无意见' }}</div>
+        </el-timeline-item>
+      </el-timeline>
+      <el-empty v-else description="暂无审批记录" :image-size="60" />
+    </el-card>
+
+    <!-- 上传发票 -->
+    <el-dialog v-model="uploadVisible" title="上传发票" width="460px">
+      <el-form label-width="80px">
+        <el-form-item label="明细">
+          <el-select v-model="uploadItemId" placeholder="选择明细">
+            <el-option
+              v-for="item in expense.items || []"
+              :key="item.id"
+              :label="`${item.description}（${formatMoney(item.amount)}）`"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="文件">
+          <input type="file" accept="image/jpeg,image/png,application/pdf" @change="onFileChange" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="uploadVisible = false">取消</el-button>
+        <el-button type="primary" :loading="uploading" @click="onUpload">上传</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 附件列表 -->
+    <el-dialog v-model="invoiceVisible" title="附件列表" width="520px">
+      <el-table :data="invoices" size="small">
+        <el-table-column prop="file_name" label="文件名" min-width="180" />
+        <el-table-column label="大小" width="90">
+          <template #default="{ row }">{{ (row.file_size / 1024).toFixed(0) }} KB</template>
+        </el-table-column>
+        <el-table-column label="下载" width="80">
+          <template #default="{ row }">
+            <a :href="row.url" target="_blank" rel="noopener">打开</a>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="invoices.length === 0" description="该明细还没有发票" :image-size="60" />
+    </el-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  getApprovalHistory,
+  getExpense,
+  listInvoices as apiListInvoices,
+  payExpense,
+  recallExpense,
+  resubmitExpense,
+  submitExpense,
+  uploadInvoice,
+} from '@/api/expense'
+import { getReview, triggerReview } from '@/api/agent'
+import { useUserStore } from '@/stores/user'
+import {
+  APPROVAL_STATUS,
+  EXPENSE_STATUS,
+  RISK_LEVEL,
+  formatDate,
+  formatMoney,
+  formatTime,
+} from '@/utils/helpers'
+
+const route = useRoute()
+const router = useRouter()
+const store = useUserStore()
+
+const expenseId = Number(route.params.id)
+const loading = ref(false)
+const expense = ref<any>({})
+const review = ref<any>(null)
+const history = ref<any[]>([])
+const reviewing = ref(false)
+
+// 上传弹窗
+const uploadVisible = ref(false)
+const uploadItemId = ref<number>()
+const uploadFile = ref<File>()
+const uploading = ref(false)
+
+// 附件弹窗
+const invoiceVisible = ref(false)
+const invoices = ref<any[]>([])
+
+const isFinance = computed(() => store.role === 'finance')
+const canUpload = computed(() => ['draft', 'rejected'].includes(expense.value.status))
+const canApproveNow = computed(() => expense.value.status === 'pending' && store.canApprove)
+
+// 预审结论标题
+const reviewTitle = computed(() => {
+  if (!review.value) return ''
+  if (review.value.status === 'failed') return '预审失败（已降级为规则兜底）'
+  if (review.value.is_fallback) return 'AI 不可用，已降级为规则兜底'
+  return `AI 建议：${DECISION_LABEL[review.value.decision] || review.value.decision || '已完成'}`
+})
+
+const DECISION_LABEL: Record<string, string> = {
+  fast_track: '可快速审批',
+  manual_review: '需人工复核',
+  suggest_reject: '建议退回补正',
+}
+
+/**
+ * 加载单据详情、预审结果与审批轨迹
+ */
+async function load() {
+  loading.value = true
+  try {
+    expense.value = await getExpense(expenseId)
+    history.value = (await getApprovalHistory(expenseId)) || []
+    try {
+      review.value = await getReview(expenseId)
+    } catch {
+      review.value = null // 还没有预审记录
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 提交送审
+ */
+async function onSubmit() {
+  await ElMessageBox.confirm('提交后自动触发 AI 预审，确认提交？', '提交确认', { type: 'warning' })
+  await submitExpense(expenseId)
+  ElMessage.success('已提交')
+  load()
+}
+
+/**
+ * 撤回
+ */
+async function onRecall() {
+  await recallExpense(expenseId)
+  ElMessage.success('已撤回')
+  load()
+}
+
+/**
+ * 驳回复提
+ */
+async function onResubmit() {
+  await resubmitExpense(expenseId)
+  ElMessage.success('已重新提交')
+  load()
+}
+
+/**
+ * 财务支付
+ */
+async function onPay() {
+  await ElMessageBox.confirm('确认已完成打款？该操作不可撤销。', '支付确认', { type: 'warning' })
+  await payExpense(expenseId)
+  ElMessage.success('已标记支付')
+  load()
+}
+
+/**
+ * 触发 AI 预审并轮询结果
+ */
+async function onTriggerReview() {
+  reviewing.value = true
+  try {
+    await triggerReview(expenseId, true)
+    ElMessage.success('已触发预审')
+    // 轮询最多 30 秒
+    for (let i = 0; i < 15; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const data: any = await getReview(expenseId)
+      if (['success', 'fallback', 'failed'].includes(data?.status)) {
+        review.value = data
+        break
+      }
+    }
+    await load()
+  } finally {
+    reviewing.value = false
+  }
+}
+
+/**
+ * 打开轨迹页
+ */
+function openTrace() {
+  router.push(`/trace/${expenseId}`)
+}
+
+/**
+ * 打开上传弹窗
+ */
+function openUpload() {
+  uploadItemId.value = expense.value.items?.[0]?.id
+  uploadVisible.value = true
+}
+
+/**
+ * 选择文件
+ * @param event input 事件
+ */
+function onFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  uploadFile.value = input.files?.[0]
+}
+
+/**
+ * 上传发票
+ */
+async function onUpload() {
+  if (!uploadItemId.value || !uploadFile.value) {
+    ElMessage.warning('请选择明细与文件')
+    return
+  }
+  uploading.value = true
+  try {
+    await uploadInvoice(uploadItemId.value, uploadFile.value)
+    ElMessage.success('上传成功')
+    uploadVisible.value = false
+  } finally {
+    uploading.value = false
+  }
+}
+
+/**
+ * 查看某条明细的附件
+ * @param row 明细
+ */
+async function loadInvoices(row: any) {
+  invoices.value = (await apiListInvoices(row.id)) || []
+  invoiceVisible.value = true
+}
+
+onMounted(load)
+</script>
+
+<style scoped>
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.summary {
+  margin: 10px 0;
+  color: #303133;
+}
+
+.citations {
+  margin-top: 12px;
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.citation {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #ebeef5;
+}
+
+.citation-text {
+  color: #606266;
+  font-size: 13px;
+}
+</style>
