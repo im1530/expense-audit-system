@@ -134,16 +134,27 @@ nssm start ExpenseAuditBackend
 | 访问地址 | `http://127.0.0.1`（80 端口；Vite 的 5173 仅用于改代码时的热更新） |
 | 主配置 | `D:\Nginx\conf\nginx.conf`（原始文件备份为 `nginx.conf.default`） |
 | 站点配置 | `D:\Nginx\conf\expense-audit.conf`（静态目录 + `/api` 反代 + gzip + SPA 回退） |
-| 日志 | `D:\Nginx\logs\expense-audit.access.log` / `.error.log` |
+| 启动脚本 | `D:\Nginx\start_nginx.cmd`（给计划任务用，重复触发时不会起第二个实例） |
+| 自启任务 | 计划任务 `ExpenseAudit_Nginx`：`/sc onstart /ru SYSTEM`，开机自动拉起 |
+| 日志 | `D:\Nginx\logs\expense-audit.access.log` / `.error.log` / `task_stdout.log` |
 
 常用命令（都在 `D:\Nginx` 下执行）：
 
 ```powershell
-.\nginx.exe -t                 # 校验配置
-.\nginx.exe -s reload          # 改完配置热加载
-.\nginx.exe -s stop            # 停止
-Start-Process D:\Nginx\nginx.exe -WorkingDirectory D:\Nginx   # 启动（后台）
+.\nginx.exe -t                 # 校验配置（普通权限即可）
+.\nginx.exe -s reload          # 改完配置热加载 ← 需要管理员
+.\nginx.exe -s stop            # 停止 ← 需要管理员
 ```
+
+> **权限提示**：Nginx 由 SYSTEM 身份的计划任务启动，普通权限执行 `-s reload` / `-s stop`
+> 会报 `OpenEvent("Global\ngx_stop_xxx") failed (5: Access is denied)`。改配置后请在
+> **管理员 PowerShell** 里执行，或临时提权：
+>
+> ```powershell
+> Start-Process D:\Nginx\nginx.exe -ArgumentList '-s','reload' -Verb RunAs
+> ```
+>
+> 只是想验证服务是否正常，普通权限跑 `deploy/verify_deploy.ps1` 即可（只读 HTTP）。
 
 > 本机配置是 HTTP 的简化版；生产用 `deploy/nginx/expense-audit.conf`（HTTPS + 证书 + `/api/docs` 仅内网）。
 > 每次 `npm run build` 后无需重启 Nginx，刷新浏览器即可（`index.html` 已配 `no-store`）。
