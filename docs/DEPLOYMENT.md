@@ -127,16 +127,49 @@ nssm start ExpenseAuditBackend
 
 ## 4.5 本机试跑（开发机上的"准生产"形态）
 
-开发机已把 Nginx 装在 **`D:\Nginx`**（便携版，5.5 MB），用真实 `dist` + 真实后端跑通了与生产一致的链路：
+开发机已把 Nginx 装在 **`D:\Nginx`**（便携版，5.5 MB），后端也做成 SYSTEM 计划任务，整条链路不依赖登录状态：
 
 | 项 | 内容 |
 |---|---|
 | 访问地址 | `http://127.0.0.1`（80 端口；Vite 的 5173 仅用于改代码时的热更新） |
 | 主配置 | `D:\Nginx\conf\nginx.conf`（原始文件备份为 `nginx.conf.default`） |
 | 站点配置 | `D:\Nginx\conf\expense-audit.conf`（静态目录 + `/api` 反代 + gzip + SPA 回退） |
-| 启动脚本 | `D:\Nginx\start_nginx.cmd`（给计划任务用，重复触发时不会起第二个实例） |
-| 自启任务 | 计划任务 `ExpenseAudit_Nginx`：`/sc onstart /ru SYSTEM`，开机自动拉起 |
+| 启动脚本 | `D:\Nginx\start_nginx.cmd`（重复触发不会起第二个实例） |
+| 自启任务 | `ExpenseAudit_Nginx`：`/sc onstart /ru SYSTEM`，开机自动拉起 |
 | 日志 | `D:\Nginx\logs\expense-audit.access.log` / `.error.log` / `task_stdout.log` |
+| 后端启动 | `D:\MySQLBackup\run_backend.cmd` → uvicorn **单 worker**，日志 `D:\MySQLBackup\logs\backend_stdout.log` |
+| 后端起停 | `D:\MySQLBackup\restart_backend.ps1`（提权执行：杀 8000 端口进程 → 触发计划任务） |
+
+### 为什么后端只跑 1 个 worker
+
+Chroma 用的是本地持久化客户端（SQLite + 文件锁），**多进程并发写不安全**。实测 `--workers 2` 时两个 worker 会在启动阶段同时重建向量集合，日志出现两次"索引构建完成"，属于竞态。单 worker 下 FastAPI 仍是异步并发，处理本系统的并发量（内网十几人）足够；确实要扩并发，应先把向量检索换成独立服务或只读副本。
+
+### 服务账户（SYSTEM）必须注意：模型不能放用户目录
+
+SYSTEM 账户的 `%USERPROFILE%` 是 `C:\Windows\system32\config\systemprofile`，读不到你个人目录下的模型文件，表现为启动日志：
+
+```
+FileNotFoundError: embedding 模型文件缺失: C:\WINDOWS\system32\config\systemprofile\.cache\...
+制度检索自检完成 backend=BM25PolicyRetriever degraded=True
+```
+
+即"静默降级成 BM25"。正确做法是把模型放到机器级可读路径，并用**机器级环境变量**指定（`.env` 里也可以，但环境变量优先级更高、对所有服务账户一致）：
+
+```powershell
+# 1. 复制模型到 D 盘
+Copy-Item "$env:USERPROFILE\.cache\expense_audit\embeddings\bge-small-zh-v1.5\*" D:\models\bge-small-zh-v1.5 -Recurse -Force
+
+# 2. 设置机器级环境变量（管理员执行）
+[Environment]::SetEnvironmentVariable('POLICY_EMBEDDING_DIR','D:\models\bge-small-zh-v1.5','Machine')
+```
+
+改完要重启后端任务（SYSTEM 进程**普通权限杀不掉**，必须提权）：
+
+```powershell
+Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile','-File','D:\MySQLBackup\restart_backend.ps1'
+```
+
+验证：日志应出现 `加载本地 embedding 模型 dir=D:\models\...` 和 `degraded=False`。
 
 常用命令（都在 `D:\Nginx` 下执行）：
 

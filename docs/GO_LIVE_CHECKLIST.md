@@ -43,6 +43,8 @@ python scripts/check_policy_backend.py
 ```
 
 - [ ] 服务启动日志出现：`制度检索自检完成 backend=ChromaPolicyRetriever clauses=33 degraded=False`
+- [ ] **模型目录对服务账户可读**：以 SYSTEM/服务账户运行时不能放用户目录（`%USERPROFILE%` 会变成 `C:\Windows\system32\config\systemprofile`），应放机器级路径并用 `POLICY_EMBEDDING_DIR` 指定；否则日志显示 `embedding 模型文件缺失` 且 `degraded=True`（静默降级 BM25）
+- [ ] **后端单 worker**：Chroma 本地持久化（SQLite + 文件锁）不支持多进程并发写，`--workers 2` 会在启动时并发重建集合（详见 `DEPLOYMENT.md`）
 - [ ] 若日志提示“已降级为 BM25”：检查 `chromadb` 是否安装、模型目录 6 个文件是否齐全
 - [ ] 首次启动会因签名变化**自动重建向量集合**（`doc=v2_kw_first`）：日志出现"制度向量集合构建完成 clauses=33"，耗时约 1.4 s，属正常；此后启动直接复用
 - [ ] 重建依据：参与 embedding 的文本已改为「关键词 + 原文」，核心条款检索覆盖从 82.4% 提升到 100%（68 条评测案例，离线实测）。**口径变化后引用指标需重录才会更新**，旧录制（98.91%/92.65%）不再代表现状
