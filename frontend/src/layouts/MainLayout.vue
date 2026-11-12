@@ -22,6 +22,17 @@
         <el-menu-item v-if="store.canViewReports" index="/reports">
           <el-icon><DataLine /></el-icon><span>统计报表</span>
         </el-menu-item>
+
+        <!-- 管理端：仅 admin 可见 -->
+        <el-sub-menu v-if="store.isAdmin" index="admin">
+          <template #title>
+            <el-icon><Setting /></el-icon><span>系统管理</span>
+          </template>
+          <el-menu-item index="/admin/users">用户管理</el-menu-item>
+          <el-menu-item index="/admin/departments">部门管理</el-menu-item>
+          <el-menu-item index="/admin/rules">规则管理</el-menu-item>
+          <el-menu-item index="/admin/flows">审批流管理</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 
@@ -77,7 +88,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown, Checked, DataLine, Document, HomeFilled, Plus } from '@element-plus/icons-vue'
+import { ArrowDown, Checked, DataLine, Document, HomeFilled, Plus, Setting } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()

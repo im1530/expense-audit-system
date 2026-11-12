@@ -46,8 +46,24 @@ frontend/
         ├── ExpenseDetail.vue   # 详情（明细/发票/AI 结论/审批轨迹/支付）
         ├── ApprovalCenter.vue  # 审批中心（待办/已办 + 通过/驳回）
         ├── Reports.vue         # 统计报表（总览/按月/部门/类别）
-        └── TraceView.vue       # AI 工作流轨迹（节点耗时、token、引用、凭证）
+        ├── TraceView.vue       # AI 工作流轨迹（节点耗时、token、引用、凭证）
+        └── admin/              # 管理端（仅 admin 可见）
+            ├── UserManage.vue        # 用户：筛选/建号/改角色部门/重置密码
+            ├── DepartmentManage.vue  # 部门：建改/启停/设负责人
+            ├── RuleManage.vue        # 规则：建改删、JSON 配置校验、启停
+            └── FlowManage.vue        # 审批流：多级角色编排、默认流、启停
 ```
+
+## 管理端（仅 `admin` 角色）
+
+| 页面 | 能力 |
+|---|---|
+| 用户管理 | 按角色/部门/状态筛选、建号（初始密码强制首登改密）、改角色与部门、启停账号、重置密码 |
+| 部门管理 | 新建/编辑、启停、设置部门负责人（从 manager 角色里选） |
+| 规则管理 | 建/改/删、规则类型与动作选择、`config` 用 JSON 编辑并做前端合法性校验（提交前解析，非法直接拦下） |
+| 审批流管理 | 多级审批链动态增删（manager / finance / finance_other / boss）、设为默认流、启停 |
+
+> 删除规则/审批流前会二次确认并提示影响（规则参与预检、流程被金额规则引用的后果）。
 
 ## 本地运行
 

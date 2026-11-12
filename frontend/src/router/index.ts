@@ -56,6 +56,30 @@ const routes = [
         component: () => import('@/views/TraceView.vue'),
         meta: { title: 'AI 预审轨迹' },
       },
+      {
+        path: 'admin/users',
+        name: 'admin-users',
+        component: () => import('@/views/admin/UserManage.vue'),
+        meta: { title: '用户管理', requiresAdmin: true },
+      },
+      {
+        path: 'admin/departments',
+        name: 'admin-departments',
+        component: () => import('@/views/admin/DepartmentManage.vue'),
+        meta: { title: '部门管理', requiresAdmin: true },
+      },
+      {
+        path: 'admin/rules',
+        name: 'admin-rules',
+        component: () => import('@/views/admin/RuleManage.vue'),
+        meta: { title: '规则管理', requiresAdmin: true },
+      },
+      {
+        path: 'admin/flows',
+        name: 'admin-flows',
+        component: () => import('@/views/admin/FlowManage.vue'),
+        meta: { title: '审批流管理', requiresAdmin: true },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
@@ -100,6 +124,9 @@ router.beforeEach(async (to) => {
     return { path: '/dashboard' }
   }
   if (to.meta.requiresReports && !store.canViewReports) {
+    return { path: '/dashboard' }
+  }
+  if (to.meta.requiresAdmin && !store.isAdmin) {
     return { path: '/dashboard' }
   }
   return true
