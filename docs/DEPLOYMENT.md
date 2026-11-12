@@ -125,6 +125,29 @@ nssm start ExpenseAuditBackend
 > Windows 上 `--workers` 建议 ≤ 2（线程/进程与 SQLAlchemy 连接池一起算），
 > 并且限流必须走 Redis（`RATE_LIMIT_BACKEND=redis`），否则多 worker 各自计数。
 
+## 4.5 本机试跑（开发机上的"准生产"形态）
+
+开发机已把 Nginx 装在 **`D:\Nginx`**（便携版，5.5 MB），用真实 `dist` + 真实后端跑通了与生产一致的链路：
+
+| 项 | 内容 |
+|---|---|
+| 访问地址 | `http://127.0.0.1`（80 端口；Vite 的 5173 仅用于改代码时的热更新） |
+| 主配置 | `D:\Nginx\conf\nginx.conf`（原始文件备份为 `nginx.conf.default`） |
+| 站点配置 | `D:\Nginx\conf\expense-audit.conf`（静态目录 + `/api` 反代 + gzip + SPA 回退） |
+| 日志 | `D:\Nginx\logs\expense-audit.access.log` / `.error.log` |
+
+常用命令（都在 `D:\Nginx` 下执行）：
+
+```powershell
+.\nginx.exe -t                 # 校验配置
+.\nginx.exe -s reload          # 改完配置热加载
+.\nginx.exe -s stop            # 停止
+Start-Process D:\Nginx\nginx.exe -WorkingDirectory D:\Nginx   # 启动（后台）
+```
+
+> 本机配置是 HTTP 的简化版；生产用 `deploy/nginx/expense-audit.conf`（HTTPS + 证书 + `/api/docs` 仅内网）。
+> 每次 `npm run build` 后无需重启 Nginx，刷新浏览器即可（`index.html` 已配 `no-store`）。
+
 ## 5. 部署后自检
 
 ```powershell
