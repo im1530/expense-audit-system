@@ -91,6 +91,27 @@ $env:VITE_API_TARGET="http://127.0.0.1:8123"; npm run dev
 npm run build      # 产物在 dist/，交给 Nginx 托管并把 /api 反代到后端
 ```
 
+## 单元测试（Vitest + jsdom）
+
+```bash
+npm test           # 单次运行
+npm run test:watch # 监听模式
+```
+
+当前覆盖 **4 个文件 / 30 个用例**，全部离线（不发网络、不连后端）：
+
+| 文件 | 覆盖点 |
+|---|---|
+| `src/utils/helpers.test.ts` | 金额格式化（千分位/空值/非数字）、时间与日期格式化、状态枚举映射完整性 |
+| `src/utils/request.test.ts` | 令牌读写、`Authorization` 自动注入、响应解包、`rawResponse` 透传、401 清令牌并跳登录 |
+| `src/stores/user.test.ts` | 登录写令牌并拉资料、首登强制改密标记、角色判定（employee/finance/admin）、退出清状态 |
+| `src/router/guard.test.ts` | 公开页放行、未登录跳转并带 redirect、刷新自动拉资料、权限拦截（审批/报表/管理端）、强制改密不跳登录 |
+
+> **Node 26 注意**：Node 26 内置了实验性的全局 `localStorage`（未加 `--localstorage-file` 时为
+> `undefined`），会盖掉 jsdom 的实现。`src/tests/setup.ts` 已显式把全局 `localStorage` /
+> `sessionStorage` 指回 `window` 的实现，否则所有用到本地存储的用例都会报
+> `Cannot read properties of undefined (reading 'clear')`。
+
 > **本机构建注意**：当前机器的临时目录存在 ACL/占用限制，esbuild 在"降级 + 压缩"阶段
 > 会因临时文件无法删除而失败，因此 `vite.config.ts` 里设了 `target: 'esnext'` 且
 > `minify: false`。产物功能完整，压缩交给 Nginx 的 gzip 即可。换到正常环境可自行改回。

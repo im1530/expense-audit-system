@@ -91,11 +91,12 @@ const router = createRouter({
 })
 
 // 全局前置守卫：未登录跳登录页；无权限的菜单直接回工作台
-router.beforeEach(async (to) => {
+// 单独导出便于单测直接调用，不必真的跑一次导航
+export async function authGuard(to: any) {
   const store = useUserStore()
 
   // 1.公开页面直接放行
-  if (to.meta.public) {
+  if (to.meta?.public) {
     return true
   }
 
@@ -120,16 +121,18 @@ router.beforeEach(async (to) => {
   }
 
   // 5.角色权限校验
-  if (to.meta.requiresApprove && !store.canApprove) {
+  if (to.meta?.requiresApprove && !store.canApprove) {
     return { path: '/dashboard' }
   }
-  if (to.meta.requiresReports && !store.canViewReports) {
+  if (to.meta?.requiresReports && !store.canViewReports) {
     return { path: '/dashboard' }
   }
-  if (to.meta.requiresAdmin && !store.isAdmin) {
+  if (to.meta?.requiresAdmin && !store.isAdmin) {
     return { path: '/dashboard' }
   }
   return true
-})
+}
+
+router.beforeEach(authGuard)
 
 export default router
