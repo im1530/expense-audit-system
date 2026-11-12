@@ -42,7 +42,13 @@ request.interceptors.request.use((config) => {
 
 // 响应拦截：直接返回 data；错误统一提示；401 回登录页
 request.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // 需要读响应头（如文件下载的 Content-Disposition）时，调用方传 rawResponse: true
+    if ((response.config as any).rawResponse) {
+      return response
+    }
+    return response.data
+  },
   (error) => {
     const status = error.response?.status
     const data = error.response?.data || {}

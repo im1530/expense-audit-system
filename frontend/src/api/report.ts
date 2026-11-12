@@ -33,9 +33,13 @@ export function listCategories(params: { start_date?: string; end_date?: string;
 }
 
 /**
- * 导出 Excel（返回二进制）
+ * 导出 Excel（返回完整响应，便于读取文件名）
  * @param params 日期区间/部门
  */
 export function exportReport(params: { start_date?: string; end_date?: string; department_id?: number }) {
-  return request.get('/report/export', { params, responseType: 'blob' })
+  return request.get('/report/export', {
+    params,
+    responseType: 'blob',
+    rawResponse: true,
+  } as any)
 }

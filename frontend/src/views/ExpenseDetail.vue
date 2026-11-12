@@ -166,20 +166,28 @@
       </template>
     </el-dialog>
 
-    <!-- 附件列表 -->
-    <el-dialog v-model="invoiceVisible" title="附件列表" width="520px">
-      <el-table :data="invoices" size="small">
-        <el-table-column prop="file_name" label="文件名" min-width="180" />
-        <el-table-column label="大小" width="90">
-          <template #default="{ row }">{{ (row.file_size / 1024).toFixed(0) }} KB</template>
-        </el-table-column>
-        <el-table-column label="下载" width="80">
-          <template #default="{ row }">
-            <a :href="row.url" target="_blank" rel="noopener">打开</a>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-empty v-if="invoices.length === 0" description="该明细还没有发票" :image-size="60" />
+    <!-- 附件列表：图片内嵌预览，PDF 新标签打开 -->
+    <el-dialog v-model="invoiceVisible" title="附件" width="560px">
+      <div v-if="invoices.length" class="invoice-grid">
+        <div v-for="item in invoices" :key="item.id" class="invoice-item">
+          <el-image
+            v-if="isImage(item)"
+            :src="item.url"
+            :preview-src-list="imageUrls"
+            :initial-index="imageUrls.indexOf(item.url)"
+            fit="cover"
+            class="invoice-thumb"
+            preview-teleported
+            hide-on-click-modal
+          />
+          <div v-else class="invoice-thumb pdf" @click="openInNewTab(item.url)">PDF</div>
+          <div class="invoice-meta">
+            <span class="muted" :title="item.file_name">{{ item.file_name }}</span>
+            <el-button v-if="canUpload" link type="danger" size="small" @click="onDeleteInvoice(item)">删除</el-button>
+          </div>
+        </div>
+      </div>
+      <el-empty v-else description="该明细还没有附件" :image-size="60" />
     </el-dialog>
   </div>
 </template>
@@ -192,6 +200,7 @@ import {
   getApprovalHistory,
   getExpense,
   listInvoices as apiListInvoices,
+  deleteInvoice,
   payExpense,
   recallExpense,
   resubmitExpense,
@@ -378,6 +387,36 @@ async function loadInvoices(row: any) {
   invoiceVisible.value = true
 }
 
+// 图片类附件的地址列表（供大图预览左右切换）
+const imageUrls = computed(() => invoices.value.filter(isImage).map((item) => item.url))
+
+/**
+ * 是否图片类型（后端返回真实 MIME，按文件头嗅探）
+ * @param item 附件
+ */
+function isImage(item: any) {
+  return String(item?.content_type || '').startsWith('image/')
+}
+
+/**
+ * 新标签打开（PDF 用）
+ * @param url 签名地址
+ */
+function openInNewTab(url: string) {
+  window.open(url, '_blank', 'noopener')
+}
+
+/**
+ * 删除附件（仅草稿/已驳回可删）
+ * @param item 附件
+ */
+async function onDeleteInvoice(item: any) {
+  await ElMessageBox.confirm(`确认删除附件「${item.file_name}」？`, '删除确认', { type: 'warning' })
+  await deleteInvoice(item.id)
+  invoices.value = invoices.value.filter((row) => row.id !== item.id)
+  ElMessage.success('已删除')
+}
+
 onMounted(load)
 </script>
 
@@ -423,5 +462,50 @@ onMounted(load)
 .citation-text {
   color: #606266;
   font-size: 13px;
+}
+
+/* 附件网格：保持简洁，一屏可看多张 */
+.invoice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.invoice-item {
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.invoice-thumb {
+  width: 100%;
+  height: 110px;
+  display: block;
+  cursor: zoom-in;
+}
+
+.invoice-thumb.pdf {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.invoice-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.invoice-meta .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
