@@ -1,7 +1,8 @@
 # 上线前检查清单
 
 > 用法：逐项确认并填写「验证结果 / 负责人」；**P0 未完成不得上线**，P1 可上线后一周内补齐。
-> 当前仓库为纯后端（无前端、无 Docker），部署以 Windows/Linux + Nginx 反代 + MySQL + Redis 为准。
+> 部署形态：前端 `frontend/dist`（Vue 3）由 Nginx 静态托管，`/api/` 反代到后端；数据库 MySQL，缓存/队列 Redis(Memurai)。
+> **具体安装步骤见 [`DEPLOYMENT.md`](DEPLOYMENT.md)**，Nginx 样例见 [`deploy/nginx/expense-audit.conf`](../deploy/nginx/expense-audit.conf)，部署后自检脚本 [`deploy/verify_deploy.ps1`](../deploy/verify_deploy.ps1)。
 
 ## 0. 前置信息
 
@@ -172,7 +173,7 @@ python scripts/verify_restore.py --backup "D:\MySQLBackup\expense_audit__develop
 - 限流已支持 Redis 共享计数（`RATE_LIMIT_BACKEND`），但 Redis 故障时会**静默降级为进程内计数**：多实例下此时实际配额会成倍放大，需靠告警关注（日志关键字"Redis 限流不可用"）；
 - 高危 24 条为“AI 预填 + 人工确认”，kappa 不适用，不能当独立双标证据；
 - 真实历史单据尚未导入（等上线后积累 20~30 条脱敏数据）；
-- 无前端，接口通过 `/api/docs` 或内部联调页面使用。
+- 前端已提供（Vue 3 管理端：登录/工作台/报销/审批/报表/AI 轨迹/系统管理），静态托管见 `DEPLOYMENT.md`；接口调试仍可用 `/api/docs`（生产限内网）；
 - **引用指标存在 ±5pp 模型噪声**：同一 Prompt、`temperature=0` 重跑 11 条，引用结果仅 6/11 一致；单次运行的 88%~93% 差异不构成版本优劣结论，需多次运行取中位数才能比较；
 - **引用指标口径已变**：2026-11-11 起检索文本改为「关键词 + 原文」、Prompt 升到 `risk_review_v4_2_citation_guard`，旧录制（引用准确率 98.91% / 召回 92.65%）不再代表现状；当前基线见 `docs/CITATION_RECALL_PLAN.md`；
 - 标注口径两处待人工复核（不改标签）：拆票类 G081–G084 引 1.2 被判越界（1.2 原文含“拆分报销”）、审批缺失类 G097–G100 要求引用 3.7 而制度无专项条款。

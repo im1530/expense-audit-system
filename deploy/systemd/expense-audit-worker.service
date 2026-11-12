@@ -1,0 +1,42 @@
+# AI Agent 财务报销审核系统 —— Celery worker（Linux systemd 样例）
+#
+# 用法：
+#   sudo cp deploy/systemd/expense-audit-worker.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now expense-audit-worker
+#
+# 注意：
+#   - Linux 用 prefork 池；Windows 必须用 threads 池（见 app/worker.py 注释）
+#   - 必须与后端共用同一份 .env（同一个 WorkingDirectory），否则 broker/key 不一致
+
+[Unit]
+Description=Expense Audit Celery Worker
+After=network.target redis.service expense-audit-backend.service
+Wants=redis.service
+
+[Service]
+Type=simple
+User=expense
+Group=expense
+
+WorkingDirectory=/opt/expense-audit/backend
+
+# 并发度按 CPU 核数与 LLM 限流配置权衡：并发太高更容易触发模型侧限流
+ExecStart=/opt/expense-audit/.venv/bin/celery \
+    -A app.worker.celery_app worker \
+    --loglevel=INFO \
+    --pool=prefork \
+    --concurrency=4 \
+    --max-tasks-per-child=200 \
+    --hostname=worker@%h
+
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=60
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

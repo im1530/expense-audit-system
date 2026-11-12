@@ -1,0 +1,50 @@
+# AI Agent 财务报销审核系统 —— 后端 Web 服务（Linux systemd 样例）
+#
+# 用法：
+#   sudo cp deploy/systemd/expense-audit-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now expense-audit-backend
+#   sudo systemctl status expense-audit-backend
+#
+# Windows 上没有 systemd：见 docs/DEPLOYMENT.md 的「Windows 服务化」一节
+# （用 NSSM 或计划任务，与之前 Memurai / Celery 的做法一致）。
+
+[Unit]
+Description=Expense Audit Backend (FastAPI / uvicorn)
+After=network.target mysql.service redis.service
+Wants=mysql.service redis.service
+
+[Service]
+Type=simple
+User=expense
+Group=expense
+
+# 代码目录：backend/ 的上一级
+WorkingDirectory=/opt/expense-audit/backend
+
+# 用虚拟环境里的解释器，不要依赖系统 python
+ExecStart=/opt/expense-audit/.venv/bin/python -m uvicorn app.main:app \
+    --host 127.0.0.1 --port 8000 \
+    --workers 4 \
+    --proxy-headers \
+    --forwarded-allow-ips 127.0.0.1 \
+    --log-level info
+
+# 崩溃自动重启（`always` 会覆盖正常退出：运维重启即拉起）
+Restart=always
+RestartSec=3
+
+# 优雅退出：worker 处理完当前请求再退
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# 资源限制（按机器调整）
+LimitNOFILE=65535
+MemoryMax=2G
+
+# 日志交给 journald；如需文件日志，在 .env 里设 LOG_FILE
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
