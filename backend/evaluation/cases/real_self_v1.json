@@ -1,0 +1,490 @@
+[
+  {
+    "case_id": "R001",
+    "title": "AI 办公工具额度",
+    "category": "其他",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111501",
+        "title": "AI 办公工具额度",
+        "total_amount": "50.00",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "其他",
+          "expense_type": "other",
+          "description": "AI 办公工具充值，仅有微信支付凭证，无发票",
+          "amount": "50.00",
+          "expense_date": "2026-11-04",
+          "has_invoice": false,
+          "no_invoice_reason": "线上充值，无发票，微信支付凭证佐证（测试数据）"
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "mid",
+      "decision": "manual_review",
+      "must_findings": [
+        "invoice_missing"
+      ],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：无发票，仅支付凭证/截图；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R002",
+    "title": "停车费",
+    "category": "交通",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111502",
+        "title": "停车费",
+        "total_amount": "18.00",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "停车费",
+          "expense_type": "transportation",
+          "description": "停车费，仅有微信支付凭证，无发票",
+          "amount": "18.00",
+          "expense_date": "2026-11-02",
+          "has_invoice": false,
+          "no_invoice_reason": "停车缴费，无发票，微信支付凭证佐证（测试数据）"
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "mid",
+      "decision": "manual_review",
+      "must_findings": [
+        "invoice_missing"
+      ],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：无发票，仅支付凭证/截图；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R003",
+    "title": "办公键盘（京东）",
+    "category": "办公",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111503",
+        "title": "办公键盘（京东）",
+        "total_amount": "73.90",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "办公耗材",
+          "expense_type": "office",
+          "description": "办公键盘采购，发票抬头为示例科技有限公司",
+          "amount": "73.90",
+          "expense_date": "2026-11-05",
+          "has_invoice": true,
+          "no_invoice_reason": ""
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "low",
+      "decision": "fast_track",
+      "must_findings": [],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：源票据为个人抬头，按“模拟公司抬头（示例科技有限公司）”口径处理；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R004",
+    "title": "打印费",
+    "category": "办公",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111504",
+        "title": "打印费",
+        "total_amount": "2.00",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "打印复印",
+          "expense_type": "office",
+          "description": "打印费，仅有微信支付凭证，无发票",
+          "amount": "2.00",
+          "expense_date": "2026-10-17",
+          "has_invoice": false,
+          "no_invoice_reason": "打印费，无发票，微信支付凭证佐证（测试数据）"
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "mid",
+      "decision": "manual_review",
+      "must_findings": [
+        "invoice_missing"
+      ],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：无发票，仅支付凭证/截图；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R005",
+    "title": "员工餐（麦当劳）",
+    "category": "餐饮",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111505",
+        "title": "员工餐（麦当劳）",
+        "total_amount": "56.60",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "工作餐",
+          "expense_type": "meal",
+          "description": "员工工作餐，发票抬头为示例科技有限公司",
+          "amount": "56.60",
+          "expense_date": "2026-11-01",
+          "has_invoice": true,
+          "no_invoice_reason": ""
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "low",
+      "decision": "fast_track",
+      "must_findings": [],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：源票据为个人抬头，按“模拟公司抬头（示例科技有限公司）”口径处理；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R006",
+    "title": "员工餐（麦当劳）2",
+    "category": "餐饮",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111506",
+        "title": "员工餐（麦当劳）2",
+        "total_amount": "33.40",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "工作餐",
+          "expense_type": "meal",
+          "description": "员工工作餐，发票抬头为示例科技有限公司",
+          "amount": "33.40",
+          "expense_date": "2026-11-02",
+          "has_invoice": true,
+          "no_invoice_reason": ""
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "low",
+      "decision": "fast_track",
+      "must_findings": [],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：源票据为个人抬头，按“模拟公司抬头（示例科技有限公司）”口径处理；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R007",
+    "title": "滴滴打车 A",
+    "category": "交通",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111507",
+        "title": "滴滴打车 A",
+        "total_amount": "12.40",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "市内交通",
+          "expense_type": "transportation",
+          "description": "出差打车，发票抬头为示例科技有限公司",
+          "amount": "12.40",
+          "expense_date": "2026-10-08",
+          "has_invoice": true,
+          "no_invoice_reason": ""
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "low",
+      "decision": "fast_track",
+      "must_findings": [],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：源票据为个人抬头，按“模拟公司抬头（示例科技有限公司）”口径处理；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R008",
+    "title": "滴滴打车 B（两段行程）",
+    "category": "交通",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111508",
+        "title": "滴滴打车 B（两段行程）",
+        "total_amount": "30.50",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "市内交通",
+          "expense_type": "transportation",
+          "description": "出差打车两段行程合并开票，发票抬头为示例科技有限公司",
+          "amount": "30.50",
+          "expense_date": "2026-10-05",
+          "has_invoice": true,
+          "no_invoice_reason": ""
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "low",
+      "decision": "fast_track",
+      "must_findings": [],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：源票据为个人抬头，按“模拟公司抬头（示例科技有限公司）”口径处理；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R009",
+    "title": "高铁票（虎门—广州南）",
+    "category": "交通",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111509",
+        "title": "高铁票（虎门—广州南）",
+        "total_amount": "34.50",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "高铁票",
+          "expense_type": "transportation",
+          "description": "高铁票（虎门—广州南），发票抬头为示例科技有限公司",
+          "amount": "34.50",
+          "expense_date": "2026-10-08",
+          "has_invoice": true,
+          "no_invoice_reason": ""
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "low",
+      "decision": "fast_track",
+      "must_findings": [],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：源票据为个人抬头，按“模拟公司抬头（示例科技有限公司）”口径处理；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  },
+  {
+    "case_id": "R010",
+    "title": "员工餐（热干面，支付截图）",
+    "category": "餐饮",
+    "context": {
+      "expense": {
+        "expense_no": "RS2026111510",
+        "title": "员工餐（热干面，支付截图）",
+        "total_amount": "8.00",
+        "status": "pending",
+        "submitter_role": "employee",
+        "department": "研发部",
+        "current_level": 0,
+        "submitted_at": "2026-11-15T09:00:00"
+      },
+      "items": [
+        {
+          "item_id": 1,
+          "category": "工作餐",
+          "expense_type": "meal",
+          "description": "加班餐，仅有支付截图，无发票",
+          "amount": "8.00",
+          "expense_date": "2026-11-11",
+          "has_invoice": false,
+          "no_invoice_reason": "加班餐，商家无法开票，支付截图佐证（测试数据）"
+        }
+      ],
+      "rule_hits": [],
+      "document_findings": [],
+      "truncated": {
+        "items": 0,
+        "rule_hits": 0
+      }
+    },
+    "expected": {
+      "risk_level": "mid",
+      "decision": "manual_review",
+      "must_findings": [
+        "invoice_missing"
+      ],
+      "must_not": []
+    },
+    "note": "真实票据+构造事由：无发票，仅支付凭证/截图；测试数据",
+    "source": "real_self_v1",
+    "label_status": "reviewed",
+    "review_status": "confirmed",
+    "frozen": true,
+    "reviewed_by": "项目负责人",
+    "reviewed_at": "2026-11-15"
+  }
+]

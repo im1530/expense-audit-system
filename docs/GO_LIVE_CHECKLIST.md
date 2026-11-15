@@ -17,11 +17,15 @@
 
 - [ ] `SECRET_KEY` 已换成 64 位以上随机串，且不在代码/日志/仓库中
 - [ ] `DATABASE_URL` 指向生产库，使用独立账号（非 root）并只授权本库
+- [ ] 应用账号只授 `SELECT/INSERT/UPDATE/DELETE`；建表/迁移用另一个有 DDL 权限的账号（见 `DEPLOYMENT.md`）
 - [ ] `DEEPSEEK_API_KEY` 已配置，账户余额与并发额度确认
 - [ ] `ALLOWED_HOSTS` / `ALLOWED_ORIGINS` 只包含生产域名
 - [ ] `ATTACHMENT_ENCRYPTION_KEY` 已生成并配置（历史明文附件仍可读，新文件加密）
+- [ ] 该加密密钥已进密码库/离线备份，并知道"启用后不可直接更换（丢失=附件不可读）"
 - [ ] `APP_ENV=production`、`DEBUG=False`、`LOG_LEVEL=INFO`
 - [ ] `LOG_FILE` 指向持久磁盘（如 `logs/app.log`），`LOG_RETENTION_DAYS` 已确认
+- [x] admin 初始密码已重置（admin 仍为 `must_change_password=True` 强制首登改密），演示/冒烟账号已停用 —— 2026-11-15 停用 10 个：testuser、manager1、fin1、manager2、emp_p2、fin2、boss1、smoke_emp、smoke_mgr、smoke_fin（`is_active=0` + `token_version+1`，登录返回 403“账号已被停用”；备份见仓库外 `users_backup_20261115.json`）
+- [ ] 启动自检生效：密钥不合格时进程应**起不来**（日志出现"生产环境安全配置不合法"即为护栏生效）
 
 验证：启动后日志无配置告警；`/api/docs` 可访问但仅内网。
 
@@ -163,8 +167,9 @@ python scripts/verify_restore.py --backup "D:\MySQLBackup\expense_audit__develop
 
 ## 7. 上线验收（逐条执行并记录）
 
-- [ ] `python -m unittest discover -s tests` 全部通过（当前 415 个，2026-11-12 实测：Ran 415 tests OK）
+- [ ] `python -m unittest discover -s tests` 全部通过（当前 470 个，2026-11-14 实测：Ran 470 tests OK）
 - [ ] 冒烟链路：登录 → 建草稿 → 加明细 → 上传发票 → 提交 → AI 预审 → 审批 → 支付
+  - 2026-11-15 已在 `expense_audit_test` + 8001 临时后端跑通两轮（含两级审批、凭证识别、支付），生产入口（443/8000 + Celery）待上线后复跑；见 `backend/evaluation/reports/e2e_smoke_20261115.md`
 - [ ] `GET /api/v1/agent/review/{id}/trace` 返回节点耗时、决策、引用、凭证结论
 - [ ] `python scripts/purge_expired_data.py --dry-run` 输出正常
 - [ ] `python scripts/recover_workflows.py --dry-run` 输出正常
@@ -173,7 +178,9 @@ python scripts/verify_restore.py --backup "D:\MySQLBackup\expense_audit__develop
 ## 8. 已知边界（写进交付说明）
 
 - 限流已支持 Redis 共享计数（`RATE_LIMIT_BACKEND`），但 Redis 故障时会**静默降级为进程内计数**：多实例下此时实际配额会成倍放大，需靠告警关注（日志关键字"Redis 限流不可用"）；
-- 高危 24 条为“AI 预填 + 人工确认”，kappa 不适用，不能当独立双标证据；
+- 60 条独立双标已完成（blind_v2，2026-11-14）：risk_level κ=0.9495（95%CI 0.8705–1.0000），58/60 一致，2 条分歧已裁决；分层过采样，κ 只代表两人一致性、不能外推总体；报告见 `backend/evaluation/reports/blind_v2_final.md`；
+- 旧高危 24 条（v1）保留，仅作 blind_v2 的抽样框，属“AI 预填 + 人工确认”，**不作为独立双标证据**；
+- blind_v2 终版与既有标签口径有 13/60 条差异（金额/发票号不符、订单号重复、注入文本）；2026-11-14 决策：本批定位为**人工标准基准**，不直接作为系统评测金标准，口径统一（改规则 / guide_v2.1 重标）另立决策（详见 blind_v2 终版报告第 4、5 节）；
 - 真实历史单据尚未导入（等上线后积累 20~30 条脱敏数据）；
 - 前端已提供（Vue 3 管理端：登录/工作台/报销/审批/报表/AI 轨迹/系统管理），静态托管见 `DEPLOYMENT.md`；接口调试仍可用 `/api/docs`（生产限内网）；
 - **引用指标存在 ±5pp 模型噪声**：同一 Prompt、`temperature=0` 重跑 11 条，引用结果仅 6/11 一致；单次运行的 88%~93% 差异不构成版本优劣结论，需多次运行取中位数才能比较；

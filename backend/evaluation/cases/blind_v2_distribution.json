@@ -1,0 +1,40 @@
+{
+  "version": "blind_v2",
+  "created_at": "2026-11-14T08:25:46+08:00",
+  "guide": {
+    "file": "docs/annotate_guide_v2.0.md",
+    "version": "annotate_guide_v2.0",
+    "sha256": "3217d04329346eeabcd1c1c459a277482a50d070f09877f6a219158a58080f2f"
+  },
+  "sample": {
+    "file": "cases/blind_v2.json",
+    "sha256": "0d38edd2881c1c72af590e449b91c59d24dee112b7523f95e1ee368da2a9cec5",
+    "n": 60
+  },
+  "policy": {
+    "file": "docs/policies/expense_policy_v1.md",
+    "sha256": "5c942ee3ef22d24148d8c0de9d4fb44f976d55297662d659283fc352eb896293",
+    "clauses": 33
+  },
+  "packets": {
+    "A": {
+      "role": "复核人 A：财务",
+      "file": "backend\\evaluation\\reports\\blind_v2_packet_A.xlsx",
+      "sha256": "42b325bf878b1df669cf06405dcee9a32b3d7f7fd4ec91f5ea99f527b1a391a9",
+      "rows": 60
+    },
+    "B": {
+      "role": "复核人 B：老板",
+      "file": "backend\\evaluation\\reports\\blind_v2_packet_B.xlsx",
+      "sha256": "443b3bea30e9ad91849a93e5f11a7a2b969a20174ac8c96b53a9b133ec9fd2e4",
+      "rows": 60
+    }
+  },
+  "checks": {
+    "orders_differ": true,
+    "answer_cells_empty": true,
+    "leak_scan": "pass",
+    "clauses": 33
+  },
+  "note": "记录的是发包时的空白版本哈希；标注人回填后哈希会变，属正常。"
+}

@@ -71,13 +71,13 @@ INSERT INTO `departments` (`id`,`name`,`description`,`manager_id`,`is_active`,`c
 -- ------------------------------------------------------------
 INSERT INTO `users` (`id`,`username`,`email`,`password_hash`,`full_name`,`phone`,`position`,`role`,`department_id`,`is_active`,`is_superuser`,`must_change_password`,`token_version`,`last_login_at`,`created_at`,`updated_at`) VALUES
 (1,'testuser','test@example.com','$2b$12$/m2dclQv3uldRDXNBbcpMetkxrpf.wvzmx.HKRv/5PHLqsO84P1Pi','张三','13800000001',NULL,'employee',1,1,0,0,0,NULL,'2026-10-22 20:35:03','2026-11-03 23:44:29'),
-(2,'manager1','manager@example.com','$2b$12$nzHXR75yZWzvY4fHOlJDIujzAQsKqqf/msYp.JId1nQij8KNiBfWe','张经理','13800000002',NULL,'manager',1,1,0,0,0,NULL,'2026-10-23 21:20:10','2026-11-03 23:44:29'),
-(3,'fin1','fin1@test.com','$2b$12$o/9b4ffS6Gwp4ivJJ4d6V.qdOjboRUq9DP/n/hfa9r.KkLx44V3D2','王晓丽','13800000003','财务专员','finance',4,1,0,0,0,NULL,'2026-10-26 16:46:29',NULL),
-(5,'manager2','manager2@test.com','$2b$12$CZbjlkl7cUjAYIIBct6g..zkrNJNl1KvU9j.opyEC0ssIVSXeuodC','李明远','13800000005','产品部经理','manager',2,1,0,0,0,NULL,'2026-10-27 00:04:08',NULL),
-(6,'emp_p2','emp_p2@test.com','$2b$12$5fplo70.xYdResHeK/rmOuIttQoof3u8noF4CXcqd3axkgSjCI1vu','陈思雨','13800000006','产品专员','employee',2,1,0,0,0,NULL,'2026-10-27 00:05:16',NULL),
-(7,'boss1','boss1@test.com','$2b$12$DwQ5IMaqBWs4DFUaErH0l.MHNeI9RPVH8UgHt9Nt1if4I1vZ6q0Cy','刘振华','13800000007','总经理','boss',NULL,1,0,0,0,NULL,'2026-10-27 01:06:30',NULL),
-(8,'fin2','fin2@test.com','$2b$12$ijUYcIJbgMvBYcegY62xn.uAmEkm0DMxXZi3LmFJema7xNQ9RCO1m','赵雅琴','13800000008','财务主管','finance',4,1,0,0,0,NULL,'2026-10-27 01:56:05',NULL),
-(15,'admin','admin@example.com','$2b$12$C2Zg74Gs9SB5EMo9GvY07OOFJ1rrjpasvFP/ocHCpcFJQlop/V3mK','系统管理员','13800000000','系统管理员','admin',3,1,0,0,0,NULL,'2026-11-03 23:28:28',NULL);
+(2,'manager1','manager@example.com','$2b$12$nzHXR75yZWzvY4fHOlJDIujzAQsKqqf/msYp.JId1nQij8KNiBfWe','李经理','13800000002',NULL,'manager',1,1,0,0,0,NULL,'2026-10-23 21:20:10','2026-11-03 23:44:29'),
+(3,'fin1','fin1@test.com','$2b$12$o/9b4ffS6Gwp4ivJJ4d6V.qdOjboRUq9DP/n/hfa9r.KkLx44V3D2','王芳','13800000003','财务专员','finance',4,1,0,0,0,NULL,'2026-10-26 16:46:29',NULL),
+(5,'manager2','manager2@test.com','$2b$12$CZbjlkl7cUjAYIIBct6g..zkrNJNl1KvU9j.opyEC0ssIVSXeuodC','陈强','13800000005','产品部经理','manager',2,1,0,0,0,NULL,'2026-10-27 00:04:08',NULL),
+(6,'emp_p2','emp_p2@test.com','$2b$12$5fplo70.xYdResHeK/rmOuIttQoof3u8noF4CXcqd3axkgSjCI1vu','周敏','13800000006','产品专员','employee',2,1,0,0,0,NULL,'2026-10-27 00:05:16',NULL),
+(7,'boss1','boss1@test.com','$2b$12$DwQ5IMaqBWs4DFUaErH0l.MHNeI9RPVH8UgHt9Nt1if4I1vZ6q0Cy','赵总','13800000007','总经理','boss',NULL,1,0,0,0,NULL,'2026-10-27 01:06:30',NULL),
+(8,'fin2','fin2@test.com','$2b$12$ijUYcIJbgMvBYcegY62xn.uAmEkm0DMxXZi3LmFJema7xNQ9RCO1m','孙丽','13800000008','财务主管','finance',4,1,0,0,0,NULL,'2026-10-27 01:56:05',NULL),
+(15,'admin','admin@example.com','$2b$12$C2Zg74Gs9SB5EMo9GvY07OOFJ1rrjpasvFP/ocHCpcFJQlop/V3mK','系统管理员','13800000000','系统管理员','admin',3,1,0,1,0,NULL,'2026-11-03 23:28:28',NULL);
 
 -- ------------------------------------------------------------
 -- 审批规则（7 条金额类 + 5 条检查类：四类提交检查 + 凭证强度提醒）

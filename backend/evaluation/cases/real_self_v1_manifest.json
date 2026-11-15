@@ -1,0 +1,141 @@
+{
+  "version": "real_self_v1",
+  "n": 10,
+  "created_at": "2026-11-15",
+  "source": "本人真实消费凭证（D:\\expense_real_self\\raw，仓库外，不入 git）",
+  "date_policy": "保留原始日期（2026-10-04 至 2026-11-15 的近期消费），未做偏移",
+  "desensitization": [
+    "姓名替换为“员工A/个人”（凭证文本中的姓名不写入案例）",
+    "手机号、身份证号、微信号、银行卡号不写入案例",
+    "发票号码只保留后 4 位（本文件不存全号）",
+    "图片/PDF 元数据在后续生成脱敏图时统一清除"
+  ],
+  "label_policy": {
+    "title_policy": "simulated_company",
+    "detail": "源票据购买方为个人；本集假设已重开为“示例科技有限公司”抬头，因此不测抬头不符（抬头不符由合成集覆盖），风险标签反映金额/日期/凭证强度",
+    "invoice_cases": "6 张发票按公司抬头处理：金额均在限额内 → low/fast_track",
+    "voucher_cases": "4 条无发票（支付凭证/截图）→ mid/manual_review（凭证不足，需人工核实）",
+    "labeler": "项目负责人（单标注，待复核）",
+    "status": "frozen"
+  },
+  "counts": {
+    "risk": {
+      "mid": 4,
+      "low": 6
+    },
+    "decision": {
+      "manual_review": 4,
+      "fast_track": 6
+    }
+  },
+  "files": [
+    {
+      "case_id": "R001",
+      "file": "AI办公工具额度.pdf",
+      "kind": "wechat_voucher",
+      "buyer_type": "n/a",
+      "bytes": 622587,
+      "sha256": "f4767bbc2c20e104bcca6345873a3aaec5fd55075b7d6537af391289c53d8dc9"
+    },
+    {
+      "case_id": "R002",
+      "file": "停车费.pdf",
+      "kind": "wechat_voucher",
+      "buyer_type": "n/a",
+      "bytes": 621796,
+      "sha256": "5412c91a6a3a7b5ca8d4ef781bf447a0de0457765585bb4cddddfa1b7ed577c5"
+    },
+    {
+      "case_id": "R003",
+      "file": "办公室办公器材.pdf",
+      "kind": "e_invoice",
+      "buyer_type": "individual",
+      "bytes": 100580,
+      "sha256": "89a011272bb07ff530343d3e8335288169857334f5109d5c8c3dcbecf773aec2"
+    },
+    {
+      "case_id": "R004",
+      "file": "办公室打印.pdf",
+      "kind": "wechat_voucher",
+      "buyer_type": "n/a",
+      "bytes": 621752,
+      "sha256": "a739127208196152d728eabcfe390ed8f6c63c1c20074dacd3b63b52518a8f3d"
+    },
+    {
+      "case_id": "R005",
+      "file": "员工餐_麦当劳.pdf",
+      "kind": "e_invoice",
+      "buyer_type": "individual",
+      "bytes": 96738,
+      "sha256": "5750f005d440f9d6b4ef4bd03c68f76a75f0da08ef9d635c6a8e5e8a0bd48794"
+    },
+    {
+      "case_id": "R006",
+      "file": "员工餐_麦当劳2.pdf",
+      "kind": "e_invoice",
+      "buyer_type": "individual",
+      "bytes": 97757,
+      "sha256": "4f5d97f1cb859facda6c2bbbe4945c6ec6a47af915f034466be0443997213848"
+    },
+    {
+      "case_id": "R007",
+      "file": "滴滴电子发票A.pdf",
+      "kind": "e_invoice",
+      "buyer_type": "individual",
+      "bytes": 76926,
+      "sha256": "ffe8ec473fafd47165493fe3c832786e834d355e2e659ccaacaf73c2cd97b7ce"
+    },
+    {
+      "case_id": "R008",
+      "file": "滴滴电子发票B.pdf",
+      "kind": "e_invoice",
+      "buyer_type": "individual",
+      "bytes": 78185,
+      "sha256": "edfec1cb5c8425e1a4fa835dfd9b4c5295ada6b075796b875e8e545f9a4987cf"
+    },
+    {
+      "case_id": "R009",
+      "file": "高铁票电子发票.pdf",
+      "kind": "e_invoice",
+      "buyer_type": "individual",
+      "bytes": 34704,
+      "sha256": "f63c2f4b890cda7579dc6a453d1b8335cbd053d546dc094b58ebe6d4e44652ce"
+    },
+    {
+      "case_id": "R010",
+      "file": "员工餐_支付截图形式.jpg",
+      "kind": "payment_screenshot",
+      "buyer_type": "n/a",
+      "bytes": 136572,
+      "sha256": "0a1635df116a5528885558d5e03d52ecd0dc97a7ada6584dc773cd7af89f56c7"
+    }
+  ],
+  "limitations": [
+    "n=10，只能做冒烟，不能做分布结论，置信区间很宽",
+    "源票据全部为个人抬头；本集按“模拟公司抬头”口径处理，不能用于测抬头不符",
+    "6 条 low + 4 条 mid，无 high；高危路径仍由合成集覆盖",
+    "仅结构化字段，未跑系统 OCR/document_agent；影像层准确率另测",
+    "事由为构造（测试数据），非公司真实报销；单标注、未做双标"
+  ],
+  "company_identity": {
+    "name": "示例科技有限公司",
+    "tax_id": "91440101MA5TEST001",
+    "source": "app/config.py COMPANY_IDENTITIES[0]"
+  },
+  "status": "frozen",
+  "frozen_at": "2026-11-15",
+  "frozen_by": "项目负责人",
+  "ocr_pilot": {
+    "n": 10,
+    "report": "reports/real_self_v1_ocr.json",
+    "fields_correct": 40,
+    "fields_total": 40,
+    "type_correct": 10,
+    "amount_correct": 10,
+    "party_correct": 10,
+    "date_correct": 10,
+    "model": "deepseek-flash",
+    "prompt_version": "document_extract_v2",
+    "note": "交通票日期口径已修复：优先出行日期，多段行程取最早一段"
+  }
+}

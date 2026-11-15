@@ -33,8 +33,8 @@
 - `reports/v3_vs_v4_100_final.*`：v3 与 v4 全量最终对比；
 - `reports/mock_vs_real.*`：mock 与真实结果对比；
 - `reports/golden_review.xlsx`：复核工作簿（5 条真实对照 + 100 条双人复核 + 100 条真实结果 + v4对比）；
-- `reports/high_risk_review_finance.xlsx`：高危 24 条盲表（复核人 A：王晓丽，财务）；
-- `reports/high_risk_review_boss.xlsx`：高危 24 条盲表（复核人 B：刘振华，老板）；
+- `reports/high_risk_review_finance.xlsx`：高危 24 条盲表（复核人 A（财务））；
+- `reports/high_risk_review_boss.xlsx`：高危 24 条盲表（复核人 B（老板））；
 - `cases/high_risk_final_v1.json` / `reports/high_risk_ab_compare.md`：高危 24 条最终标签与 A/B 对比（AI 预填 + 人工确认口径）；
 - `finalize_high_risk_review.py`：复核表收口脚本（更新备注、对比 A/B、写最终标签与报告）；
 - `build_review_workbook.py`、`update_review_workbook.py`、`add_real_results_sheet.py`、`add_v4_sheet.py`、`build_high_risk_blind.py`：生成/更新复核文件；
@@ -174,6 +174,26 @@ python scripts/evaluate_rag.py --backend chroma \
 
 - 报告：`reports/rag_latest.*`（BM25 结构化）、`reports/rag_colloquial.*`（BM25 口语化）、`reports/rag_chroma_base.*`、`reports/rag_colloquial_chroma.*`、`reports/rag_hybrid_*.*`。
 
+## 独立双标 blind_v2（2026-11-14）
+
+背景：v1 的高危 24 条是「AI 预填 + 人工确认」，同源，κ 不可计算。blind_v2 改为两人互不可见、不看 AI 的独立标注：
+
+- **样本**：24 高危全取 + low 18 + mid 18 = 60 条，冻结在 `cases/blind_v2.json`（预登记种子、来源 SHA-256、指南版本）；分层过采样，κ 只代表两人一致性、不外推总体；
+- **盲包**：A（财务）/ B（老板）两份 xlsx，不含 AI 结论、规则命中、场景类别、原始编号，顺序各自独立打乱；发放哈希在 `cases/blind_v2_distribution.json`；标注指南 `docs/annotate_guide_v2.0.md`；
+- **结果**：58/60 一致，percent agreement **96.67%**，Cohen's κ=**0.9495**（bootstrap 95%CI **0.8705–1.0000**），线性/二次加权 κ 0.9611/0.9733，PABAK 0.95；2 条分歧（完全无凭证判 high 还是 mid）裁决为 **mid/manual_review**；
+- **终版**：`cases/high_risk_final_v2.json`（60 条，含 A/B 原标、`adjudicated` 标记与裁决说明）；旧 24 条保留为抽样框，不再作双标证据；
+- **口径差异**：终版与既有标签 13/60 条不一致——金额/发票号不符（系统 high、人工 mid）、订单号重复（系统 mid、人工 high）、注入文本（系统 low、人工 high）。原因是 `annotate_guide_v2.0` 与 `document_rules` 口径不一致；详见 `reports/blind_v2_final.md` 第 4 节；
+- **使用定位（2026-11-14 决定，方案 C）**：本批定位为**人工标准基准**，不直接作为系统评测金标准；改规则（A）或出 guide_v2.1 重标（B）属于下一轮独立决策，完成前不得用本批标签判模型“过严/过松”；
+- **复现**：`build_blind_v2.py --verify` → `build_blind_v2_packets.py --verify` → `analyze_blind_v2.py` → `finalize_blind_v2.py`。
+
+## 真实自采集 real_self_v1（已冻结，2026-11-15）
+
+- 来源：本人 10 份真实消费凭证（6 张电子发票、3 张微信支付凭证、1 张支付截图），原始件在仓库外 `D:\expense_real_self\raw`；
+- 口径：**真实票据 + 构造事由 + 模拟公司抬头**（示例科技有限公司），不测抬头不符；6 条 low（票证齐全、限额内）+ 4 条 mid（无发票/弱凭证），无 high；
+- 文件：`cases/real_self_v1.json`、`cases/real_self_v1_manifest.json`（哈希/口径/限制）、`reports/real_self_v1_review.md`；已冻结并设只读，哈希在 `cases/real_self_v1.sha256`；
+- OCR 试点 10 条（`reports/real_self_v1_ocr.md`）：类型/金额/日期/商户 **40/40**（Prompt v2 修复了交通票日期口径），输入约 13.2k token；
+- 限制：n=10 只能冒烟、单标注未做 κ；个人抬头不能用于测抬头不符；OCR 仅 4 条、单次运行。
+
 ## 指标口径
 
 - 决策一致率：`decision` 与人工标签一致比例；
@@ -188,8 +208,9 @@ python scripts/evaluate_rag.py --backend chroma \
 ## 后续
 
 - `citation_labels_v1.json` 已覆盖 96 条并冻结；后续调整口径需记录 change_log 并升版本；
-- 高危 24 条已 A/B 收口（`high_risk_final_v1.json`、`high_risk_ab_compare.md`）：记录一致 24/24，与金标准 0 差异；但两份表同源（AI 预填 + 复核人确认），kappa 不可计算，**不能当作独立双标证据**；
-- 如需可审计的独立双标：由王晓丽、刘振华在互不可见条件下重新独立填写两份新表，再运行 `finalize_high_risk_review.py` 对比；
+- 独立双标 blind_v2 已完成（2026-11-14）：60 条、κ=0.9495（95%CI 0.8705–1.0000）、2 条分歧已裁决，见上文；
+- 旧 24 条（v1）保留为抽样框，仍属 AI 预填 + 人工确认，**不能当作独立双标证据**；
+- blind_v2 与既有标签体系有 13/60 条口径差异；2026-11-14 已决定先定位为人工标准基准（方案 C），改规则或重标另立决策；
 - 增加置信区间与分类别指标；
 - 把 4 条 `ai_fallback` 改成“强制 LLM 失败”的专项降级测试；
 - 系统上线后补 20~30 条脱敏真实历史单据；

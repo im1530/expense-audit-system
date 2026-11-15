@@ -79,7 +79,76 @@ python scripts/check_policy_backend.py     # 期望 backend=ChromaPolicyRetrieve
 | `DOCUMENT_RAW_RESPONSE_ENABLED` | `False` | 同上 |
 | `ATTACHMENT_ENCRYPTION_KEY` | Fernet 密钥 | 启用附件落盘加密 |
 
+### 数据库账号与密钥（最小权限）
+
+应用**不要用 root 连库**。生产建议拆成两个账号：
+
+| 账号 | 权限 | 用途 |
+|---|---|---|
+| `expense_app` | `expense_audit.*` 的 `SELECT/INSERT/UPDATE/DELETE` | 后端运行时读写业务数据 |
+| 运维账号（root 或有 DDL 的账号） | `expense_audit.*` 的 `ALTER/CREATE/INDEX/DROP` | 只用于执行 `schema.sql`、`scripts/migrate.py upgrade` |
+
+```sql
+-- 建应用账号（密码用随机串，不要写进仓库；命令历史里也不要留明文）
+CREATE USER 'expense_app'@'localhost' IDENTIFIED BY '<随机密码>';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `expense_audit`.* TO 'expense_app'@'localhost';
+-- 测试库需要 ALL：tests/__init__.py 会 DROP/CREATE expense_audit_test 并回放 schema.sql
+GRANT ALL PRIVILEGES ON `expense_audit_test`.* TO 'expense_app'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+两条密钥的运维红线：
+
+- **`SECRET_KEY` 轮换 = 所有令牌立即失效**：已登录用户会被踢回登录页（附件签名链接也一起失效），换之前先通知；建议在停机窗口做。
+- **`ATTACHMENT_ENCRYPTION_KEY` 一旦启用不可直接更换**：库里/磁盘上是旧密钥密文，直接换会导致历史附件全部不可读。
+  更换流程 = 用旧密钥解密全部附件 → 用新密钥重新加密 → 才能替换配置；密钥本身要进密码库或离线备份，**丢失等于附件永久不可读**。
+- 配置了 `APP_ENV=production` 后启动会做**密钥自检**（`SECRET_KEY` 长度 ≥ 32、加密密钥为合法 Fernet 密钥），
+  任一不满足进程直接起不来（见 `app/config.py` 的 `_validate_production_secrets`），不再允许"带空密钥上线"。
+
 ## 3. Nginx 配置
+
+### 3.1 内网部署（没有公网域名，自签 HTTPS）
+
+公司内网使用、不打算买域名/做备案时，用自签证书即可，**不需要 OpenSSL**：
+
+```powershell
+# 在仓库根目录执行；把 --dns / --ip 换成"同事实际访问用的名字和地址"
+.\.venv\Scripts\python.exe deploy\gen_selfsigned_cert.py `
+  --dns localhost --dns expense.corp.local --ip 192.168.1.20 `
+  --out-dir D:\Nginx\cert --years 3
+```
+
+产出 `cert.pem` / `key.pem`，Nginx 这样引用：
+
+```nginx
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name expense.corp.local 192.168.1.20;
+    ssl_certificate     D:/Nginx/cert/cert.pem;
+    ssl_certificate_key D:/Nginx/cert/key.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    # 其余 location 与 deploy/nginx/expense-audit.conf 相同
+}
+```
+
+三个**必须同时做**的配套动作，少一个就会出问题：
+
+1. **客户端安装根证书**（每台要访问的电脑执行一次，管理员 PowerShell）：
+   `Import-Certificate -FilePath 'D:\Nginx\cert\cert.pem' -CertStoreLocation Cert:\LocalMachine\Root`
+   否则浏览器会报"证书不受信任"，点"继续访问"只是绕过告警，不是解决。
+2. **证书 SAN 必须覆盖访问用的名字**：用 `http://192.168.1.20` 访问，证书里就要有 `192.168.1.20`；
+   用主机名访问就要有主机名。换机器/换 IP 后需要重新生成。
+3. **`ALLOWED_HOSTS` 必须包含同一个名字**，否则后端会返回 400 `Invalid host header`：
+   ```ini
+   ALLOWED_HOSTS=["localhost","127.0.0.1","expense.corp.local","192.168.1.20"]
+   ALLOWED_ORIGINS=["https://expense.corp.local","https://192.168.1.20"]
+   ```
+
+> 自签只解决"传输加密"，不解决"对方是谁"。所以根证书要由你们自己分发（最好走 IT 的域策略/终端管理），
+> 不要随代码仓库分发；`certs/`、`*.pem`、`*.key` 已在 `.gitignore` 中。
+
+### 3.2 公网部署（有正式域名与证书）
 
 复制 [`deploy/nginx/expense-audit.conf`](../deploy/nginx/expense-audit.conf)，改 4 处 TODO 后：
 
@@ -243,6 +312,10 @@ pwsh -File deploy\verify_deploy.ps1 -BaseUrl "https://expense.example.com"
 | 现象 | 原因 | 处理 |
 |---|---|---|
 | 所有请求 400 `Invalid host header` | Nginx `server_name` 与 `ALLOWED_HOSTS` 不一致 | 两边改成同一个域名 |
+| `nginx -s reload` 报 `OpenEvent("Global\ngx_reload_xxx") failed (5: Access is denied)` | nginx 由 SYSTEM 身份启动，它创建的 Global 事件 ACL 不允许交互式管理员打开 | 改为"重启 nginx"：`taskkill /F /T /PID <master>` 后重新 `Start-Process nginx.exe`；或给重载单独建一个 SYSTEM 计划任务并用 `schtasks /run` 触发（每次仍需管理员） |
+| 改了 nginx 配置却"部分生效"，`-s reload` 也不报错 | Windows `SO_REUSEADDR` 允许残留的旧 worker 与新实例同时绑 80，请求被旧进程接走 | `Get-Process nginx` 看是否有启动时间很早的进程 → `taskkill /F /T /PID <pid>` 清掉孤儿进程 |
+| 浏览器提示"证书不受信任" | 自签证书未装入客户端受信任根 | 每台访问端执行 `Import-Certificate -FilePath cert.pem -CertStoreLocation Cert:\LocalMachine\Root`（当前用户可先装 `CurrentUser\Root` 验证） |
+| 证书装上后仍报"名称不匹配" | 证书 SAN 里没有客户端实际输入的名字/IP | 用 `deploy/gen_selfsigned_cert.py` 按实际访问名重新生成并重启 nginx |
 | 限流全部按 `127.0.0.1` 计数 | Nginx 没透传 `X-Forwarded-For` | 按样例加上三个 `X-Forwarded-*` 头 |
 | 上传 413 | `client_max_body_size` 小于文件大小 | 调大（样例给 12m） |
 | 刷新 `/expenses/1` 404 | 缺 SPA 回退 | `try_files $uri $uri/ /index.html;` |

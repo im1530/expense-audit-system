@@ -1,0 +1,176 @@
+{
+  "version": "blind_v2",
+  "generated_at": "2026-11-14T10:40:13+08:00",
+  "inputs": {
+    "A": {
+      "file": "backend\\evaluation\\reports\\blind_v2_returned_A.xlsx",
+      "sha256": "648eed54df53d9640c842ca6d2408a78e5a2bc9dae7d898973161231b7975b1c"
+    },
+    "B": {
+      "file": "backend\\evaluation\\reports\\blind_v2_returned_B.xlsx",
+      "sha256": "cb26dd5ff1bb0737aa3fc0b982edd0ef69a5ae018bd342ac8a2807b382b558d4"
+    },
+    "sample": {
+      "file": "cases/blind_v2.json",
+      "sha256": "0d38edd2881c1c72af590e449b91c59d24dee112b7523f95e1ee368da2a9cec5"
+    }
+  },
+  "integrity": {
+    "rows": 60,
+    "fact_issues": 0,
+    "value_issues": 0,
+    "value_issue_details": []
+  },
+  "risk": {
+    "dimension": "risk_level",
+    "n": 60,
+    "agree": 58,
+    "po": 0.966667,
+    "po_ci95": [
+      0.88636,
+      0.990811
+    ],
+    "kappa": 0.949537,
+    "kappa_ci95": [
+      0.870466,
+      1.0
+    ],
+    "kappa_boot_mean": 0.948069,
+    "weighted_linear": 0.961064,
+    "weighted_quadratic": 0.973274,
+    "pabak": 0.95,
+    "confusion": [
+      [
+        16,
+        0,
+        0
+      ],
+      [
+        0,
+        21,
+        0
+      ],
+      [
+        0,
+        2,
+        21
+      ]
+    ],
+    "marginal_a": {
+      "low": 16,
+      "mid": 21,
+      "high": 23
+    },
+    "marginal_b": {
+      "low": 16,
+      "mid": 23,
+      "high": 21
+    }
+  },
+  "decision": {
+    "dimension": "decision",
+    "n": 60,
+    "agree": 58,
+    "po": 0.966667,
+    "po_ci95": [
+      0.88636,
+      0.990811
+    ],
+    "kappa": 0.949537,
+    "kappa_ci95": [
+      0.870466,
+      1.0
+    ],
+    "kappa_boot_mean": 0.948069,
+    "weighted_linear": 0.961064,
+    "weighted_quadratic": 0.973274,
+    "pabak": 0.95,
+    "confusion": [
+      [
+        16,
+        0,
+        0
+      ],
+      [
+        0,
+        21,
+        0
+      ],
+      [
+        0,
+        2,
+        21
+      ]
+    ],
+    "marginal_a": {
+      "fast_track": 16,
+      "manual_review": 21,
+      "suggest_reject": 23
+    },
+    "marginal_b": {
+      "fast_track": 16,
+      "manual_review": 23,
+      "suggest_reject": 21
+    }
+  },
+  "both_agree": 58,
+  "disagreements": [
+    {
+      "blind_id": "B002",
+      "title": "无发票、无发票号、无无票说明",
+      "category": "其他",
+      "amount": "680.00",
+      "date": "2026-11-06",
+      "invoice": "无",
+      "a": {
+        "risk": "high",
+        "decision": "suggest_reject",
+        "citation": "2.1,2.2,2.3,2.4,2.5",
+        "reason": "未上传发票或有效凭证、未填写发票号且未填写无票说明"
+      },
+      "b": {
+        "risk": "mid",
+        "decision": "manual_review",
+        "citation": null,
+        "reason": "没有发票,属于缺票,要进行人工复核"
+      },
+      "pattern": "风险与决策均不一致（同向）"
+    },
+    {
+      "blind_id": "B037",
+      "title": "酒店只有支付截图",
+      "category": "住宿",
+      "amount": "1200.00",
+      "date": "2026-11-06",
+      "invoice": "无",
+      "a": {
+        "risk": "high",
+        "decision": "suggest_reject",
+        "citation": 3.4,
+        "reason": "快捷酒店单次限额 1000 元,超限额,且无发票"
+      },
+      "b": {
+        "risk": "mid",
+        "decision": "manual_review",
+        "citation": null,
+        "reason": "只有截图,没有发票,属于缺票/弱凭证,要进行人工核实"
+      },
+      "pattern": "风险与决策均不一致（同向）"
+    }
+  ],
+  "quality": {
+    "identical_reason_ids": [
+      "B001",
+      "B014",
+      "B029",
+      "B039",
+      "B057",
+      "B060"
+    ]
+  },
+  "notes": [
+    "分层过采样，κ 不外推到总体高危比例。",
+    "κ 使用裁决前标注；裁决后不重算。",
+    "决策与风险被硬边界绑定，两个 κ 不是独立证据。"
+  ]
+}

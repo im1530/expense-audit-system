@@ -1,0 +1,20 @@
+{
+  "version": "blind_v2",
+  "adjudicated_by": "项目负责人",
+  "adjudicated_at": "2026-11-14T10:50:41+08:00",
+  "basis": "按制度 2.5（凭证缺失应提示补正）与 3.7（超限属风险提示），完全无凭证属于需人工核实的疑点，判 mid/manual_review；high 保留给虚报、重复、个人消费等明确违规。",
+  "decisions": [
+    {
+      "blind_id": "B002",
+      "risk": "mid",
+      "decision": "manual_review",
+      "note": "无发票、无发票号、无无票说明，属凭证缺失（2.5），需补正，不构成明确违规"
+    },
+    {
+      "blind_id": "B037",
+      "risk": "mid",
+      "decision": "manual_review",
+      "note": "只有支付截图且超快捷酒店限额，缺票+超限均为提示项（2.5/3.7），需人工核实"
+    }
+  ]
+}

@@ -1,0 +1,309 @@
+{
+  "meta": {
+    "version": "blind_v2",
+    "n": 60,
+    "note": "盲编号↔案例编号↔分层，仅用于统计与裁决，不得进入盲包。"
+  },
+  "mapping": [
+    {
+      "blind_id": "B001",
+      "case_id": "G013",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B002",
+      "case_id": "G065",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B003",
+      "case_id": "G087",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B004",
+      "case_id": "G089",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B005",
+      "case_id": "G090",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B006",
+      "case_id": "G003",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B007",
+      "case_id": "G093",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B008",
+      "case_id": "G033",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B009",
+      "case_id": "G049",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B010",
+      "case_id": "G043",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B011",
+      "case_id": "G045",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B012",
+      "case_id": "G019",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B013",
+      "case_id": "G072",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B014",
+      "case_id": "G079",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B015",
+      "case_id": "G086",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B016",
+      "case_id": "G094",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B017",
+      "case_id": "G036",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B018",
+      "case_id": "G070",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B019",
+      "case_id": "G091",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B020",
+      "case_id": "G041",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B021",
+      "case_id": "G002",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B022",
+      "case_id": "G048",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B023",
+      "case_id": "G012",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B024",
+      "case_id": "G028",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B025",
+      "case_id": "G037",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B026",
+      "case_id": "G050",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B027",
+      "case_id": "G035",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B028",
+      "case_id": "G046",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B029",
+      "case_id": "G057",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B030",
+      "case_id": "G008",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B031",
+      "case_id": "G022",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B032",
+      "case_id": "G052",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B033",
+      "case_id": "G088",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B034",
+      "case_id": "G047",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B035",
+      "case_id": "G063",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B036",
+      "case_id": "G001",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B037",
+      "case_id": "G021",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B038",
+      "case_id": "G026",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B039",
+      "case_id": "G015",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B040",
+      "case_id": "G014",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B041",
+      "case_id": "G062",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B042",
+      "case_id": "G023",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B043",
+      "case_id": "G034",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B044",
+      "case_id": "G025",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B045",
+      "case_id": "G044",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B046",
+      "case_id": "G020",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B047",
+      "case_id": "G010",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B048",
+      "case_id": "G027",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B049",
+      "case_id": "G006",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B050",
+      "case_id": "G064",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B051",
+      "case_id": "G042",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B052",
+      "case_id": "G092",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B053",
+      "case_id": "G056",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B054",
+      "case_id": "G016",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B055",
+      "case_id": "G017",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B056",
+      "case_id": "G009",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B057",
+      "case_id": "G059",
+      "stratum": "mid"
+    },
+    {
+      "blind_id": "B058",
+      "case_id": "G004",
+      "stratum": "low"
+    },
+    {
+      "blind_id": "B059",
+      "case_id": "G085",
+      "stratum": "high"
+    },
+    {
+      "blind_id": "B060",
+      "case_id": "G080",
+      "stratum": "low"
+    }
+  ]
+}

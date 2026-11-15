@@ -157,7 +157,11 @@ payment_screenshot（微信/支付宝等支付截图）、receipt（收据/小�
 
 【提取字段】
 - amount：价税合计/实付金额，只填数字；
-- document_date：开票日期/交易日期/乘车日期，格式 YYYY-MM-DD；
+- document_date：格式 YYYY-MM-DD，按凭证类型取值：
+  · 交通/差旅类（train_ticket、taxi_receipt、travel_itinerary、transit_record）：优先取「出行日期/乘车日期/发车日期」，
+    没有出行日期时才用开票日期；一张凭证含多段行程时，取最早一段的出行日期，不要退回开票日期；
+  · 支付凭证/截图（payment_screenshot、receipt）：取「交易时间/支付时间」；
+  · 发票/酒店水单（vat_invoice、hotel_folio）：取开票日期；水单有入住/离店日期时优先取消费发生日期；
 - counterparty：商户、平台或收款方；
 - identifier：发票号/订单号/流水号/车票号，按票面原样填写；
 - confidence：0~1 的识别置信度；

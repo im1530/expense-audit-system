@@ -67,6 +67,10 @@ python -m unittest tests.test_expense_state_machine.ExpenseStateMachineTest.test
 | `test_citation_metrics.py` | 引用标注结构、条款编号合法性、命中/漏引/越界/检索缺口、引用准确率与召回率、Markdown 引用章节 |
 | `test_evaluation_runner.py` | 100 条金标准结构、96 条真实集、mock 指标、关键词 finding 匹配、录制/回放、版本对比 |
 | `test_prompt_v4.py` | v4 校准段、默认版本、自定义 System Prompt 注入与结果版本号 |
+| `test_blind_v2_freeze.py` | blind_v2 冻结样本：哈希、60 条/24-18-18、高危集合、无泄题字段、重跑抽样一致 |
+| `test_blind_v2_packets.py` | 盲包：三页结构、A/B 顺序不同、待填列空白、包内无 G 编号、条款 33 条、下拉 |
+| `test_blind_v2_agreement.py` | 一致性报告：58/60、κ 与 CI 可复现、分歧 B002/B037、裁决清单空白 |
+| `test_blind_v2_final.py` | 终版标签：分布 16/23/21、仅 2 条裁决、A/B 原标保留、与 v1 差异计数、哈希 |
 
 ## 约定
 

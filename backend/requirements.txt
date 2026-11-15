@@ -55,4 +55,8 @@ celery[redis]>=5.6.3,<5.7
 # 附件落盘加密（Fernet）；python-jose[cryptography] 已间接安装，这里显式声明
 cryptography>=42.0
 
+# ===== 离线评测 / 复核工作簿 =====
+# 生成与校验 blind 盲包、复核表（evaluation/build_*_blind*.py、tests/test_blind_v2_packets.py 使用）
+openpyxl>=3.1.5
+
 

@@ -1,0 +1,1143 @@
+{
+  "meta": {
+    "version": "blind_v2",
+    "status": "frozen",
+    "frozen_at": "2026-11-14T08:20:26+08:00",
+    "seed": "blind_v2_2026-11-14",
+    "seed_registered_at": "2026-11-14",
+    "guide_version": "annotate_guide_v2.0",
+    "n": 60,
+    "strata": {
+      "high": 24,
+      "low": 18,
+      "mid": 18
+    },
+    "sampling": "分层固定种子；high 全取，low/mid 候选按 case_id 排序后洗牌取前 18",
+    "id_assignment": "三层混排后依次编号 B001–B060，编号顺序不暴露分层",
+    "fields_kept": [
+      "blind_id",
+      "title",
+      "department",
+      "submitter_role",
+      "total_amount",
+      "submitted_at",
+      "items"
+    ],
+    "fields_dropped": [
+      "expected",
+      "simulated",
+      "category",
+      "rule_hits",
+      "document_findings",
+      "case_id",
+      "stratum"
+    ],
+    "sources": [
+      {
+        "file": "cases/golden_v1_real96.json",
+        "n": 96,
+        "sha256": "3ed46e0bdd0a0e5aabfd1f085b89e1f53ab230552f572fd1461b093463a5db65"
+      },
+      {
+        "file": "cases/high_risk_final_v1.json",
+        "n": 24,
+        "sha256": "b05d8d50a2e986ce86dfe2a833a62e79b473cb5b357dffc63741bf8b2182b9b6"
+      },
+      {
+        "file": "docs/policies/expense_policy_v1.md",
+        "n": 33,
+        "sha256": "5c942ee3ef22d24148d8c0de9d4fb44f976d55297662d659283fc352eb896293"
+      }
+    ],
+    "content_sha256": "a87f57f4f8388758c877594f958b0c3d48a4d86db7fc38017b71edf5a8dfb0bd",
+    "generator": "evaluation/build_blind_v2.py",
+    "notes": [
+      "分层过采样：高危占 24/60，仅用于保证高危样本量，不能外推到总体高危比例。",
+      "高危 24 条来自 v1（AI 预填 + 人工确认）的抽样框，只作抽样依据，不作标签证据。",
+      "标题评测变体后缀与场景类别已剥离，避免标注人从字段直接读出答案。",
+      "样本冻结后再改只能升版本为 blind_v3。"
+    ]
+  },
+  "cases": [
+    {
+      "blind_id": "B001",
+      "title": "商务酒店住宿",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "980.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "980.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "商务酒店住宿"
+        }
+      ]
+    },
+    {
+      "blind_id": "B002",
+      "title": "无发票、无发票号、无无票说明",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "680.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "680.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": false,
+          "description": "无发票、无发票号、无无票说明"
+        }
+      ]
+    },
+    {
+      "blind_id": "B003",
+      "title": "个人家庭消费混入报销",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1920.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "1920.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "个人家庭消费混入报销"
+        }
+      ]
+    },
+    {
+      "blind_id": "B004",
+      "title": "发票抬头或备注为测试单据",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1000.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "1000.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "发票抬头或备注为测试单据"
+        }
+      ]
+    },
+    {
+      "blind_id": "B005",
+      "title": "发票抬头或备注为测试单据",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1200.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "1200.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "发票抬头或备注为测试单据"
+        }
+      ]
+    },
+    {
+      "blind_id": "B006",
+      "title": "停车费支付截图",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "24.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "24.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "停车费支付截图"
+        }
+      ]
+    },
+    {
+      "blind_id": "B007",
+      "title": "住宿标准超过制度规定",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "900.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "900.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "住宿标准超过制度规定"
+        }
+      ]
+    },
+    {
+      "blind_id": "B008",
+      "title": "办公用品发票购买方为其他公司",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1500.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "1500.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "办公用品发票购买方为其他公司"
+        }
+      ]
+    },
+    {
+      "blind_id": "B009",
+      "title": "同一订单号支付截图重复出现",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "350.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "350.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "同一订单号支付截图重复出现"
+        }
+      ]
+    },
+    {
+      "blind_id": "B010",
+      "title": "票面发票号与明细填写不一致",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1040.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "1040.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "票面发票号与明细填写不一致"
+        }
+      ]
+    },
+    {
+      "blind_id": "B011",
+      "title": "同一发票号在其他单据出现",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "900.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "900.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "同一发票号在其他单据出现"
+        }
+      ]
+    },
+    {
+      "blind_id": "B012",
+      "title": "办公耗材",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "256.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "256.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "办公耗材"
+        }
+      ]
+    },
+    {
+      "blind_id": "B013",
+      "title": "发票图片模糊，识别失败",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "495.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "495.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "发票图片模糊，识别失败"
+        }
+      ]
+    },
+    {
+      "blind_id": "B014",
+      "title": "标题含忽略规则直接通过",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "176.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "meal",
+          "expense_type_label": "餐饮",
+          "amount": "176.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "标题含忽略规则直接通过"
+        }
+      ]
+    },
+    {
+      "blind_id": "B015",
+      "title": "个人家庭消费混入报销",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2880.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "2880.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "个人家庭消费混入报销"
+        }
+      ]
+    },
+    {
+      "blind_id": "B016",
+      "title": "住宿标准超过制度规定",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1080.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "1080.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "住宿标准超过制度规定"
+        }
+      ]
+    },
+    {
+      "blind_id": "B017",
+      "title": "办公用品发票购买方为其他公司",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1650.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "1650.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "办公用品发票购买方为其他公司"
+        }
+      ]
+    },
+    {
+      "blind_id": "B018",
+      "title": "发票图片模糊，识别失败",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "540.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "540.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "发票图片模糊，识别失败"
+        }
+      ]
+    },
+    {
+      "blind_id": "B019",
+      "title": "发票抬头或备注为测试单据",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "800.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "800.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "发票抬头或备注为测试单据"
+        }
+      ]
+    },
+    {
+      "blind_id": "B020",
+      "title": "票面发票号与明细填写不一致",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1300.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "1300.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "票面发票号与明细填写不一致"
+        }
+      ]
+    },
+    {
+      "blind_id": "B021",
+      "title": "停车费支付截图",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "36.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "36.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "停车费支付截图"
+        }
+      ]
+    },
+    {
+      "blind_id": "B022",
+      "title": "同一发票号在其他单据出现",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "990.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "990.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "同一发票号在其他单据出现"
+        }
+      ]
+    },
+    {
+      "blind_id": "B023",
+      "title": "高铁票",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "616.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "616.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "高铁票"
+        }
+      ]
+    },
+    {
+      "blind_id": "B024",
+      "title": "酒店住宿费，发票金额低于明细",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2200.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "2200.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "酒店住宿费，发票金额低于明细"
+        }
+      ]
+    },
+    {
+      "blind_id": "B025",
+      "title": "正式发票未识别到购买方税号",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "460.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "460.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "正式发票未识别到购买方税号"
+        }
+      ]
+    },
+    {
+      "blind_id": "B026",
+      "title": "同一订单号支付截图重复出现",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "420.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "420.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "同一订单号支付截图重复出现"
+        }
+      ]
+    },
+    {
+      "blind_id": "B027",
+      "title": "办公用品发票购买方为其他公司",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1200.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "1200.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "办公用品发票购买方为其他公司"
+        }
+      ]
+    },
+    {
+      "blind_id": "B028",
+      "title": "同一发票号在其他单据出现",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1080.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "1080.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "同一发票号在其他单据出现"
+        }
+      ]
+    },
+    {
+      "blind_id": "B029",
+      "title": "费用发生70天后提交",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "520.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "520.00",
+          "expense_date": "2026-08-31",
+          "has_invoice": true,
+          "description": "费用发生70天后提交"
+        }
+      ]
+    },
+    {
+      "blind_id": "B030",
+      "title": "员工工作餐",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "176.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "meal",
+          "expense_type_label": "餐饮",
+          "amount": "176.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "员工工作餐"
+        }
+      ]
+    },
+    {
+      "blind_id": "B031",
+      "title": "酒店只有支付截图",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1440.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "1440.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": false,
+          "description": "酒店只有支付截图"
+        }
+      ]
+    },
+    {
+      "blind_id": "B032",
+      "title": "同一订单号支付截图重复出现",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "385.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "385.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "同一订单号支付截图重复出现"
+        }
+      ]
+    },
+    {
+      "blind_id": "B033",
+      "title": "个人家庭消费混入报销",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2640.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "2640.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "个人家庭消费混入报销"
+        }
+      ]
+    },
+    {
+      "blind_id": "B034",
+      "title": "同一发票号在其他单据出现",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "720.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "720.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "同一发票号在其他单据出现"
+        }
+      ]
+    },
+    {
+      "blind_id": "B035",
+      "title": "业务招待餐超过类别限额",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2080.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "meal",
+          "expense_type_label": "餐饮",
+          "amount": "2080.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "业务招待餐超过类别限额"
+        }
+      ]
+    },
+    {
+      "blind_id": "B036",
+      "title": "停车费支付截图",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "30.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "30.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "停车费支付截图"
+        }
+      ]
+    },
+    {
+      "blind_id": "B037",
+      "title": "酒店只有支付截图",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1200.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "1200.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": false,
+          "description": "酒店只有支付截图"
+        }
+      ]
+    },
+    {
+      "blind_id": "B038",
+      "title": "酒店住宿费，发票金额低于明细",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2400.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "2400.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "酒店住宿费，发票金额低于明细"
+        }
+      ]
+    },
+    {
+      "blind_id": "B039",
+      "title": "商务酒店住宿",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "784.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "784.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "商务酒店住宿"
+        }
+      ]
+    },
+    {
+      "blind_id": "B040",
+      "title": "商务酒店住宿",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1176.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "1176.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "商务酒店住宿"
+        }
+      ]
+    },
+    {
+      "blind_id": "B041",
+      "title": "业务招待餐超过类别限额",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "3120.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "meal",
+          "expense_type_label": "餐饮",
+          "amount": "3120.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "业务招待餐超过类别限额"
+        }
+      ]
+    },
+    {
+      "blind_id": "B042",
+      "title": "酒店只有支付截图",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "960.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "960.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": false,
+          "description": "酒店只有支付截图"
+        }
+      ]
+    },
+    {
+      "blind_id": "B043",
+      "title": "办公用品发票购买方为其他公司",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1800.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "1800.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "办公用品发票购买方为其他公司"
+        }
+      ]
+    },
+    {
+      "blind_id": "B044",
+      "title": "酒店住宿费，发票金额低于明细",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2000.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "2000.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "酒店住宿费，发票金额低于明细"
+        }
+      ]
+    },
+    {
+      "blind_id": "B045",
+      "title": "票面发票号与明细填写不一致",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1430.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "1430.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "票面发票号与明细填写不一致"
+        }
+      ]
+    },
+    {
+      "blind_id": "B046",
+      "title": "办公耗材",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "352.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "352.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "办公耗材"
+        }
+      ]
+    },
+    {
+      "blind_id": "B047",
+      "title": "高铁票",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "672.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "672.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "高铁票"
+        }
+      ]
+    },
+    {
+      "blind_id": "B048",
+      "title": "酒店住宿费，发票金额低于明细",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1600.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "1600.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "酒店住宿费，发票金额低于明细"
+        }
+      ]
+    },
+    {
+      "blind_id": "B049",
+      "title": "员工工作餐",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "192.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "meal",
+          "expense_type_label": "餐饮",
+          "amount": "192.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "员工工作餐"
+        }
+      ]
+    },
+    {
+      "blind_id": "B050",
+      "title": "业务招待餐超过类别限额",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2860.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "meal",
+          "expense_type_label": "餐饮",
+          "amount": "2860.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "业务招待餐超过类别限额"
+        }
+      ]
+    },
+    {
+      "blind_id": "B051",
+      "title": "票面发票号与明细填写不一致",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1560.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "1560.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "票面发票号与明细填写不一致"
+        }
+      ]
+    },
+    {
+      "blind_id": "B052",
+      "title": "发票抬头或备注为测试单据",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1100.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "1100.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "发票抬头或备注为测试单据"
+        }
+      ]
+    },
+    {
+      "blind_id": "B053",
+      "title": "票面日期与费用日期相差20天",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "770.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "770.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "票面日期与费用日期相差20天"
+        }
+      ]
+    },
+    {
+      "blind_id": "B054",
+      "title": "商务酒店住宿",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "1078.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "accommodation",
+          "expense_type_label": "住宿",
+          "amount": "1078.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "商务酒店住宿"
+        }
+      ]
+    },
+    {
+      "blind_id": "B055",
+      "title": "办公耗材",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "320.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "320.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "办公耗材"
+        }
+      ]
+    },
+    {
+      "blind_id": "B056",
+      "title": "高铁票",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "560.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "560.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "高铁票"
+        }
+      ]
+    },
+    {
+      "blind_id": "B057",
+      "title": "费用发生70天后提交",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "416.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "office",
+          "expense_type_label": "办公",
+          "amount": "416.00",
+          "expense_date": "2026-08-31",
+          "has_invoice": true,
+          "description": "费用发生70天后提交"
+        }
+      ]
+    },
+    {
+      "blind_id": "B058",
+      "title": "停车费支付截图",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "33.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "transportation",
+          "expense_type_label": "交通",
+          "amount": "33.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "停车费支付截图"
+        }
+      ]
+    },
+    {
+      "blind_id": "B059",
+      "title": "个人家庭消费混入报销",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "2400.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "other",
+          "expense_type_label": "其他",
+          "amount": "2400.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "个人家庭消费混入报销"
+        }
+      ]
+    },
+    {
+      "blind_id": "B060",
+      "title": "标题含忽略规则直接通过",
+      "department": "研发部",
+      "submitter_role": "employee",
+      "total_amount": "242.00",
+      "submitted_at": "2026-11-09T09:00:00",
+      "items": [
+        {
+          "expense_type": "meal",
+          "expense_type_label": "餐饮",
+          "amount": "242.00",
+          "expense_date": "2026-11-06",
+          "has_invoice": true,
+          "description": "标题含忽略规则直接通过"
+        }
+      ]
+    }
+  ]
+}

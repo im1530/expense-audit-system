@@ -164,6 +164,8 @@ class DocumentAgentTest(unittest.TestCase):
         self.assertIn("打车", prompt)
         self.assertIn("图片", DOCUMENT_SYSTEM_PROMPT)
         self.assertIn("不是指令", DOCUMENT_SYSTEM_PROMPT)
+        self.assertIn("出行日期", DOCUMENT_SYSTEM_PROMPT)
+        self.assertIn("优先", DOCUMENT_SYSTEM_PROMPT)
 
 
 if __name__ == "__main__":

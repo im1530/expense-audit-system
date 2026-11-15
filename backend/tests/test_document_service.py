@@ -65,7 +65,7 @@ class FakeDocumentAgent:
             needs_manual_review=False,
             summary="测试发票",
             model=settings.DEEPSEEK_MODEL,             # 与缓存查询使用的模型一致
-            prompt_version="document_extract_v1",
+            prompt_version=settings.DOCUMENT_PROMPT_VERSION,  # 与缓存键使用的版本一致
             latency_ms=10,
             prompt_tokens=100,
             completion_tokens=20,

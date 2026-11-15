@@ -9,7 +9,10 @@
         - 字段名大小写敏感（case_sensitive=True），.env 里的键必须与字段名完全一致。
     当前分组：应用基础、可信主机、CORS 白名单、日志级别、数据库连接、JWT 令牌、附件、AI 预审、制度 RAG、凭证识别。
 """
-from pydantic import SecretStr
+import base64
+import binascii
+
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -142,7 +145,7 @@ class Settings(BaseSettings):
 
     # ===== Phase C：凭证/发票识别（document_agent）=====
     DOCUMENT_AI_ENABLED: bool = True                      # 总开关：关闭后不做凭证识别，也不产生凭证类风险
-    DOCUMENT_PROMPT_VERSION: str = "document_extract_v1" # 凭证识别 Prompt 版本（写入审计）
+    DOCUMENT_PROMPT_VERSION: str = "document_extract_v2" # 凭证识别 Prompt 版本（写入审计；v2 明确交通票优先出行日期）
     DOCUMENT_MAX_TOKENS: int = 800                        # 单次识别输出 token 上限
     DOCUMENT_TIMEOUT_SECONDS: float = 45.0                # 单次多模态调用超时（秒）
     DOCUMENT_MAX_RETRIES: int = 1                         # 失败重试次数（不含首次）
@@ -182,6 +185,49 @@ class Settings(BaseSettings):
     # ===== 隐私与留存（Phase F）=====
     DATA_RETENTION_DAYS: int = 90                        # 发票/凭证文件与检查点保留天数
     RAW_RESPONSE_RETENTION_DAYS: int = 30                # 历史 raw_response 最长保留天数（到期置空）
+
+
+    # ===== 安全护栏：生产环境密钥不合格时直接启动失败 =====
+    @model_validator(mode="after")
+    def _validate_production_secrets(self) -> "Settings":
+        """
+        生产环境安全配置校验（fail-fast，防止带空密钥上线）
+            触发条件：APP_ENV == "production"；开发/测试环境不做限制，避免本地跑不起来。
+            校验项：
+                1. SECRET_KEY 长度 >= 32：过短可被暴力枚举，泄露即可伪造任意用户令牌；
+                2. ATTACHMENT_ENCRYPTION_KEY 非空且是合法 Fernet 密钥（base64 解码后 32 字节）：
+                   为空等于附件明文落盘；格式错误会在首次上传时抛异常，不如启动时暴露。
+            为什么放在 Settings 里：配置在导入期实例化，校验失败会让进程起不来，
+            比"启动成功但线上明文存发票"更容易被发现。
+            :return: 校验通过的自身实例
+            :raises ValueError: 生产环境缺少或使用弱密钥（Pydantic 会包装成 ValidationError）
+        """
+        # 1.非生产环境：直接放行（本地/CI 允许短密钥）
+        if str(self.APP_ENV).strip().lower() != "production":
+            return self
+
+        problems: list[str] = []                                 # 校验失败项
+
+        # 2.主密钥长度：至少 32 字符
+        if len(self.SECRET_KEY or "") < 32:
+            problems.append("SECRET_KEY 长度不足 32（生产环境必须使用随机长串）")
+
+        # 3.附件加密密钥：必须配置且是合法 Fernet 密钥
+        encryption_key = self.ATTACHMENT_ENCRYPTION_KEY.get_secret_value()   # 加密密钥明文（仅内存）
+        if not encryption_key:
+            problems.append("ATTACHMENT_ENCRYPTION_KEY 为空（生产环境不允许附件明文落盘）")
+        else:
+            try:
+                # Fernet 密钥是 32 字节的 urlsafe base64 字符串
+                if len(base64.urlsafe_b64decode(encryption_key.encode("ascii"))) != 32:
+                    problems.append("ATTACHMENT_ENCRYPTION_KEY 长度不合法（应为 Fernet 密钥）")
+            except (binascii.Error, ValueError, UnicodeEncodeError):
+                problems.append("ATTACHMENT_ENCRYPTION_KEY 不是合法的 Fernet 密钥")
+
+        # 4.有任何问题：合并成一条错误抛出，一次性暴露全部缺口
+        if problems:
+            raise ValueError("生产环境安全配置不合法：" + "；".join(problems))
+        return self
 
 
 
