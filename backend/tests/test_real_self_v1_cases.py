@@ -75,7 +75,7 @@ class RealSelfV1CasesTest(unittest.TestCase):
     def test_no_pii(self):
         """不得出现姓名、手机号、身份证、长数字串"""
         text = json.dumps(self.cases, ensure_ascii=False)
-        self.assertNotIn("张三", text)
+        self.assertNotIn("\u53f6\u5f66\u5747", text)
         self.assertIsNone(re.search(r"1[3-9]\d{9}", text))
         self.assertIsNone(re.search(r"\d{17}[\dXx]", text))
         self.assertIsNone(re.search(r"\d{15,}", text))
@@ -111,7 +111,7 @@ class RealSelfV1CasesTest(unittest.TestCase):
             self.assertTrue(item["party_ok"], item["case_id"])
             self.assertGreaterEqual(item["confidence"], 0.8)
         text = json.dumps(data, ensure_ascii=False)
-        self.assertNotIn("张三", text)
+        self.assertNotIn("\u53f6\u5f66\u5747", text)
         self.assertIsNone(re.search(r"1[3-9]\d{9}", text))
 
 
