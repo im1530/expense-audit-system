@@ -60,6 +60,7 @@ mysql -uroot -p < app/sql/init_data.sql
 
 - 接口文档：`http://127.0.0.1:8000/api/docs`
 - 初始账号：`admin / Admin@123456`，**首次登录强制改密**
+- 本地演示账号：执行 `python scripts/seed_demo_passwords.py` 后，`testuser / manager1 / fin1 / manager2 / emp_p2 / fin2` 的密码统一为 `Demo@123456`（**仅本地演示，生产必须停用**）
 - 不填 Key 时：`AI 预审 = 规则兜底`（`is_fallback=true`），报表/审批/凭证上传全部照常
 
 > 部署（Nginx / systemd / 内网自签 HTTPS / 数据库最小权限）见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)。
@@ -89,6 +90,19 @@ cd ../frontend && npm test                                      # 30 个，jsdom
 - 后端测试**不联网、不调真实 LLM**：LLM 用假客户端/录制回放，Chroma 用假 embedding + 内存 client；
 - 使用独立测试库 `expense_audit_test`，用例前清表、灌最小种子数据，进程退出删除；
 - 真实模型评测：`scripts/evaluate.py --mode real`（会产生费用），指标口径与历史结论见 [`backend/evaluation/README.md`](backend/evaluation/README.md)。
+
+## 真实数据验证（自采集，2026-11-15）
+
+除合成集外，还用本人 10 笔真实消费凭证（脱敏）做了补充验证：
+
+- **票据真实、事由构造、模拟公司抬头**，不是公司真实报销；原始图片/PDF 不进仓库；
+- OCR 10 条：类型/金额/日期/商户 **40/40**；交通票日期口径问题已通过 Prompt v2 修复；
+- 风险链路：票面 34.50 vs 明细 1200 → `high / suggest_reject`，document → rule → risk → decision 联动正常；
+- 审批链路：测试库全链路 + 生产入口（443）两级审批/支付均通过；
+- 独立双标：60 条盲标 κ=0.9495（95%CI 0.8705–1.0000），2 条分歧已裁决；
+- 详见 `backend/evaluation/reports/`（`real_self_v1_*`、`blind_v2_*`、`e2e_smoke_20261115.md`）。
+
+> 这批“真实数据”只用于离线评测与冒烟，不参与线上预审，也不用于调 Prompt。
 
 ## 目录结构
 
@@ -129,7 +143,7 @@ expense-audit-system/
 ## 状态与边界
 
 - 这是个人项目，用于展示完整的工程实现；演示数据均为虚构（姓名/手机号已脱敏）。
-- 真实历史单据尚未导入，评测基于合成与标注数据——这是当前最大的局限，也写在 `GO_LIVE_CHECKLIST.md` 的「已知边界」里。
+- 没有企业真实报销数据；用本人 10 笔脱敏消费凭证做了补充验证（`real_self_v1`），但它属于个人自采集样本，不代表企业生产分布；
 - 60 条独立双标（blind_v2）已完成：风险等级 κ=0.9495（95%CI 0.8705–1.0000）、58/60 一致、2 条分歧已裁决；定位为**人工标准基准**（不直接作为系统评测金标准），旧高危 24 条仅作抽样框；
 
 ## License
