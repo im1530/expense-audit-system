@@ -54,7 +54,7 @@
       </template>
       <el-table :data="expense.items || []" border size="small">
         <el-table-column label="类别" width="150">
-          <template #default="{ row }">{{ row.category_name || row.category_id }}</template>
+          <template #default="{ row }">{{ categoryNames[row.category_id] || row.category_name || row.category_id }}</template>
         </el-table-column>
         <el-table-column prop="description" label="说明" min-width="180" />
         <el-table-column label="金额" width="120" align="right">
@@ -199,6 +199,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getApprovalHistory,
   getExpense,
+  listCategories,
   listInvoices as apiListInvoices,
   deleteInvoice,
   payExpense,
@@ -228,6 +229,7 @@ const expense = ref<any>({})
 const review = ref<any>(null)
 const history = ref<any[]>([])
 const reviewing = ref(false)
+const categoryNames = ref<Record<number, string>>({})
 
 // 上传弹窗
 const uploadVisible = ref(false)
@@ -264,6 +266,12 @@ async function load() {
   loading.value = true
   try {
     expense.value = await getExpense(expenseId)
+    try {
+      const categories = (await listCategories()) || []
+      categoryNames.value = Object.fromEntries(categories.map((item: any) => [item.id, item.name]))
+    } catch {
+      categoryNames.value = {} // 类别字典失败不影响详情主体
+    }
     history.value = (await getApprovalHistory(expenseId)) || []
     try {
       review.value = await getReview(expenseId)

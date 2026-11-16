@@ -65,6 +65,20 @@ mysql -uroot -p < app/sql/init_data.sql
 
 > 部署（Nginx / systemd / 内网自签 HTTPS / 数据库最小权限）见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)。
 
+## Docker 一键体验（推荐给第一次跑的人）
+
+不装 Python/MySQL/Redis，直接：
+
+```bash
+export DEEPSEEK_API_KEY=sk-xxxx     # 可选；不配则 AI 预审自动降级为规则
+docker compose up --build
+```
+
+- 打开 <http://localhost:8080>，`admin / Admin@123456`（首次登录强制改密）；
+- 演示账号（testuser/manager1/fin1，密码 `Demo@123456`）需先执行：
+  `docker compose exec backend python scripts/seed_demo_passwords.py`
+- 详细说明与和生产环境的差异见 [`docs/DOCKER.md`](docs/DOCKER.md)。
+
 ## 四个值得看的设计
 
 | 设计 | 做法 | 为什么 |
@@ -120,6 +134,7 @@ expense-audit-system/
 | 文档 | 内容 |
 |---|---|
 | [`backend/README.md`](backend/README.md) | 后端逐文件职责、分层约定、三条硬约束 |
+| [`docs/DOCKER.md`](docs/DOCKER.md) | Docker 一键体验、演示账号、与生产差异 |
 | [`frontend/README.md`](frontend/README.md) | 前端目录、与后端的约定（登录表单、金额字符串、角色菜单） |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | 部署步骤、内网自签 HTTPS、最小权限账号、常见坑 |
 | [`docs/GO_LIVE_CHECKLIST.md`](docs/GO_LIVE_CHECKLIST.md) | 上线前逐项检查（P0/P1）与已知边界 |
@@ -128,17 +143,14 @@ expense-audit-system/
 
 ## 界面截图
 
-| 页面 | 看点 | 文件 |
-|---|---|---|
-| 报销详情 | AI 结论、风险点、制度引用原文 | `docs/images/detail.png` |
-| 工作流轨迹 | 节点耗时/token、决策、引用、凭证结论 | `docs/images/trace.png` |
-| 统计报表 | 总览卡片 + 按月/部门/类别 | `docs/images/reports.png` |
+| 工作台 | 报销详情 |
+|---|---|
+| ![工作台](docs/images/dashboard.png) | ![报销详情](docs/images/detail.png) |
 
-> 把截图放到 `docs/images/` 后，取消下面三行的注释即可在内嵌显示。
->
-> <!-- ![报销详情](docs/images/detail.png) -->
-> <!-- ![工作流轨迹](docs/images/trace.png) -->
-> <!-- ![统计报表](docs/images/reports.png) -->
+| 工作流轨迹 | 统计报表 |
+|---|---|
+| ![工作流轨迹](docs/images/trace.png) | ![统计报表](docs/images/reports.png) |
+
 
 ## 状态与边界
 

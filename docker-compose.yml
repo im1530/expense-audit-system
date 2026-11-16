@@ -1,0 +1,94 @@
+name: expense-audit
+
+# 一键体验：MySQL 8 + Redis + FastAPI + Celery + Nginx(前端)
+# 说明：演示环境用 BM25 检索（不装 chromadb），生产仍建议 Chroma + 单 worker。
+
+x-backend-env: &backend-env
+  APP_ENV: development
+  DEBUG: "False"
+  DATABASE_URL: mysql+pymysql://expense_app:expense_app_pwd@mysql:3306/expense_audit?charset=utf8mb4
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+  RATE_LIMIT_BACKEND: redis
+  SECRET_KEY: docker-demo-secret-key-please-change-in-production
+  ALLOWED_HOSTS: '["localhost","127.0.0.1"]'
+  ALLOWED_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080"]'
+  POLICY_RETRIEVER: bm25
+  AI_REVIEW_QUEUE_ENABLED: "true"
+  AI_REVIEW_AUTO_TRIGGER: "true"
+  DOCUMENT_AI_CONSENT_REQUIRED: "false"
+  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+  UPLOAD_DIR: /data/uploads
+  LOG_LEVEL: INFO
+
+services:
+  mysql:
+    image: mysql:8.0
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root_demo_pwd
+      MYSQL_DATABASE: expense_audit
+      MYSQL_USER: expense_app
+      MYSQL_PASSWORD: expense_app_pwd
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/app/sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./backend/app/sql/init_data.sql:/docker-entrypoint-initdb.d/02_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    environment: *backend-env
+    volumes:
+      - app_uploads:/data/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  worker:
+    build:
+      context: ./backend
+    command: celery -A app.worker.celery_app worker --loglevel=INFO --pool=threads --concurrency=4
+    environment: *backend-env
+    volumes:
+      - app_uploads:/data/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  app_uploads:
