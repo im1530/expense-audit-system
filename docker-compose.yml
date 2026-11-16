@@ -55,6 +55,7 @@ services:
     environment: *backend-env
     volumes:
       - app_uploads:/data/uploads
+      - ./docs/policies:/docs/policies:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -74,6 +75,7 @@ services:
     environment: *backend-env
     volumes:
       - app_uploads:/data/uploads
+      - ./docs/policies:/docs/policies:ro
     depends_on:
       mysql:
         condition: service_healthy
