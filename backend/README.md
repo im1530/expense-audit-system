@@ -291,7 +291,7 @@ backend/
 | [`../docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md) | 部署、内网自签 HTTPS、数据库最小权限、常见坑 |
 | [`../docs/GO_LIVE_CHECKLIST.md`](../docs/GO_LIVE_CHECKLIST.md) | 上线前逐项检查（P0/P1） |
 | [`../docs/CITATION_RECALL_PLAN.md`](../docs/CITATION_RECALL_PLAN.md) | 引用漏引的定位过程与收口方案 |
-| [`../docs/policies/expense_policy_v1.md`](../docs/policies/expense_policy_v1.md) | 制度原文（v1.2，33 条） |
+| [`../docs/policies/expense_policy_v1_3.md`](../docs/policies/expense_policy_v1_3.md) | 制度原文（v1.3，33 条） |
 | [`evaluation/README.md`](evaluation/README.md) | 评测集、指标口径、历史结论 |
 | [`migrations/README.md`](migrations/README.md) | 零依赖迁移工具用法 |
 | [`tests/README.md`](tests/README.md) | 测试机制与逐文件覆盖说明 |

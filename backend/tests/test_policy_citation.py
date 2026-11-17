@@ -124,7 +124,7 @@ class PolicyCitationTest(unittest.TestCase):
         """审计统计包含本轮检索到的条款编号"""
         result = validate_citations([], self.bundle)
         self.assertEqual(result.stats["retrieved_clause_ids"], ["3.1", "3.3"])
-        self.assertEqual(result.stats["policy_version"], "v1.2")
+        self.assertEqual(result.stats["policy_version"], "v1.3")
 
 
 if __name__ == "__main__":

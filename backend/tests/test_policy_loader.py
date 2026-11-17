@@ -19,8 +19,8 @@ from app.rag.loader import (
 
 
 
-# 仓库根目录下的真实制度文件
-POLICY_PATH = Path(__file__).resolve().parents[2] / "docs" / "policies" / "expense_policy_v1.md"
+# 仓库根目录下当前运行的制度文件（v1.2 保留给 blind_v2 冻结评测）
+POLICY_PATH = Path(__file__).resolve().parents[2] / "docs" / "policies" / "expense_policy_v1_3.md"
 
 
 
@@ -81,7 +81,7 @@ class PolicyLoaderTest(unittest.TestCase):
         """真实制度文档可解析，33 条条款且编号唯一"""
         document = load_policy_document(POLICY_PATH)
         self.assertEqual(document.doc_id, "expense_policy")
-        self.assertEqual(document.version, "v1.2")
+        self.assertEqual(document.version, "v1.3")
         self.assertEqual(len(document.clauses), 33)
         self.assertEqual(len({clause.clause_id for clause in document.clauses}), 33)
 

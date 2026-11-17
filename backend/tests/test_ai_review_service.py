@@ -236,7 +236,7 @@ class AIReviewServiceTest(BaseTestCase, unittest.TestCase):
         result = execute_review(log.id, agent=agent, session_factory=self.Session)
 
         self.assertIsNotNone(agent.policy)
-        self.assertEqual(agent.policy.version, "v1.2")
+        self.assertEqual(agent.policy.version, "v1.3")
         self.assertEqual(result.policy_version, "v1.1")
         self.assertEqual(result.retrieval_meta["citation_count"], 1)
         self.assertEqual(result.policy_citations[0]["clause_id"], "3.1")

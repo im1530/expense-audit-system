@@ -84,7 +84,7 @@ def make_outcome(
         prompt_tokens=10,
         completion_tokens=5,
         raw_content="{}",
-        policy_version="v1.2",
+        policy_version="v1.3",
         retrieved_clause_ids=["2.2"],
     )
 
@@ -146,7 +146,7 @@ class WorkflowTraceApiTest(BaseTestCase, unittest.TestCase):
         self.assertEqual(trace["citations"][0]["clause_id"], "2.2")
         self.assertGreater(trace["prompt_tokens"], 0)
         self.assertEqual(trace["prompt_version"], PROMPT_VERSION)         # run 记录的是线上 Prompt 版本
-        self.assertEqual(trace["policy_version"], "v1.2")
+        self.assertEqual(trace["policy_version"], "v1.3")
         WorkflowTraceResponse.model_validate(trace)                       # 响应契约必须能校验通过
 
     def test_trace_requires_run(self):

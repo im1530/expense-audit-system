@@ -135,7 +135,7 @@ class PolicyRiskAgentTest(unittest.TestCase):
         self.assertEqual(len(outcome.policy_citations), 1)
         self.assertEqual(outcome.policy_citations[0]["clause_id"], "3.1")
         self.assertTrue(any(item["type"] == "policy" for item in outcome.findings))
-        self.assertEqual(outcome.policy_version, "v1.2")
+        self.assertEqual(outcome.policy_version, "v1.3")
         self.assertEqual(outcome.retrieved_clause_ids, ["3.1"])
 
     def test_invalid_citation_and_policy_finding_dropped(self):

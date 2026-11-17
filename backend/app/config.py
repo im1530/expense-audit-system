@@ -128,7 +128,7 @@ class Settings(BaseSettings):
     POLICY_RAG_ENABLED: bool = True                      # 总开关：关闭后不检索制度，引用必须为空
     POLICY_RETRIEVER: str = "chroma"                     # 检索后端：chroma（默认）/ bm25 / hybrid
     POLICY_DIR: str = "../docs/policies"                 # 制度目录：相对 backend 目录，也可填绝对路径
-    POLICY_FILE: str = "expense_policy_v1.md"            # 当前使用的制度文件名
+    POLICY_FILE: str = "expense_policy_v1_3.md"          # 当前使用的制度文件名（v1.2 保留给 blind_v2 冻结评测）
     POLICY_TOP_K: int = 4                                # 单次最多注入多少条制度条款
     POLICY_MIN_SCORE: float = 0.6                        # BM25 绝对分数下限，低于该值不返回
     POLICY_MIN_RELATIVE_SCORE: float = 0.35              # 相对最高分的比例下限，过滤明显不相关条款

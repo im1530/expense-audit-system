@@ -96,7 +96,7 @@ class CitationLabelsTest(unittest.TestCase):
         self.assertEqual(label["optional_clause_ids"], ["3.3"])
 
     def test_invoice_no_case_uses_v12_clause(self):
-        """G041 在制度 v1.2 后核心改为 2.4（2.4 增补了发票号一致性）"""
+        """G041 在制度 v1.3 后核心改为 2.4（2.4 增补了发票号一致性）"""
         label = self.labels["G041"]
         self.assertEqual(label["core_clause_ids"], ["2.4"])
         self.assertEqual(sorted(label["optional_clause_ids"]), ["1.2", "2.1", "2.2"])
