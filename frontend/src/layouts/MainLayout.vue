@@ -19,6 +19,9 @@
         <el-menu-item v-if="store.canApprove" index="/approvals">
           <el-icon><Checked /></el-icon><span>审批中心</span>
         </el-menu-item>
+        <el-menu-item v-if="store.role === 'finance'" index="/payable">
+          <el-icon><Money /></el-icon><span>待支付</span>
+        </el-menu-item>
         <el-menu-item v-if="store.canViewReports" index="/reports">
           <el-icon><DataLine /></el-icon><span>统计报表</span>
         </el-menu-item>
@@ -88,7 +91,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown, Checked, DataLine, Document, HomeFilled, Plus, Setting } from '@element-plus/icons-vue'
+import { ArrowDown, Checked, DataLine, Document, HomeFilled, Money, Plus, Setting } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()

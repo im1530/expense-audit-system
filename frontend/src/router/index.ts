@@ -45,6 +45,12 @@ const routes = [
         meta: { title: '审批中心', requiresApprove: true },
       },
       {
+        path: 'payable',
+        name: 'payable',
+        component: () => import('@/views/PayableList.vue'),
+        meta: { title: '待支付', requiresPay: true },
+      },
+      {
         path: 'reports',
         name: 'reports',
         component: () => import('@/views/Reports.vue'),
@@ -122,6 +128,9 @@ export async function authGuard(to: any) {
 
   // 5.角色权限校验
   if (to.meta?.requiresApprove && !store.canApprove) {
+    return { path: '/dashboard' }
+  }
+  if (to.meta?.requiresPay && store.role !== 'finance') {
     return { path: '/dashboard' }
   }
   if (to.meta?.requiresReports && !store.canViewReports) {
