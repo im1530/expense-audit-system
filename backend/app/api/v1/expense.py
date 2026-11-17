@@ -1823,7 +1823,7 @@ def get_expense_approval_history(
         # 将ORM对象转换为字典,注入审批人展示字段
         record_dict = record.__dict__.copy()  # 审批记录字典
         record_dict['approver_name'] = approver_name  # 审批人姓名
-        record_dict['approver_role'] = approver_role.value if hasattr(approver_role, "value") else (approver_role or "")  # 审批人角色
+        record_dict['approver_role'] = approver_role.value if hasattr(approver_role, "value") else None  # 待处理记录无审批人，返回 null 而不是空串
         approval_history.append(record_dict)
 
 
