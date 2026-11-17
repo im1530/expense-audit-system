@@ -12,11 +12,14 @@ from fastapi import HTTPException
 from app.api.v1.approval import approval_action
 from app.api.v1.expense import (
     cancel_expense,
+    confirm_received as confirm_received_route,
     pay_expense,
     recall_expense,
+    register_expense as register_expense_route,
     resubmit_expense,
     submit_expense,
 )
+from app.schemas.settlement import ExpenseRegisterRequest
 from app.models import Approval, Expense
 from app.models.approval import ApprovalStatus
 from app.models.expense import ExpenseStatus
@@ -130,50 +133,56 @@ class ExpenseStateMachineTest(BaseTestCase, unittest.TestCase):
             cancel_expense(expense_id=expense.id, db=self.db, current_user=user)
         self.assert_http_error(ctx, 409)
 
-    # ---------- 支付 ----------
-    def test_pay_requires_permission(self):
-        """员工没有 pay 权限（403）"""
-        employee = self.fx["users"]["employee"]
-        expense = make_expense(self.db, employee, status=ExpenseStatus.APPROVED,
-                               flow_id=self.fx["flows"]["mgr"].id)
-
-        with self.assertRaises(HTTPException) as ctx:
-            pay_expense(expense_id=expense.id, db=self.db, current_user=employee)
-        self.assert_http_error(ctx, 403)
-
-    def test_pay_approved_success(self):
-        """财务对已通过单据支付：状态转已支付并记录时间"""
+    # ---------- 结算：登记 → 确认领取 ----------
+    def test_pay_endpoint_deprecated(self):
+        """旧支付接口返回 410，避免绕过登记"""
         employee = self.fx["users"]["employee"]
         finance = self.fx["users"]["finance"]
         expense = make_expense(self.db, employee, status=ExpenseStatus.APPROVED,
                                flow_id=self.fx["flows"]["mgr"].id)
 
-        result = pay_expense(expense_id=expense.id, db=self.db, current_user=finance)
+        with self.assertRaises(HTTPException) as ctx:
+            pay_expense(expense_id=expense.id, db=self.db, current_user=finance)
+        self.assert_http_error(ctx, 410)
 
-        self.assertEqual(result.status, ExpenseStatus.PAID)
-        self.assertIsNotNone(result.paid_at)
+    def test_register_then_confirm_success(self):
+        """财务登记 → 提交人确认 → 已支付"""
+        employee = self.fx["users"]["employee"]
+        finance = self.fx["users"]["finance"]
+        expense = make_expense(self.db, employee, status=ExpenseStatus.APPROVED,
+                               flow_id=self.fx["flows"]["mgr"].id)
 
-    def test_pay_pending_conflict(self):
-        """未审批通过的单据不能支付（409）"""
+        registered = register_expense_route(
+            expense.id, ExpenseRegisterRequest(note="请查收"),
+            db=self.db, current_user=finance,
+        )
+        self.assertEqual(registered.status, ExpenseStatus.REGISTERED)
+
+        paid = confirm_received_route(expense.id, db=self.db, current_user=employee)
+        self.assertEqual(paid.status, ExpenseStatus.PAID)
+        self.assertIsNotNone(paid.paid_at)
+
+    def test_register_pending_conflict(self):
+        """未审批通过的单据不能登记（409）"""
         employee = self.fx["users"]["employee"]
         finance = self.fx["users"]["finance"]
         expense = make_expense(self.db, employee, status=ExpenseStatus.PENDING,
                                flow_id=self.fx["flows"]["mgr"].id)
 
         with self.assertRaises(HTTPException) as ctx:
-            pay_expense(expense_id=expense.id, db=self.db, current_user=finance)
+            register_expense_route(expense.id, ExpenseRegisterRequest(), db=self.db, current_user=finance)
         self.assert_http_error(ctx, 409)
 
-    def test_pay_twice_conflict(self):
-        """重复支付被拦截（409）"""
+    def test_register_twice_conflict(self):
+        """重复登记被拦截（409）"""
         employee = self.fx["users"]["employee"]
         finance = self.fx["users"]["finance"]
         expense = make_expense(self.db, employee, status=ExpenseStatus.APPROVED,
                                flow_id=self.fx["flows"]["mgr"].id)
-        pay_expense(expense_id=expense.id, db=self.db, current_user=finance)
+        register_expense_route(expense.id, ExpenseRegisterRequest(), db=self.db, current_user=finance)
 
         with self.assertRaises(HTTPException) as ctx:
-            pay_expense(expense_id=expense.id, db=self.db, current_user=finance)
+            register_expense_route(expense.id, ExpenseRegisterRequest(), db=self.db, current_user=finance)
         self.assert_http_error(ctx, 409)
 
     # ---------- 重新提交 ----------

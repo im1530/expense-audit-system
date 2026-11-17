@@ -34,6 +34,8 @@ from app.models.checkpoint import (
     WorkflowCheckpointWrite,
 )
 from app.models.maintenance import MaintenanceRun, MaintenanceStatus
+from app.models.settlement import ExpenseSettlement
+from app.models.notification import Notification
 
 
 __all__ = ["Base", "User", "UserRole", "Expense", "ExpenseItem",   # 对外导出的模型清单
@@ -43,4 +45,4 @@ __all__ = ["Base", "User", "UserRole", "Expense", "ExpenseItem",   # 对外导�
            "DOCUMENT_TYPE_EVIDENCE", "EVIDENCE_ORDER",
            "WorkflowRun", "WorkflowRunStatus", "WorkflowStep", "WorkflowStepStatus",
            "WorkflowCheckpoint", "WorkflowCheckpointBlob", "WorkflowCheckpointWrite",
-           "MaintenanceRun", "MaintenanceStatus"]
+           "MaintenanceRun", "MaintenanceStatus", "ExpenseSettlement", "Notification"]

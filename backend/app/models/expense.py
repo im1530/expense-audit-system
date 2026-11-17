@@ -28,18 +28,21 @@ class ExpenseStatus(str,enum.Enum):
     `str, enum.Enum`：让枚举值同时是字符串，存进 MySQL、接口返回都方便
     （否则默认是 `ExpenseStatus.DRAFT` 这种对象，序列化时还要额外转换）。
     状态机（仅允许以下流转，越级流转由接口层用 409 拦截）：
-        draft → pending（提交送审）→ approved（终审通过）→ paid（财务支付）
+        draft → pending（提交送审）→ approved（终审通过）→ registered（财务登记）
+        → paid（提交人确认领取，闭环完成）
         pending → draft（撤回提交）
         pending / rejected → cancelled（主动撤销）
         pending → rejected（任一级驳回）；rejected → pending（修改后重新提交）
-    说明：每次流转都必须同步维护 submitted_at / approved_at / paid_at / cancelled_at 中的对应时间字段，
+        registered → approved（财务撤销登记）
+    说明：每次流转都必须同步维护 submitted_at / approved_at / registered_at / paid_at / cancelled_at 中的对应时间字段，
     并保持与 approvals 表中审批记录状态一致。
     """
     DRAFT = "draft"                # 草稿：刚建好，还没提交
     PENDING = 'pending'            # 待审批：正在走审批
     APPROVED = "approved"          # 审批通过：审批同意
+    REGISTERED = "registered"      # 已登记：财务登记，待提交人确认领取
     REJECTED = "rejected"          # 审批拒绝：审批打回
-    PAID = "paid"                  # 已支付：财务打款完成
+    PAID = "paid"                  # 已支付：提交人确认领取，报销闭环完成
     CANCELLED = "cancelled"        # 已取消：主动作废
 
 
@@ -199,10 +202,34 @@ class Expense(Base):
         comment="审批时间"                   # 字段备注，写进数据库
     )
 
-    # paid_at:财务支付时间
+    # registered_at:财务登记时间（登记后待提交人确认领取）
+    registered_at = Column(
+        DateTime(timezone=True),            # 日期时间类型,timezone=True 带时区
+        comment="财务登记时间"               # 字段备注，写进数据库
+    )
+
+    # registered_by:登记财务的用户ID
+    registered_by = Column(
+        BigInteger,                         # 与 users.id 同类型
+        comment="登记财务ID"                 # 字段备注，写进数据库
+    )
+
+    # register_note:登记备注（会发给提交人）
+    register_note = Column(
+        String(500),                        # 与迁移保持一致
+        comment="登记备注"                   # 字段备注，写进数据库
+    )
+
+    # paid_at:报销闭环完成时间（提交人确认领取时写入）
     paid_at = Column(
         DateTime(timezone=True),            # 日期时间类型,timezone=True 带时区
         comment="支付时间"                   # 字段备注，写进数据库
+    )
+
+    # confirmed_at:提交人确认领取时间
+    confirmed_at = Column(
+        DateTime(timezone=True),            # 日期时间类型,timezone=True 带时区
+        comment="确认领取时间"               # 字段备注，写进数据库
     )
 
     # cancelled_at:单据撤销时间

@@ -172,7 +172,7 @@ CREATE TABLE `expenses` (
   `expense_no` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '报销单号',
   `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '报销标题',
   `total_amount` decimal(12,2) NOT NULL COMMENT '总金额',
-  `status` enum('draft','pending','approved','rejected','paid','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('draft','pending','approved','registered','rejected','paid','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL,
   `flow_id` bigint(20) DEFAULT NULL COMMENT '审批流ID',
   `approval_chain` json DEFAULT NULL COMMENT '匹配到的审批角色链',
   `current_level` int(11) NOT NULL DEFAULT '1' COMMENT '当前审批层级',
@@ -180,7 +180,11 @@ CREATE TABLE `expenses` (
   `remark` text COLLATE utf8mb4_unicode_ci COMMENT '备注',
   `submitted_at` datetime DEFAULT NULL COMMENT '提交时间',
   `approved_at` datetime DEFAULT NULL COMMENT '审批时间',
+  `registered_at` datetime DEFAULT NULL COMMENT '财务登记时间',
+  `registered_by` bigint(20) DEFAULT NULL COMMENT '登记财务ID',
+  `register_note` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '登记备注（发给提交人）',
   `paid_at` datetime DEFAULT NULL COMMENT '支付时间',
+  `confirmed_at` datetime DEFAULT NULL COMMENT '提交人确认领取时间',
   `cancelled_at` datetime DEFAULT NULL COMMENT '撤销时间',
   `risk_score` decimal(5,2) DEFAULT NULL COMMENT '风险分数',
   `risk_level` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '风险等级',
@@ -194,8 +198,10 @@ CREATE TABLE `expenses` (
   KEY `ix_expenses_status` (`status`),
   KEY `idx_flow` (`flow_id`),
   KEY `idx_expenses_created_at` (`created_at`),
+  KEY `idx_expenses_registered_at` (`registered_at`),
   CONSTRAINT `expenses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `expenses_ibfk_2` FOREIGN KEY (`flow_id`) REFERENCES `approval_flows` (`id`)
+  CONSTRAINT `expenses_ibfk_2` FOREIGN KEY (`flow_id`) REFERENCES `approval_flows` (`id`),
+  CONSTRAINT `fk_expenses_registered_by` FOREIGN KEY (`registered_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
@@ -458,5 +464,46 @@ CREATE TABLE `maintenance_runs` (
   KEY `ix_maintenance_runs_job` (`job`),
   KEY `ix_maintenance_runs_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='运维任务执行记录';
+
+-- ------------------------------------------------------------
+-- 结算流水（P1）：财务登记 / 撤销 / 提交人确认 / 管理员强制关闭
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS `expense_settlements`;
+CREATE TABLE `expense_settlements` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '结算流水ID',
+  `expense_id` bigint(20) NOT NULL COMMENT '报销单ID',
+  `action` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'register/cancel/confirm/force_close',
+  `operator_id` bigint(20) DEFAULT NULL COMMENT '操作人ID',
+  `note` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '备注/原因',
+  `channel` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'bank/alipay/wechat/cash，可选',
+  `transaction_no` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '流水号，可选',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+  `updated_at` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_settlements_expense` (`expense_id`, `created_at`),
+  UNIQUE KEY `uk_settlements_transaction_no` (`transaction_no`),
+  CONSTRAINT `fk_settlements_expense` FOREIGN KEY (`expense_id`) REFERENCES `expenses` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 站内通知：登记/撤销/确认/强制关闭
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS `notifications`;
+CREATE TABLE `notifications` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '通知ID',
+  `user_id` bigint(20) NOT NULL COMMENT '接收人ID',
+  `type` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'expense_registered/registration_cancelled/expense_confirmed/force_closed',
+  `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '通知标题',
+  `content` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '通知内容',
+  `related_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '关联对象类型，如 expense',
+  `related_id` bigint(20) DEFAULT NULL COMMENT '关联对象ID',
+  `is_read` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否已读',
+  `read_at` datetime DEFAULT NULL COMMENT '已读时间',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_notifications_user_read` (`user_id`, `is_read`, `created_at`),
+  CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

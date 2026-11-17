@@ -36,6 +36,14 @@ from app.services.expense_service import apply_business_filters, match_approval_
 from app.services.rule_engine import run_rule_checks, save_rule_hits, summarize_level
 from app.services.review_queue import trigger_auto_review
 from app.schemas.rule import RulePrecheckResponse
+from app.schemas.settlement import (
+    CancelRegistrationRequest,
+    ExpenseRegisterRequest,
+    ExpenseSettlementItem,
+    ForceCloseRequest,
+)
+from app.services import settlement_service
+from app.services.settlement_service import SettlementError
 from sqlalchemy import func, case
 import logging
 
@@ -1692,7 +1700,7 @@ def cancel_expense(
     "/{expense_id}/pay",             # 接口路径；拼上总前缀后完整为 /api/v1/expense/{expense_id}/pay (和总路由拼接)
     response_model=ExpenseResponse,        # 返回值按 ExpenseResponse 格式化
     tags=["报销"],                          # 在 /api/docs 文档里归到"报销"分组显示
-    summary="财务对通过审批的报销单进行支付确认",    # 接口标题
+    summary="已废弃：支付改为登记+确认领取",    # 接口标题
 )
 def pay_expense(
         expense_id: int,                                    # 路径参数，要支付的报销单ID
@@ -1700,50 +1708,18 @@ def pay_expense(
         current_user: User = Depends(get_current_user)      # 当前登录人（验签）
 ):
     """
-    财务确认支付：审批通过 → 已支付（报销流程的终点）
-    权限说明:
-        - 需登录鉴权，且必须拥有 pay 权限（按 User.has_permission 的映射，当前仅 finance 拥有）
-        - 不校验单据归属：财务本来就要给别人的单据打款
-    校验规则:
-        - 单据不存在 404；已支付 409（防重复点击/重复打款）；非 approved 状态 409
-    业务处理:
-        - 状态置 paid 并记录 paid_at，作为审计与对账依据
-        - 注意：本接口只做"状态确认"，不对接真实打款通道
-        :param expense_id: 路径参数，要支付的报销单ID
+    已废弃：支付改为“财务登记 + 提交人确认领取”两阶段
+        - 新流程请使用 POST /expense/{id}/register 与 /expense/{id}/confirm-received
+        - 保留本路由只为了给出明确 410，避免旧客户端绕过登记直接改 paid
+        :param expense_id: 报销单ID
         :param db: 数据库会话
-        :param current_user: 当前登录用户（须有 pay 权限）
-        :return: 支付后的报销单完整信息
-        :raises HTTPException: 403 无支付权限；404 单据不存在；409 状态不允许支付
+        :param current_user: 当前登录用户
+        :raises HTTPException: 410 接口已废弃
     """
-    # 1.权限校验:只有 finance 有 pay 权限(admin 刻意不授予),否则 403
-    if not current_user.has_permission("pay"):
-        raise HTTPException(status_code=403, detail="无支付权限")
-
-    # 2.查询报销单,不存在则404
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()  # 按ID查询单据
-    if not expense:
-        raise HTTPException(status_code=404, detail="报销单不存在")
-
-    # 3.状态校验:已支付的单不能重复支付
-    if expense.status == ExpenseStatus.PAID:
-        raise HTTPException(status_code=409, detail="该报销单已支付，请勿重复支付")
-
-    # 4.状态校验:只有 approved(审批通过)才能进入支付
-    if expense.status not in (ExpenseStatus.APPROVED,):
-        raise HTTPException(status_code=409, detail="仅审批通过的报销单可以支付")
-
-    # 5.更新报销状态为 paid,并记录支付时间
-    expense.status = ExpenseStatus.PAID  # 状态：已支付
-    expense.paid_at = datetime.now()  # 记录支付时间
-
-    # 6.更新数据库的两步
-    db.commit()            # 提交事务,真正落库
-    db.refresh(expense)    # 回读数据库,把 更新后的字段值 刷新到 expense 对象上
-
-    # 7.返回；由 response_model=ExpenseResponse 过滤字段
-    logger.info("报销单支付完成 expense_id=%s expense_no=%s amount=%s operator_id=%s",  # 日志格式串
-                expense.id, expense.expense_no, expense.total_amount, current_user.id)  # 单据ID/单号/金额/操作人
-    return expense
+    raise HTTPException(
+        status_code=410,
+        detail="支付流程已改为“财务登记 + 提交人确认领取”，请使用 /register 与 /confirm-received",
+    )
 
 
 
@@ -1829,6 +1805,143 @@ def get_expense_approval_history(
 
     # 5.返回:由 response_model=List[ApprovalRecordItem] 过滤字段
     return approval_history
+
+
+# 财务登记：审批通过 → 已登记待领取
+@router.post(
+    "/{expense_id}/register",
+    response_model=ExpenseResponse,
+    tags=["报销"],
+    summary="财务登记报销单并通知提交人领取",
+)
+def register_expense(
+        expense_id: int,
+        body: ExpenseRegisterRequest,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+):
+    """
+    财务登记：仅审批通过的单据，且登记人不能是提交人本人
+        :param expense_id: 报销单ID
+        :param body: 备注/渠道/流水号（均可选）
+        :param db: 数据库会话
+        :param current_user: 当前登录用户
+        :return: 登记后的报销单
+    """
+    try:
+        return settlement_service.register(
+            db, expense_id, current_user,
+            note=body.note, channel=body.channel, transaction_no=body.transaction_no,
+        )
+    except SettlementError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+
+# 财务撤销登记：已登记待领取 → 审批通过
+@router.post(
+    "/{expense_id}/cancel-registration",
+    response_model=ExpenseResponse,
+    tags=["报销"],
+    summary="财务撤销登记",
+)
+def cancel_registration(
+        expense_id: int,
+        body: CancelRegistrationRequest | None = None,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+):
+    """
+    撤销登记：只允许财务操作，且不能是提交人本人
+        :param expense_id: 报销单ID
+        :param body: 撤销原因（可选）
+        :param db: 数据库会话
+        :param current_user: 当前登录用户
+        :return: 撤销后的报销单
+    """
+    try:
+        return settlement_service.cancel_registration(
+            db, expense_id, current_user, reason=body.reason if body else None,
+        )
+    except SettlementError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+
+# 提交人确认领取：已登记待领取 → 已支付
+@router.post(
+    "/{expense_id}/confirm-received",
+    response_model=ExpenseResponse,
+    tags=["报销"],
+    summary="提交人确认已领取报销款",
+)
+def confirm_received(
+        expense_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+):
+    """
+    提交人确认领取：只有提交人本人可以操作，确认后进入已支付
+        :param expense_id: 报销单ID
+        :param db: 数据库会话
+        :param current_user: 当前登录用户
+        :return: 确认后的报销单
+    """
+    try:
+        return settlement_service.confirm_received(db, expense_id, current_user)
+    except SettlementError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+
+# 管理员强制关闭：已登记待领取 → 已支付
+@router.post(
+    "/{expense_id}/force-close",
+    response_model=ExpenseResponse,
+    tags=["报销"],
+    summary="管理员强制关闭已登记的报销单",
+)
+def force_close(
+        expense_id: int,
+        body: ForceCloseRequest,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+):
+    """
+    强制关闭：仅 admin，必须填原因；用于提交人离职等无法确认的场景
+        :param expense_id: 报销单ID
+        :param body: 原因（必填）
+        :param db: 数据库会话
+        :param current_user: 当前登录用户
+        :return: 关闭后的报销单
+    """
+    try:
+        return settlement_service.force_close(db, expense_id, current_user, reason=body.reason)
+    except SettlementError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+
+# 结算流水
+@router.get(
+    "/{expense_id}/settlements",
+    response_model=List[ExpenseSettlementItem],
+    tags=["报销"],
+    summary="查询结算流水（登记/撤销/确认/强制关闭）",
+)
+def get_settlements(
+        expense_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+):
+    """
+    结算流水：提交人本人、审批人、可看全公司者可查
+        :param expense_id: 报销单ID
+        :param db: 数据库会话
+        :param current_user: 当前登录用户
+        :return: 结算流水列表
+    """
+    try:
+        return settlement_service.list_settlements(db, expense_id, current_user)
+    except SettlementError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
 
 
 

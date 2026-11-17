@@ -8,8 +8,9 @@ export const EXPENSE_STATUS: Record<string, { label: string; type: string }> = {
   draft: { label: '草稿', type: 'info' },
   pending: { label: '待审批', type: 'warning' },
   approved: { label: '已通过', type: 'success' },
+  registered: { label: '待领取', type: 'warning' },
   rejected: { label: '已驳回', type: 'danger' },
-  paid: { label: '已支付', type: 'success' },
+  paid: { label: '已报销', type: 'success' },
   cancelled: { label: '已撤销', type: 'info' },
 }
 

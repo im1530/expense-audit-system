@@ -225,7 +225,11 @@ class ExpenseResponse(ExpenseBase):
     ai_reviewed_result: Optional[str] = None    # AI审核结论
     submitted_at: Optional[datetime] = None     # 提交时间
     approved_at: Optional[datetime] = None      # 审批时间
+    registered_at: Optional[datetime] = None    # 财务登记时间
+    registered_by: Optional[int] = None         # 登记财务ID
+    register_note: Optional[str] = None         # 登记备注
     paid_at: Optional[datetime] = None          # 财务支付时间
+    confirmed_at: Optional[datetime] = None     # 提交人确认领取时间
     cancelled_at: Optional[datetime] = None     # 作废时间
     created_at: datetime                        # 创建时间
     updated_at: Optional[datetime] = None       # 更新时间

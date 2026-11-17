@@ -17,13 +17,10 @@
             <el-button v-if="expense.status === 'draft' && isOwner" type="success" @click="onSubmit">提交送审</el-button>
             <el-button v-if="expense.status === 'pending' && isOwner" type="warning" @click="onRecall">撤回</el-button>
             <el-button v-if="expense.status === 'rejected' && isOwner" type="primary" @click="onResubmit">重新提交</el-button>
-            <el-button
-              v-if="expense.status === 'approved' && isFinance"
-              type="success"
-              @click="onPay"
-            >
-              确认支付
-            </el-button>
+            <el-button v-if="canRegister" type="success" @click="openRegister">登记</el-button>
+            <el-button v-if="canCancelRegistration" type="warning" @click="openCancelRegister">撤销登记</el-button>
+            <el-button v-if="canConfirmReceived" type="success" @click="onConfirmReceived">确认已报销</el-button>
+            <el-button v-if="canForceClose" type="danger" plain @click="onForceClose">强制关闭</el-button>
             <el-button v-if="canApproveNow" type="primary" @click="router.push('/approvals')">去审批</el-button>
           </div>
         </div>
@@ -70,6 +67,23 @@
           <template #default="{ row }">
             <el-button link type="primary" @click="loadInvoices(row)">查看附件</el-button>
           </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <!-- 结算记录 -->
+    <el-card v-if="settlements.length" shadow="never" class="page-card" style="margin-top: 16px">
+      <template #header><span>结算记录</span></template>
+      <el-table :data="settlements" border size="small">
+        <el-table-column label="动作" width="110">
+          <template #default="{ row }">{{ SETTLEMENT_ACTION[row.action] || row.action }}</template>
+        </el-table-column>
+        <el-table-column prop="operator_id" label="操作人ID" width="100" />
+        <el-table-column prop="note" label="备注/原因" min-width="180" />
+        <el-table-column prop="channel" label="渠道" width="90" />
+        <el-table-column prop="transaction_no" label="流水号" width="180" />
+        <el-table-column label="时间" width="170">
+          <template #default="{ row }">{{ formatTime(row.created_at) }}</template>
         </el-table-column>
       </el-table>
     </el-card>
@@ -189,6 +203,44 @@
       </div>
       <el-empty v-else description="该明细还没有附件" :image-size="60" />
     </el-dialog>
+
+    <!-- 财务登记 -->
+    <el-dialog v-model="registerVisible" title="登记报销单" width="520px">
+      <el-form label-width="90px">
+        <el-form-item label="备注">
+          <el-input v-model="registerForm.note" type="textarea" :rows="3" maxlength="500" show-word-limit
+            placeholder="选填；会随通知一起发给提交人" />
+        </el-form-item>
+        <el-form-item label="渠道">
+          <el-select v-model="registerForm.channel" clearable placeholder="选填">
+            <el-option label="银行转账" value="bank" />
+            <el-option label="支付宝" value="alipay" />
+            <el-option label="微信" value="wechat" />
+            <el-option label="现金" value="cash" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="流水号">
+          <el-input v-model="registerForm.transaction_no" maxlength="64" placeholder="选填，唯一" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="registerVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="onRegister">确认登记并通知</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 撤销登记 -->
+    <el-dialog v-model="cancelRegisterVisible" title="撤销登记" width="480px">
+      <el-form label-width="90px">
+        <el-form-item label="原因">
+          <el-input v-model="cancelReason" type="textarea" :rows="3" maxlength="200" show-word-limit placeholder="选填" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="cancelRegisterVisible = false">取消</el-button>
+        <el-button type="warning" :loading="submitting" @click="onCancelRegister">确认撤销</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -197,12 +249,16 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
+  cancelRegistration,
+  confirmReceived,
+  forceCloseExpense,
   getApprovalHistory,
   getExpense,
   listCategories,
   listInvoices as apiListInvoices,
+  listSettlements,
+  registerExpense,
   deleteInvoice,
-  payExpense,
   recallExpense,
   resubmitExpense,
   submitExpense,
@@ -230,6 +286,14 @@ const review = ref<any>(null)
 const history = ref<any[]>([])
 const reviewing = ref(false)
 const categoryNames = ref<Record<number, string>>({})
+const settlements = ref<any[]>([])
+
+// 结算弹窗
+const registerVisible = ref(false)
+const registerForm = ref({ note: '', channel: '', transaction_no: '' })
+const cancelRegisterVisible = ref(false)
+const cancelReason = ref('')
+const submitting = ref(false)
 
 // 上传弹窗
 const uploadVisible = ref(false)
@@ -245,6 +309,25 @@ const isFinance = computed(() => store.role === 'finance')
 const isOwner = computed(() => expense.value.user_id === store.user?.id)
 const canUpload = computed(() => isOwner.value && ['draft', 'rejected'].includes(expense.value.status))
 const canApproveNow = computed(() => expense.value.status === 'pending' && store.canApprove)
+const canRegister = computed(
+  () => store.role === 'finance' && expense.value.status === 'approved' && !isOwner.value,
+)
+const canCancelRegistration = computed(
+  () => store.role === 'finance' && expense.value.status === 'registered' && !isOwner.value,
+)
+const canConfirmReceived = computed(
+  () => isOwner.value && expense.value.status === 'registered',
+)
+const canForceClose = computed(
+  () => store.isAdmin && expense.value.status === 'registered',
+)
+
+const SETTLEMENT_ACTION: Record<string, string> = {
+  register: '财务登记',
+  cancel: '撤销登记',
+  confirm: '确认领取',
+  force_close: '强制关闭',
+}
 
 // 预审结论标题
 const reviewTitle = computed(() => {
@@ -274,6 +357,11 @@ async function load() {
       categoryNames.value = {} // 类别字典失败不影响详情主体
     }
     history.value = (await getApprovalHistory(expenseId)) || []
+    try {
+      settlements.value = (await listSettlements(expenseId)) || []
+    } catch {
+      settlements.value = [] // 结算流水失败不影响详情主体
+    }
     try {
       review.value = await getReview(expenseId)
     } catch {
@@ -313,12 +401,79 @@ async function onResubmit() {
 }
 
 /**
- * 财务支付
+ * 打开登记弹窗
  */
-async function onPay() {
-  await ElMessageBox.confirm('确认已完成打款？该操作不可撤销。', '支付确认', { type: 'warning' })
-  await payExpense(expenseId)
-  ElMessage.success('已标记支付')
+function openRegister() {
+  registerForm.value = { note: '', channel: '', transaction_no: '' }
+  registerVisible.value = true
+}
+
+/**
+ * 财务登记
+ */
+async function onRegister() {
+  submitting.value = true
+  try {
+    await registerExpense(expenseId, {
+      note: registerForm.value.note || undefined,
+      channel: registerForm.value.channel || undefined,
+      transaction_no: registerForm.value.transaction_no || undefined,
+    })
+    ElMessage.success('已登记，已通知提交人领取')
+    registerVisible.value = false
+    load()
+  } finally {
+    submitting.value = false
+  }
+}
+
+/**
+ * 打开撤销登记弹窗
+ */
+function openCancelRegister() {
+  cancelReason.value = ''
+  cancelRegisterVisible.value = true
+}
+
+/**
+ * 撤销登记
+ */
+async function onCancelRegister() {
+  submitting.value = true
+  try {
+    await cancelRegistration(expenseId, { reason: cancelReason.value || undefined })
+    ElMessage.success('已撤销登记')
+    cancelRegisterVisible.value = false
+    load()
+  } finally {
+    submitting.value = false
+  }
+}
+
+/**
+ * 提交人确认已收到报销款
+ */
+async function onConfirmReceived() {
+  await ElMessageBox.confirm(
+    '确认已经收到这笔报销款了吗？确认后状态将变为“已报销”，不可撤回。',
+    '确认已报销',
+    { type: 'warning', confirmButtonText: '确认已收到', cancelButtonText: '取消' },
+  )
+  await confirmReceived(expenseId)
+  ElMessage.success('已确认领取')
+  load()
+}
+
+/**
+ * 管理员强制关闭
+ */
+async function onForceClose() {
+  const { value } = await ElMessageBox.prompt('请输入强制关闭原因（必填）', '强制关闭', {
+    inputPlaceholder: '如：员工离职，财务确认已打款',
+    inputValidator: (input: string) => (input && input.trim() ? true : '原因不能为空'),
+  })
+  await forceCloseExpense(expenseId, { reason: String(value).trim() })
+  ElMessage.success('已强制关闭')
   load()
 }
 

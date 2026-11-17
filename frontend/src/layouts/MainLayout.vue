@@ -48,6 +48,29 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <el-popover placement="bottom-end" :width="360" trigger="click" @show="loadNotifications">
+            <template #reference>
+              <el-badge :value="unreadCount" :hidden="!unreadCount" class="notice-badge">
+                <el-icon class="notice-icon"><Bell /></el-icon>
+              </el-badge>
+            </template>
+            <div class="notice-head">
+              <span>通知</span>
+              <el-button link type="primary" size="small" @click="onReadAll">全部已读</el-button>
+            </div>
+            <el-empty v-if="!notifications.length" description="暂无通知" :image-size="50" />
+            <div
+              v-for="item in notifications"
+              :key="item.id"
+              class="notice-item"
+              :class="{ unread: !item.is_read }"
+              @click="openNotice(item)"
+            >
+              <div class="notice-title">{{ item.title }}</div>
+              <div class="notice-content">{{ item.content }}</div>
+              <div class="notice-time">{{ formatTime(item.created_at) }}</div>
+            </div>
+          </el-popover>
           <el-tag size="small" type="info" effect="plain">{{ roleLabel }}</el-tag>
           <el-dropdown @command="onCommand">
             <span class="user-name">
@@ -88,11 +111,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown, Checked, DataLine, Document, HomeFilled, Money, Plus, Setting } from '@element-plus/icons-vue'
+import { ArrowDown, Bell, Checked, DataLine, Document, HomeFilled, Money, Plus, Setting } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { getUnreadCount, listNotifications, readAllNotifications, readNotification } from '@/api/notification'
+import { formatTime } from '@/utils/helpers'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,6 +138,53 @@ const ROLE_LABELS: Record<string, string> = {
   employee: '员工',
 }
 const roleLabel = computed(() => ROLE_LABELS[store.role] || '未知角色')
+
+// 站内通知
+const unreadCount = ref(0)
+const notifications = ref<any[]>([])
+let noticeTimer: number | undefined
+
+async function loadUnread() {
+  try {
+    const data: any = await getUnreadCount()
+    unreadCount.value = data?.count || 0
+  } catch {
+    unreadCount.value = 0
+  }
+}
+
+async function loadNotifications() {
+  try {
+    const data: any = await listNotifications({ page: 1, page_size: 10 })
+    notifications.value = data?.items || []
+  } catch {
+    notifications.value = []
+  }
+}
+
+async function openNotice(item: any) {
+  try {
+    if (!item.is_read) await readNotification(item.id)
+  } finally {
+    if (item.related_id) router.push(`/expenses/${item.related_id}`)
+    loadUnread()
+  }
+}
+
+async function onReadAll() {
+  await readAllNotifications()
+  notifications.value = notifications.value.map((item) => ({ ...item, is_read: true }))
+  unreadCount.value = 0
+}
+
+onMounted(() => {
+  loadUnread()
+  noticeTimer = window.setInterval(loadUnread, 60000)
+})
+
+onUnmounted(() => {
+  if (noticeTimer) window.clearInterval(noticeTimer)
+})
 
 // 改密弹窗状态
 const passwordVisible = ref(false)
@@ -235,6 +307,52 @@ function onLogout() {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.notice-badge {
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.notice-icon {
+  font-size: 18px;
+  color: #606266;
+}
+
+.notice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.notice-item {
+  padding: 8px 4px;
+  border-bottom: 1px solid #f2f2f2;
+  cursor: pointer;
+}
+
+.notice-item.unread {
+  background: #f0f7ff;
+}
+
+.notice-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.notice-content {
+  font-size: 12px;
+  color: #606266;
+  margin: 2px 0;
+  line-height: 1.5;
+}
+
+.notice-time {
+  font-size: 11px;
+  color: #909399;
 }
 
 .user-name {

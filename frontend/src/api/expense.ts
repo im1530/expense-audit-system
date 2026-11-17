@@ -97,11 +97,36 @@ export function resubmitExpense(id: number) {
 }
 
 /**
- * 财务支付确认
+ * 财务支付确认（已废弃：改用登记 + 提交人确认）
  * @param id 报销单ID
  */
 export function payExpense(id: number) {
   return request.post(`/expense/${id}/pay`)
+}
+
+/** 财务登记（审批通过 → 待领取） */
+export function registerExpense(id: number, payload: { note?: string; channel?: string; transaction_no?: string }) {
+  return request.post(`/expense/${id}/register`, payload)
+}
+
+/** 财务撤销登记（待领取 → 已通过） */
+export function cancelRegistration(id: number, payload: { reason?: string }) {
+  return request.post(`/expense/${id}/cancel-registration`, payload)
+}
+
+/** 提交人确认领取（待领取 → 已报销） */
+export function confirmReceived(id: number) {
+  return request.post(`/expense/${id}/confirm-received`)
+}
+
+/** 管理员强制关闭（待领取 → 已报销） */
+export function forceCloseExpense(id: number, payload: { reason: string }) {
+  return request.post(`/expense/${id}/force-close`, payload)
+}
+
+/** 结算流水 */
+export function listSettlements(id: number) {
+  return request.get(`/expense/${id}/settlements`)
 }
 
 /**

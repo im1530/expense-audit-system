@@ -44,6 +44,8 @@ TEST_PASSWORD = "Passw0rd!"
 # 需要清空的表（外键检查关闭后顺序不敏感）
 ALL_TABLES = [
     "maintenance_runs",
+    "notifications",
+    "expense_settlements",
     "workflow_checkpoint_writes",
     "workflow_checkpoint_blobs",
     "workflow_checkpoints",

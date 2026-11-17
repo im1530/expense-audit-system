@@ -87,3 +87,8 @@ api_router.include_router(report.router, prefix="/report", tags=["报表"])
 # 12.挂载 AI 预审子路由，前缀 /agent，文档归到"AI预审"组
 from app.api.v1 import agent
 api_router.include_router(agent.router, prefix="/agent", tags=["AI预审"])
+
+
+# 13.挂载站内通知子路由，前缀 /notifications，文档归到"通知"组
+from app.api.v1 import notification
+api_router.include_router(notification.router, prefix="/notifications", tags=["通知"])
