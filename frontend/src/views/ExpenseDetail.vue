@@ -14,9 +14,9 @@
             </el-tag>
           </div>
           <div class="actions">
-            <el-button v-if="expense.status === 'draft'" type="success" @click="onSubmit">提交送审</el-button>
-            <el-button v-if="expense.status === 'pending'" type="warning" @click="onRecall">撤回</el-button>
-            <el-button v-if="expense.status === 'rejected'" type="primary" @click="onResubmit">重新提交</el-button>
+            <el-button v-if="expense.status === 'draft' && isOwner" type="success" @click="onSubmit">提交送审</el-button>
+            <el-button v-if="expense.status === 'pending' && isOwner" type="warning" @click="onRecall">撤回</el-button>
+            <el-button v-if="expense.status === 'rejected' && isOwner" type="primary" @click="onResubmit">重新提交</el-button>
             <el-button
               v-if="expense.status === 'approved' && isFinance"
               type="success"
@@ -242,7 +242,8 @@ const invoiceVisible = ref(false)
 const invoices = ref<any[]>([])
 
 const isFinance = computed(() => store.role === 'finance')
-const canUpload = computed(() => ['draft', 'rejected'].includes(expense.value.status))
+const isOwner = computed(() => expense.value.user_id === store.user?.id)
+const canUpload = computed(() => isOwner.value && ['draft', 'rejected'].includes(expense.value.status))
 const canApproveNow = computed(() => expense.value.status === 'pending' && store.canApprove)
 
 // 预审结论标题
