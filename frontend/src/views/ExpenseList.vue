@@ -112,7 +112,12 @@ async function load() {
   try {
     query.start_date = dateRange.value?.[0] || ''
     query.end_date = dateRange.value?.[1] || ''
-    const data: any = await listMyExpenses({ ...query })
+    // 只把非空条件发给后端：空串会被当成非法枚举/日期，触发 422
+    const params: Record<string, any> = { page: query.page, page_size: query.page_size }
+    for (const key of ['status', 'expense_type', 'start_date', 'end_date'] as const) {
+      if (query[key]) params[key] = query[key]
+    }
+    const data: any = await listMyExpenses(params)
     rows.value = data.items || []
     total.value = data.total || 0
   } finally {
