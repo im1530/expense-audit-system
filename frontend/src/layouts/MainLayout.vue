@@ -157,6 +157,7 @@ async function loadNotifications() {
   try {
     const data: any = await listNotifications({ page: 1, page_size: 10 })
     notifications.value = data?.items || []
+    await loadUnread()
   } catch {
     notifications.value = []
   }
