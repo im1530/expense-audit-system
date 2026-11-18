@@ -7,9 +7,8 @@
           同时用 status 记录待审批、已撤回、已作废等流程痕迹，供待办列表与审批历史查询。
     状态区分：Expense.status 表示"单据整体走到哪一步"，Approval.status 表示"这一条审批记录的状态"，
     两者需要在同一个事务里同步更新，否则会出现"单据待审批但待办里查不到"的不一致。
-    落库方式：Approval.status 直接以 ApprovalStatus 枚举声明，且 native_enum=False（底层 varchar），
-    因此 pending / approved / rejected / recalled / cancelled / obsoleted 六个取值都能正常写入，
-    后续枚举增删取值也不需要改表结构。
+    落库方式：Approval.status 直接以 ApprovalStatus 枚举声明，且 native_enum=True，
+    与 schema.sql 的 MySQL ENUM 保持一致；新增取值必须同步写迁移（ALTER TABLE）。
 """
 
 
@@ -111,8 +110,8 @@ class ApprovalStatus(str,enum.Enum):
             - recalled   已撤回：提交人主动撤回提交，待办作废但记录留痕
             - cancelled  已撤销：提交人主动作废单据，未处理的待办同步作废
             - obsoleted  已作废：重新提交后，上一轮流程的旧记录统一失效标记
-        与 Approval.status 列的关系：该列直接以本枚举做类型声明（native_enum=False，落库为 varchar），
-        六个取值全部可写入，新增取值时无需改表结构。
+        与 Approval.status 列的关系：该列直接以本枚举做类型声明（native_enum=True，MySQL ENUM），
+        新增取值时必须同步写迁移，避免代码能写、库拒绝。
     """
     PENDING = "pending"         # 待审批
     APPROVED = "approved"       # 已通过:审批通过
@@ -189,7 +188,7 @@ class Approval(Base):
         Enum(
             ApprovalStatus,                 # 字段类型：枚举，只能取 ApprovalStatus 枚举里的值
             values_callable=lambda enum_cls: [m.value for m in enum_cls],   # 存枚举的 .value（小写），而非成员名大写
-            native_enum=False,              # 关键：禁用数据库原生ENUM，底层用varchar存储(取值增删不用改表结构)
+            native_enum=True,               # 与 schema.sql 的 MySQL ENUM 保持一致；新增状态必须同步写迁移
             name="approval_status",         # 数据库里枚举类型的名字
         ),
         nullable=False,                     # 非空:每条审批必须有审批状态

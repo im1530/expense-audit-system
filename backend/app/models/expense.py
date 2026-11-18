@@ -165,7 +165,7 @@ class Expense(Base):
         Enum(
             ExpenseStatus,              # 字段类型：枚举，只能取 ExpenseStatus 枚举里的值
             values_callable=lambda enum_cls: [m.value for m in enum_cls], # 存枚举的 .value（小写），而非成员名大写
-            native_enum=False,          # 关键：禁用数据库原生ENUM，底层用varchar存储
+            native_enum=True,           # 与 schema.sql 的 MySQL ENUM 保持一致；新增状态必须同步写迁移
             name="expense_status",      # 数据库里枚举类型的名字
         ),
         default=ExpenseStatus.DRAFT,    # 默认值：草稿

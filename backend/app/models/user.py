@@ -136,7 +136,7 @@ class User(Base):
         Enum(
             UserRole,               # 枚举类型，限定只能选 UserRole 枚举里的值
             values_callable=lambda enum_cls: [m.value for m in enum_cls], # 存 .value（小写），而非成员名大写
-            native_enum=False,      # 禁用数据库原生ENUM，底层用varchar存储
+            native_enum=True,       # 与 schema.sql 的 MySQL ENUM 保持一致
             name="user_role",       # 数据库枚举类型名
         ),
         nullable=False,             # 非空：必须填角色
