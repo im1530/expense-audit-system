@@ -94,7 +94,7 @@ const cards = computed(() => [
   { label: '草稿', value: counts.value.draft || 0, color: 'text-info' },
   { label: '待审批', value: counts.value.pending || 0, color: 'text-warning' },
   { label: '已通过', value: counts.value.approved || 0, color: 'text-success' },
-  { label: '已支付', value: counts.value.paid || 0, color: 'text-primary' },
+  { label: '已报销', value: counts.value.paid || 0, color: 'text-primary' },
 ])
 
 /**

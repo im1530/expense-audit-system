@@ -36,7 +36,7 @@
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatTime(expense.created_at) }}</el-descriptions-item>
         <el-descriptions-item label="提交时间">{{ formatTime(expense.submitted_at) }}</el-descriptions-item>
-        <el-descriptions-item label="支付时间">{{ formatTime(expense.paid_at) }}</el-descriptions-item>
+        <el-descriptions-item label="确认领取">{{ formatTime(expense.paid_at) }}</el-descriptions-item>
         <el-descriptions-item label="说明" :span="3">{{ expense.description || '-' }}</el-descriptions-item>
       </el-descriptions>
     </el-card>

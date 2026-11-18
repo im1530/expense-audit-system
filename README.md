@@ -1,5 +1,7 @@
 # AI Agent 财务报销审核系统
 
+[![CI](https://github.com/im1530/expense-audit-system/actions/workflows/ci.yml/badge.svg)](https://github.com/im1530/expense-audit-system/actions/workflows/ci.yml)
+
 一个**可运行**的报销审核平台：Vue 3 前端 + FastAPI 后端，核心是把「制度条款」变成可检索、可引用的依据，把「规则」变成确定性结论，再让 LLM 补充规则覆盖不到的疑点。
 **AI 只出建议、人工做决定；AI 失败自动降级为规则结论，绝不阻断审批。**
 
@@ -7,6 +9,7 @@
 - 前端 13 个页面（含 4 个管理端）· 30 个单测
 - 制度检索核心条款覆盖 82.4% → **100%**（68 条评测案例，离线可复现）
 - 96 条标注集：决策一致率 100%、风险等级 100%、高危漏放 0
+- 两阶段结算：财务登记 → 提交人确认领取，站内通知，制度 v1.3
 
 ## 它解决什么问题
 
@@ -112,7 +115,7 @@ cd ../frontend && npm test                                      # 30 个，jsdom
 - **票据真实、事由构造、模拟公司抬头**，不是公司真实报销；原始图片/PDF 不进仓库；
 - OCR 10 条：类型/金额/日期/商户 **40/40**；交通票日期口径问题已通过 Prompt v2 修复；
 - 风险链路：票面 34.50 vs 明细 1200 → `high / suggest_reject`，document → rule → risk → decision 联动正常；
-- 审批链路：测试库全链路 + 生产入口（443）两级审批/支付均通过；
+- 审批链路：测试库全链路 + 生产入口（443）两级审批均通过；结算链路在测试库/Docker 已验证“登记 → 提交人确认”；
 - 独立双标：60 条盲标 κ=0.9495（95%CI 0.8705–1.0000），2 条分歧已裁决；
 - 详见 `backend/evaluation/reports/`（`real_self_v1_*`、`blind_v2_*`、`e2e_smoke_20261115.md`）。
 
@@ -150,6 +153,12 @@ expense-audit-system/
 | 工作流轨迹 | 统计报表 |
 |---|---|
 | ![工作流轨迹](docs/images/trace.png) | ![统计报表](docs/images/reports.png) |
+
+### 两阶段结算（财务登记 → 提交人确认领取）
+
+| 报销结算 | 财务登记 | 站内通知 |
+|---|---|---|
+| ![报销结算](docs/images/settlement.png) | ![财务登记](docs/images/register.png) | ![站内通知](docs/images/notifications.png) |
 
 
 ## 状态与边界

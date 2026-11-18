@@ -56,7 +56,7 @@
         <el-table-column label="总金额" width="150">
           <template #default="{ row }">{{ formatMoney(row.total_amount) }}</template>
         </el-table-column>
-        <el-table-column label="已支付" width="150">
+        <el-table-column label="已报销" width="150">
           <template #default="{ row }">{{ formatMoney(row.paid_amount) }}</template>
         </el-table-column>
       </el-table>
