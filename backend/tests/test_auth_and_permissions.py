@@ -50,19 +50,26 @@ class AuthAndPermissionTest(BaseTestCase, unittest.TestCase):
 
     # ---------- 登录 ----------
     def test_login_success(self):
-        """正确密码登录：返回令牌，且不需要强制改密"""
+        """正确密码登录：返回令牌，更新最近登录时间，且不需要强制改密"""
+        user = self.fx["users"]["employee"]
+        self.assertIsNone(user.last_login_at)
         result = login(form_data=self.login_form("employee_e1", TEST_PASSWORD), db=self.db)
 
         self.assertIn("access_token", result)
         self.assertEqual(result["token_type"], "bearer")
         self.assertFalse(result["must_change_password"])
+        self.db.refresh(user)
+        self.assertIsNotNone(user.last_login_at)
 
     def test_login_wrong_password(self):
-        """密码错误：401，且提示不区分账号不存在"""
+        """密码错误：401，提示不区分账号不存在，且不更新最近登录时间"""
+        user = self.fx["users"]["employee"]
         with self.assertRaises(HTTPException) as ctx:
             login(form_data=self.login_form("employee_e1", "wrong-password"), db=self.db)
         self.assert_http_error(ctx, 401)
         self.assertEqual(ctx.exception.detail, "用户名或密码错误")
+        self.db.refresh(user)
+        self.assertIsNone(user.last_login_at)
 
     def test_login_inactive_account(self):
         """账号被停用：密码正确也拒绝登录（403）"""

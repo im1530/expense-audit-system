@@ -120,6 +120,7 @@ def login(
         - 返回标准 {"access_token", "token_type": "bearer"}，前端后续请求带 Authorization: Bearer <token>
         - 额外返回 must_change_password：为 true 时前端应立刻跳转改密页，
           因为此时除"修改密码"外的接口都会返回 403
+    登录成功后会把 users.last_login_at 更新为当前时间，供管理端用户列表展示最近登录。
         :param form_data: 用户名/密码表单，由 OAuth2PasswordRequestForm 解析
         :param db: 数据库会话
         :return: 含 access_token、token_type、must_change_password 的字典
@@ -144,14 +145,19 @@ def login(
         logger.warning("登录失败 username=%s user_id=%s 原因=账号已停用", user.username, user.id)
         raise HTTPException(status_code=403, detail="账号已被停用,请联系管理员")
 
-    # 4.校验通过,签发 token(载荷:sub=用户ID + ver=令牌版本号)
+    # 4.记录最近登录时间：管理端用户列表依赖该字段，只有成功登录才更新
+    user.last_login_at = datetime.now()
+    db.commit()
+    db.refresh(user)
+
+    # 5.校验通过,签发 token(载荷:sub=用户ID + ver=令牌版本号)
     token = create_user_token(user)  # 访问令牌
     logger.info("登录成功 user_id=%s username=%s role=%s must_change_password=%s",  # 日志模板
                 user.id, user.username,  # 用户ID/用户名
                 user.role.value if hasattr(user.role, "value") else user.role,  # 角色
                 user.must_change_password)  # 是否待改密
 
-    # 5.返回 token 给前端
+    # 6.返回 token 给前端
     #  "token_type": "bearer" 是标准约定:持票人令牌类型，前端后续把 token 放在请求头 Authorization: Bearer <token>
     #  must_change_password: 管理员建号/重置密码后为 True，前端据此强制跳转改密页
     return {
