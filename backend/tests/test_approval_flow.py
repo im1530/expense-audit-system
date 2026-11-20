@@ -46,6 +46,46 @@ class ApprovalFlowMatchingTest(BaseTestCase, unittest.TestCase):
         """边界：999.99 仍属于小额档"""
         self.assertEqual(self.match("employee", Decimal("999.99")), self.fx["flows"]["mgr"].id)
 
+    def test_decimal_amount_direct_input(self):
+        """直接传 Decimal 时边界仍正确（不经过 float 中转）"""
+        user = self.fx["users"]["employee"]
+        self.assertEqual(
+            match_approval_flow(self.db, user, Decimal("999.99")),
+            self.fx["flows"]["mgr"].id,
+        )
+        self.assertEqual(
+            match_approval_flow(self.db, user, Decimal("1000.00")),
+            self.fx["flows"]["mgr_fin"].id,
+        )
+        self.assertEqual(
+            match_approval_flow(self.db, user, Decimal("19999.99")),
+            self.fx["flows"]["mgr_fin"].id,
+        )
+
+    def test_overlapping_rules_use_lowest_id(self):
+        """重叠规则按 id 升序取第一条，结果可复现"""
+        self.db.query(Rule).update({"is_active": False})
+        self.db.commit()
+        flow_a = self.fx["flows"]["mgr"]
+        flow_b = self.fx["flows"]["mgr_fin"]
+        self.db.add_all([
+            Rule(
+                name="重叠规则A", rule_type="amount", condition="0~5000", action="assign_chain",
+                config={"submitter_roles": ["employee"], "min_amount": 0,
+                        "max_amount": 5000, "flow_id": flow_a.id},
+                is_active=True,
+            ),
+            Rule(
+                name="重叠规则B", rule_type="amount", condition="1000~20000", action="assign_chain",
+                config={"submitter_roles": ["employee"], "min_amount": 1000,
+                        "max_amount": 20000, "flow_id": flow_b.id},
+                is_active=True,
+            ),
+        ])
+        self.db.commit()
+        # 2000 同时命中两条，按 id 升序应命中先写入的 A
+        self.assertEqual(self.match("employee", 2000), flow_a.id)
+
     def test_employee_boundary_1000(self):
         """边界：1000 进入中额档（经理→财务）"""
         self.assertEqual(self.match("employee", 1000), self.fx["flows"]["mgr_fin"].id)

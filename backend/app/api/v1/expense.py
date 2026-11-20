@@ -1298,7 +1298,7 @@ def submit_expense(
     flow_id = match_approval_flow(  # 匹配审批流
         db=db,                                  # 数据库会话对象
         submitter_user=current_user,            # 提交人
-        amount=float(expense.total_amount)      # 报销金额
+        amount=expense.total_amount             # 报销金额（Decimal，避免 float 边界误差）
     )
 
 
@@ -1470,7 +1470,7 @@ def resubmit_expense(
     flow_id = match_approval_flow(  # 匹配审批流
         db=db,                              # 数据库会话对象
         submitter_user=current_user,        # 提交人
-        amount=float(expense.total_amount)  # 报销金额
+        amount=expense.total_amount         # 报销金额（Decimal，避免 float 边界误差）
     )
 
     # 4.返回值为0代表是boss角色，无线上审批流

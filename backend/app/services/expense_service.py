@@ -11,6 +11,8 @@
     约定：本模块只改内存中的对象、不提交事务（commit 由调用方负责），便于把多次写操作放进同一事务保证原子性。
 """
 from datetime import timedelta
+from decimal import Decimal, InvalidOperation
+
 from sqlalchemy.orm import Query, Session
 from app.models.expense import Expense,ExpenseItem,Category
 from app.schemas.common import BusinessFilter
@@ -111,8 +113,32 @@ def apply_item_business_filters(query: Query, filters: BusinessFilter) -> Query:
 
 
 
+# 金额统一转 Decimal（规则配置来自 JSON，可能是 int/float/str）
+def _as_decimal(value, *, label: str) -> Decimal | None:
+    """
+    把金额转成 Decimal，避免用浮点数做金额比较
+        :param value: 原始金额；None 表示"不限"
+        :param label: 出错时的定位说明（哪条规则的哪个字段）
+        :return: Decimal；None 原样返回
+        :raises HTTPException: 500，配置里的金额不是合法数字（属于配置错误，不是用户输入问题）
+    """
+    # 1.不限额的语义用 None 表示，直接透传
+    if value is None:
+        return None
+    # 2.已经是 Decimal 无需转换
+    if isinstance(value, Decimal):
+        return value
+    # 3.其余类型统一先转字符串再转 Decimal：str(0.1) 得到 "0.1"，
+    #   而 Decimal(0.1) 会带出二进制误差 0.1000000000000000055511151231257827
+    try:
+        return Decimal(str(value).strip())
+    except (InvalidOperation, ValueError) as exc:
+        raise HTTPException(status_code=500, detail=f"审批规则配置的金额不合法：{label}") from exc
+
+
+
 # 提交报销单时匹配审批流
-def match_approval_flow(db: Session, submitter_user: User, amount: float) -> int:
+def match_approval_flow(db: Session, submitter_user: User, amount: float | Decimal | str) -> int:
     """
     按「提交人角色 + 报销金额」匹配审批流，返回应绑定的审批流ID
     纯计算逻辑：只读库、不写库、不提交事务，供"首次提交"与"驳回后重新提交"复用。
@@ -121,8 +147,8 @@ def match_approval_flow(db: Session, submitter_user: User, amount: float) -> int
         2. 取出所有启用中的金额类规则（rule_type="amount" 且 is_active=True）；
         3. 逐条规则按「先角色、后金额区间」校验：config.submitter_roles 含本人角色，
            且金额落在 [min_amount, max_amount] 内（max_amount 缺省视为无上限）；
-        4. 采用"第一条命中即生效"，因此规则之间的优先级取决于查询返回顺序，
-           如需精确控制优先级，应在 rules 表增加排序字段并显式 order_by；
+        4. 采用"第一条命中即生效"，遍历顺序固定为 rules.id 升序（已显式 order_by，保证结果可复现）；
+           若业务需要可调优先级，应在 rules 表增加 priority 字段并改为按它排序；
         5. 命中规则后，还要校验该规则 config.flow_id 指向的审批流"存在且已启用"：
            规则与流程是两处独立配置，流程被停用/删掉后规则仍在，若不校验就会把单据挂到无效流程上，
            因此这里宁可 500 阻断，也不静默放行或改走默认流（避免大额单据被降级到简易流程）；
@@ -131,7 +157,7 @@ def match_approval_flow(db: Session, submitter_user: User, amount: float) -> int
         7. 前面都拿不到流程时抛 500 阻断提交（属于初始化数据缺失，不能静默放过）。
         :param db: 数据库会话
         :param submitter_user: 报销单提交人，用于取角色
-        :param amount: 报销单总金额（float），用于与规则中的金额区间比较
+        :param amount: 报销单总金额（Decimal 优先；兼容 float/str 入参，内部统一转 Decimal 比较）
         :return: 匹配到的审批流ID；boss 角色返回 0，表示不走线上审批
         :raises HTTPException: 500，规则命中的审批流不存在/已停用，或系统没有可用的默认审批流
     """
@@ -143,11 +169,20 @@ def match_approval_flow(db: Session, submitter_user: User, amount: float) -> int
     if submitter_role == "boss":
         return 0
 
+    # 2.1 金额统一转 Decimal：金额比较不能用 float，否则边界值（如 999.99 / 19999.99）
+    #     可能因二进制浮点表示误差被多算或少算进一档，导致审批层级错配
+    amount_value = _as_decimal(amount, label="报销金额")
+    if amount_value is None:
+        raise HTTPException(status_code=500, detail="报销单总金额缺失，无法匹配审批流")
+
     # 3. 查询所有启用中的金额类审批规则
+    #    显式按 id 升序：'第一条命中即生效'要求遍历顺序确定，
+    #    否则同一笔金额在规则区间重叠时可能今天走 flow A、明天走 flow B（取决于数据库返回顺序）。
+    #    当前用 id 作为"写入顺序"的替身；若业务需要可调优先级，应在 rules 表加 priority 字段并改这里。
     rules = db.query(Rule).filter(                  # 启用金额规则
         Rule.rule_type == "amount",                 # 金额类规则
         Rule.is_active == True                      # 仅启用
-    ).all()
+    ).order_by(Rule.id.asc()).all()
 
     # 4. 遍历规则，按「角色 -> 金额区间」依次匹配
     for rule in rules:
@@ -160,15 +195,21 @@ def match_approval_flow(db: Session, submitter_user: User, amount: float) -> int
         if submitter_role not in allowed_roles:
             continue
 
-        # 取出金额区间，缺省值兜底
-        min_amount = rule_config.get("min_amount", 0) or 0   # 金额下限
-        max_amount = rule_config.get("max_amount")          # 金额上限
+        # 取出金额区间，缺省值兜底（统一转 Decimal，NULL 表示无上限）
+        min_amount = _as_decimal(
+            rule_config.get("min_amount", 0), label=f"规则 {rule.id} 的 min_amount"
+        )                                            # 金额下限
+        if min_amount is None:
+            min_amount = Decimal("0")                # 未配置下限视为 0
+        max_amount = _as_decimal(
+            rule_config.get("max_amount"), label=f"规则 {rule.id} 的 max_amount"
+        )                                            # 金额上限（None=不限）
 
         # 低于金额下限，不命中
-        if amount < min_amount:
+        if amount_value < min_amount:
             continue
         # 设有金额上限且超出上限，不命中
-        if max_amount is not None and amount > max_amount:
+        if max_amount is not None and amount_value > max_amount:
             continue
 
         # 角色与金额均匹配，记录命中规则并终止遍历
