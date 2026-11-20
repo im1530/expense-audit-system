@@ -75,7 +75,8 @@ def create_expense(
         - 需登录鉴权；提交人固定为当前登录用户（从令牌取），不接受前端传入，确保数据归属安全
     核心处理:
         - 逐条校验费用分类是否存在且启用，并把"不存在"与"已停用"区分成不同提示，便于前端定位；
-        - 后端汇总明细金额得到总金额，前端传了也不采信，避免金额被篡改；
+        - 明细挂到主单后先 flush，再统一调用 recalculate_expense_total_amount 按数据库 SUM 汇总，
+          与增/改/删明细共用同一套算法，避免"内存 sum"和"DB SUM"两套逻辑漂移；
         - 单号规则：EXP + 年月日时分秒 + 6 位随机十六进制（同一秒内也不会重复）；
         - 通过 expense.items.append(...) 一次性级联写入主表与明细表，同一事务提交。
     异常: 400 明细分类不存在/已停用；422 请求体校验失败（如明细为空）
@@ -105,8 +106,8 @@ def create_expense(
                 raise HTTPException(status_code=400, detail=f"第{index}条明细的费用分类已停用,不可使用")
 
 
-    # 2.汇总明细金额,作为报销单总金额(前端不传入,后端计算)
-    total = sum(item.amount for item in payload.items)  # 明细金额合计
+    # 2.总金额先置 0，待明细 flush 后统一按数据库 SUM 重算（与增删改明细同一算法）
+    total = 0
 
 
     # 3.报销单号：前缀 EXP + 时间戳 + 6位随机，避免重复(前端不传入,后端生成)
@@ -137,6 +138,8 @@ def create_expense(
 
     # 6.写入数据库的三步
     db.add(expense)        # 把对象加入会话(还没真正写入库)
+    db.flush()             # 先落明细，保证下面的 SUM 能查到本事务内的新数据
+    recalculate_expense_total_amount(expense, db)  # 统一按数据库 SUM 回写总金额
     db.commit()            # 提交事务,真正落库,此时自增id生成
     db.refresh(expense)    # 回读数据库,把 id、默认值等刷新到 expense 对象上
 
