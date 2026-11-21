@@ -283,7 +283,7 @@ class User(Base):
             "finance":["submit","view_own","edit_own","cancel",
                 "approve","reject","view_all","pay","export"],      # 财务：基础员工权 + 审批/拒绝/看全部/支付/导出
             "boss": ["submit", "view_own", "edit_own", "cancel",
-                "approve", "reject", "view_all"],                    # 老板：基础员工权 + 审批/拒绝/看全部
+                "approve", "reject", "view_all", "export"],          # 老板：基础员工权 + 审批/拒绝/看全部/导出（董事会材料需要）
             "admin": ["submit", "view_own", "edit_own", "cancel",
                       "view_all", "export", "manage_user"],           # 管理员：基础员工权 + 看全部/导出/管用户；刻意不含 approve/pay，admin 只查不批不付款
         }

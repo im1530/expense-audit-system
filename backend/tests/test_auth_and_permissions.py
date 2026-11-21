@@ -15,7 +15,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.api.deps import get_current_user, get_current_user_allow_pending_password
 from app.api.v1.admin_user import list_users
 from app.api.v1.auth import login, read_current_user
-from app.api.v1.report import report_overview
+from app.api.v1.report import report_export, report_overview
 from app.core.security import create_user_token
 from app.schemas.common import PageParams
 from app.schemas.user import UserResponse
@@ -178,6 +178,20 @@ class AuthAndPermissionTest(BaseTestCase, unittest.TestCase):
         overview = report_overview(start_date=None, end_date=None, department_id=None,
                                    db=self.db, current_user=finance)
         self.assertEqual(overview["total_count"], 0)     # 种子数据里还没有单据
+
+    def test_boss_can_export(self):
+        """老板有 view_all + export：能导出董事会/经营会材料"""
+        boss = self.fx["users"]["boss"]
+        self.assertTrue(boss.has_permission("export"))
+
+        response = report_export(
+            start_date=None, end_date=None, department_id=None, status=None,
+            db=self.db, current_user=boss,
+        )
+        self.assertEqual(
+            response.media_type,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
 
 
