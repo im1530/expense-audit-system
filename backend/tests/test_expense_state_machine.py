@@ -211,29 +211,50 @@ class ExpenseStateMachineTest(BaseTestCase, unittest.TestCase):
 
     # ---------- 审批执行 ----------
     def test_manager_then_finance_approval(self):
-        """两级审批：经理通过后推进层级，财务通过后终审通过"""
+        """两级审批：同一条任务被更新，通过后为下一级创建新待办"""
         employee = self.fx["users"]["employee"]
         manager = self.fx["users"]["manager"]
         finance2 = self.fx["users"]["finance2"]      # 非申请人本人
-        expense = make_expense(self.db, employee, status=ExpenseStatus.PENDING,
+        expense = make_expense(self.db, employee, status=ExpenseStatus.DRAFT,
                                flow_id=self.fx["flows"]["mgr_fin"].id,
                                amount=Decimal("5000.00"))
+        submit_expense(expense_id=expense.id, db=self.db, current_user=employee)
+        level1_task = self.db.query(Approval).filter(
+            Approval.expense_id == expense.id, Approval.level == 1,
+            Approval.status == ApprovalStatus.PENDING,
+        ).one()
 
         first = approval_action(expense_id=expense.id,
                                 action=ApprovalAction(status="approved", comment="同意"),
                                 db=self.db, current_user=manager)
-        self.assertEqual(first.level, 1)
+        self.assertEqual(first.id, level1_task.id)       # 更新原任务，不新增结果行
+        self.assertEqual(first.status, ApprovalStatus.APPROVED)
+        self.assertIsNotNone(first.acted_at)
         self.db.refresh(expense)
         self.assertEqual(expense.status, ExpenseStatus.PENDING)
         self.assertEqual(expense.current_level, 2)
 
+        pending_tasks = self.db.query(Approval).filter(
+            Approval.expense_id == expense.id, Approval.status == ApprovalStatus.PENDING,
+        ).all()
+        self.assertEqual(len(pending_tasks), 1)          # 只为第 2 级新建一条待办
+        self.assertEqual(pending_tasks[0].level, 2)
+
         second = approval_action(expense_id=expense.id,
                                  action=ApprovalAction(status="approved", comment="财务同意"),
                                  db=self.db, current_user=finance2)
+        self.assertEqual(second.id, pending_tasks[0].id)
         self.assertEqual(second.level, 2)
+        self.assertEqual(second.status, ApprovalStatus.APPROVED)
         self.db.refresh(expense)
         self.assertEqual(expense.status, ExpenseStatus.APPROVED)
         self.assertIsNotNone(expense.approved_at)
+
+        # 一级一行：最终两条 approved，没有任何遗留 pending
+        records = self.db.query(Approval).filter(Approval.expense_id == expense.id).all()
+        self.assertEqual(len(records), 2)
+        self.assertTrue(all(r.status == ApprovalStatus.APPROVED for r in records))
+        self.assertTrue(all(r.acted_at is not None for r in records))
 
     def test_reject_terminates_flow(self):
         """任一级驳回：流程终止，单据转已驳回"""

@@ -143,7 +143,7 @@
         <el-timeline-item
           v-for="item in history"
           :key="item.id"
-          :timestamp="formatTime(item.created_at)"
+          :timestamp="formatTime(item.acted_at || item.created_at)"
           :type="APPROVAL_STATUS[item.status]?.type"
         >
           <b>{{ item.approver_name || '系统' }}</b>

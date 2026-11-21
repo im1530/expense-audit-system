@@ -73,7 +73,8 @@ class ApprovalResponse(BaseModel):
     status:ApprovalStatus           # 审批状态
     level:Optional[int]             # 第几级审批
     comment:Optional[str]           # 审批意见
-    created_at:datetime             # 审批时间
+    created_at:datetime             # 任务创建时间（提交/进入本级的时间）
+    acted_at:Optional[datetime]     # 处理时间（审批/撤回/撤销时回填）
 
     model_config = {"from_attributes": True}    # 允许直接从 ORM 对象读取属性
 
@@ -104,7 +105,8 @@ class ApprovalRecordItem(BaseModel):
     level: int                          # 第几级审批
     status: ApprovalStatus              # 审批结果(枚举)
     comment: Optional[str]              # 审批意见(唯一可空字段,选填)
-    created_at: datetime                # 审批执行时间
+    created_at: datetime                # 任务创建时间（提交/进入本级的时间）
+    acted_at: Optional[datetime]        # 处理时间（审批/撤回/撤销时回填）
 
     model_config = {"from_attributes": True}    # 允许直接从 ORM 对象读取属性
 

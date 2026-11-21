@@ -15,7 +15,7 @@
 
 from app.models.base import Base
 import enum
-from sqlalchemy import Column, BigInteger, String, Text, Boolean, JSON, Enum, Integer, ForeignKey
+from sqlalchemy import Column, BigInteger, String, Text, Boolean, JSON, Enum, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
 
@@ -207,6 +207,12 @@ class Approval(Base):
     comment = Column(
         Text,                   # 字段类型：文本
         comment="审批意见"       # 字段备注，写进数据库
+    )
+
+    # acted_at:该待办被处理的时间；提交时创建为 NULL，审批/撤回/撤销时回填
+    acted_at = Column(
+        DateTime(timezone=True),  # 日期时间类型
+        comment="处理时间"         # 字段备注，写进数据库
     )
 
 

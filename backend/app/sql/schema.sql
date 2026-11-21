@@ -45,6 +45,7 @@ CREATE TABLE `approvals` (
   `status` enum('pending','approved','rejected','recalled','cancelled','obsoleted') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '审批状态：待审批/已通过/已驳回/已撤回/已撤销/已作废',
   `level` int(11) NOT NULL COMMENT '所属审批层级',
   `comment` text COLLATE utf8mb4_unicode_ci COMMENT '审批意见',
+  `acted_at` datetime DEFAULT NULL COMMENT '处理时间（审批/撤回/撤销时回填）',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),

@@ -1479,7 +1479,8 @@ def resubmit_expense(
         db.query(Approval).filter(
             Approval.expense_id == expense_id
         ).update({
-            "status": ApprovalStatus.OBSOLETED
+            "status": ApprovalStatus.OBSOLETED,
+            "acted_at": datetime.now(),
         })
         # 不绑定审批流ID，重置审批层级标记
         expense.flow_id = None  # 无线上审批流
@@ -1500,7 +1501,8 @@ def resubmit_expense(
         db.query(Approval).filter(
             Approval.expense_id == expense_id  # 限定范围：仅当前报销单的审批记录
         ).update({
-            "status": ApprovalStatus.OBSOLETED  # 统一更新为已作废状态，标记上一轮审批流程失效
+            "status": ApprovalStatus.OBSOLETED,  # 统一更新为已作废状态，标记上一轮审批流程失效
+            "acted_at": datetime.now(),            # 旧轮待办关闭时间
         })
 
         # 9.状态改为待审批,并刷新提交时间
@@ -1603,7 +1605,8 @@ def recall_expense(
         Approval.status == ApprovalStatus.PENDING        # 仅待审批状态的记录可撤回
     ).update({
         "status": ApprovalStatus.RECALLED,               # 统一更新为已撤回状态
-        "comment": "用户撤回该单据提交"                    # 更新备注，明确标注该条记录的业务操作原因
+        "comment": "用户撤回该单据提交",                    # 更新备注，明确标注该条记录的业务操作原因
+        "acted_at": datetime.now(),                       # 撤回即待办关闭时间
     })
 
     # 6.更新数据库的两步
@@ -1684,7 +1687,8 @@ def cancel_expense(
         Approval.status == ApprovalStatus.PENDING        # 仅修改待审批状态的记录,不触碰历史处理记录
     ).update({
         "status": ApprovalStatus.CANCELLED,             # 统一更新为已撤销状态
-        "comment": "用户主动撤销该单据"                    # 更新备注，明确标注该条记录的业务操作原因
+        "comment": "用户主动撤销该单据",                    # 更新备注，明确标注该条记录的业务操作原因
+        "acted_at": datetime.now(),                     # 撤销即待办关闭时间
     })
 
     # 7.更新数据库的两步

@@ -154,52 +154,77 @@ def approval_action(
             raise HTTPException(status_code=403, detail=f"无权审批,本级应由 {required_role} 审批")
 
 
-    # 8.落一条审批记录(阶段1级别固定为1)
-    record = Approval(  # 审批记录实体
-        expense_id=expense_id,              # 所属报销单ID(关联哪张报销单)
-        approver_id=current_user.id,        # 审批人ID
-        flow_id=expense.flow_id,            # 所属审批流ID
-        status=action.status,               # 审批结果:approved / rejected
-        comment=action.comment,             # 审批意见,可空
-        level=expense.current_level,        # 当前是第几级审批
+    # 8.定位本级待办：提交/上一级通过时创建，审批动作直接更新它，不再新增一条结果记录
+    approval = (
+        db.query(Approval)
+        .filter(
+            Approval.expense_id == expense_id,
+            Approval.level == expense.current_level,
+            Approval.status == ApprovalStatus.PENDING,
+        )
+        .order_by(Approval.id.desc())
+        .first()
     )
+    if approval is None:
+        # 兼容历史数据：旧流程可能没有为本级建待办，补一条再更新，避免 500
+        approval = Approval(
+            expense_id=expense_id,
+            approver_id=None,
+            flow_id=expense.flow_id,
+            status=ApprovalStatus.PENDING,
+            comment="系统补建待办",
+            level=expense.current_level,
+        )
+        db.add(approval)
 
+    now = datetime.now()
+    approval.approver_id = current_user.id          # 回填实际审批人
+    approval.status = action.status                 # pending → approved / rejected
+    approval.comment = action.comment               # 审批意见
+    approval.acted_at = now                         # 处理时间
 
     # 9.处理审批结果
     if action.status == ApprovalStatus.REJECTED:
         # 9.1 拒绝:直接终止,报销单状态为 rejected,并记录审批时间
         expense.status = ExpenseStatus.REJECTED  # 状态：已驳回
-        expense.approved_at = datetime.now()  # 记录审批通过时间
+        expense.approved_at = now  # 记录审批通过时间
     else:
         # 9.2 通过:判断是否还有下一级审批 --- any(...)：只要有一个满足就返回 True，全不满足返回 False
         next_level = expense.current_level + 1  # 计算下一级别(当前级别 + 1)
         has_next = any(lv.get("level") == next_level for lv in levels)  # 是否还有下一级
         if has_next:
-            # 还有下一级:推进层级,单据保持 pending 等待下一级
+            # 还有下一级:推进层级,为下一级创建新的待办,单据保持 pending
             expense.current_level = next_level  # 推进层级
             expense.status = ExpenseStatus.PENDING  # 状态：待下一级
+            db.add(Approval(
+                expense_id=expense_id,
+                approver_id=None,
+                flow_id=expense.flow_id,
+                status=ApprovalStatus.PENDING,
+                comment="等待本级审批",
+                level=next_level,
+            ))
         else:
             # 没有下一级:报销单状态为 approved,并记录审批时间
             expense.status = ExpenseStatus.APPROVED  # 状态：终审通过
-            expense.approved_at = datetime.now()  # 记录审批通过时间
+            expense.approved_at = now  # 记录审批通过时间
 
 
     # 10.写入数据库的三步
-    db.add(record)         # 把对象加入会话(还没真正写入库)
     db.commit()            # 提交事务,真正落库
-    db.refresh(record)     # 回读数据库,把 id、默认值等刷新到 record 对象上
+    db.refresh(approval)   # 回读数据库,把 id、默认值等刷新到 approval 对象上
 
 
     # 11.返回:由 response_model=ApprovalResponse 过滤字段
     logger.info(
         "审批操作 expense_id=%s level=%s approver_id=%s result=%s 单据状态=%s",  # 日志格式串
         expense.id,                                                     # 报销单ID
-        record.level,                                                   # 审批层级
+        approval.level,                                                 # 审批层级
         current_user.id,                                                # 审批人ID
         action.status.value if hasattr(action.status, "value") else action.status,     # 审批结果
         expense.status.value if hasattr(expense.status, "value") else expense.status,  # 单据状态
     )
-    return record
+    return approval
 
 
 
