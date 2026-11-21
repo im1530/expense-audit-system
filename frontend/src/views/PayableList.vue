@@ -12,6 +12,7 @@
         <el-tab-pane label="待登记" name="approved" />
         <el-tab-pane label="待领取" name="registered" />
         <el-tab-pane label="已报销" name="paid" />
+        <el-tab-pane label="已关闭" name="closed" />
       </el-tabs>
 
       <el-table :data="rows" border size="small">

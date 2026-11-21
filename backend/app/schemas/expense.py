@@ -230,6 +230,7 @@ class ExpenseResponse(ExpenseBase):
     register_note: Optional[str] = None         # 登记备注
     paid_at: Optional[datetime] = None          # 财务支付时间
     confirmed_at: Optional[datetime] = None     # 提交人确认领取时间
+    closed_at: Optional[datetime] = None        # 管理员强制关闭时间
     cancelled_at: Optional[datetime] = None     # 作废时间
     created_at: datetime                        # 创建时间
     updated_at: Optional[datetime] = None       # 更新时间

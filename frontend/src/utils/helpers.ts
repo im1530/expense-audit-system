@@ -11,6 +11,7 @@ export const EXPENSE_STATUS: Record<string, { label: string; type: string }> = {
   registered: { label: '待领取', type: 'warning' },
   rejected: { label: '已驳回', type: 'danger' },
   paid: { label: '已报销', type: 'success' },
+  closed: { label: '已关闭', type: 'info' },
   cancelled: { label: '已撤销', type: 'info' },
 }
 

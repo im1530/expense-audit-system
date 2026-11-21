@@ -91,7 +91,10 @@ class SettlementServiceTest(BaseTestCase, unittest.TestCase):
             force_close(self.db, expense.id, self.fx["users"]["finance"], reason="越权")
         self.assertEqual(ctx.exception.status_code, 403)
         closed = force_close(self.db, expense.id, self.fx["users"]["admin"], reason="员工离职")
-        self.assertEqual(closed.status, ExpenseStatus.PAID)
+        self.assertEqual(closed.status, ExpenseStatus.CLOSED)
+        self.assertIsNotNone(closed.closed_at)
+        self.assertIsNone(closed.paid_at)
+        self.assertIsNone(closed.confirmed_at)
 
     def test_transaction_no_unique(self):
         """重复流水号登记报 409"""

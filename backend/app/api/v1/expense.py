@@ -844,8 +844,10 @@ def get_expense_status_list():
         ExpenseStatus.DRAFT: "草稿",
         ExpenseStatus.PENDING: "待审批",
         ExpenseStatus.APPROVED: "已通过",
+        ExpenseStatus.REGISTERED: "待领取",
         ExpenseStatus.REJECTED: "已驳回",
-        ExpenseStatus.PAID: "已支付",
+        ExpenseStatus.PAID: "已报销",
+        ExpenseStatus.CLOSED: "已关闭",
         ExpenseStatus.CANCELLED: "已取消",
     }
 

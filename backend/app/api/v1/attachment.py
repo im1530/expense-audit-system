@@ -249,8 +249,8 @@ def extract_invoice(
         raise HTTPException(status_code=404, detail="附件已删除")
     if not can_read_attachment(current_user, expense.user_id):
         raise HTTPException(status_code=403, detail="无权限识别该凭证")
-    if expense.status in (ExpenseStatus.PAID, ExpenseStatus.CANCELLED):
-        raise HTTPException(status_code=409, detail="已支付/已取消单据不允许再识别凭证")
+    if expense.status in (ExpenseStatus.PAID, ExpenseStatus.CLOSED, ExpenseStatus.CANCELLED):
+        raise HTTPException(status_code=409, detail="已报销/已关闭/已取消单据不允许再识别凭证")
     if not has_ai_consent(expense.user):
         raise HTTPException(status_code=403, detail=AI_CONSENT_REQUIRED_MESSAGE)
     if not settings.DOCUMENT_AI_ENABLED:

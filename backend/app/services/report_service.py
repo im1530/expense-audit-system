@@ -27,8 +27,10 @@ STATUS_LABELS = {                               # 状态→中文名
     ExpenseStatus.DRAFT.value: "草稿",
     ExpenseStatus.PENDING.value: "待审批",
     ExpenseStatus.APPROVED.value: "已通过",
+    ExpenseStatus.REGISTERED.value: "待领取",
     ExpenseStatus.REJECTED.value: "已驳回",
-    ExpenseStatus.PAID.value: "已支付",
+    ExpenseStatus.PAID.value: "已报销",
+    ExpenseStatus.CLOSED.value: "已关闭",
     ExpenseStatus.CANCELLED.value: "已取消",
 }
 

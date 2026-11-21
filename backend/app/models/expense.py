@@ -43,6 +43,7 @@ class ExpenseStatus(str,enum.Enum):
     REGISTERED = "registered"      # 已登记：财务登记，待提交人确认领取
     REJECTED = "rejected"          # 审批拒绝：审批打回
     PAID = "paid"                  # 已支付：提交人确认领取，报销闭环完成
+    CLOSED = "closed"              # 已关闭：管理员强制关闭，未经过提交人确认
     CANCELLED = "cancelled"        # 已取消：主动作废
 
 
@@ -230,6 +231,12 @@ class Expense(Base):
     confirmed_at = Column(
         DateTime(timezone=True),            # 日期时间类型,timezone=True 带时区
         comment="确认领取时间"               # 字段备注，写进数据库
+    )
+
+    # closed_at:管理员强制关闭时间（closed 终态）
+    closed_at = Column(
+        DateTime(timezone=True),            # 日期时间类型,timezone=True 带时区
+        comment="强制关闭时间"               # 字段备注，写进数据库
     )
 
     # cancelled_at:单据撤销时间

@@ -162,7 +162,7 @@ def confirm_received(db: Session, expense_id: int, current_user: User) -> Expens
 
 
 def force_close(db: Session, expense_id: int, current_user: User, *, reason: str) -> Expense:
-    """管理员强制关闭：registered → paid"""
+    """管理员强制关闭：registered → closed（不算提交人确认领取）"""
     role = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
     if role != UserRole.ADMIN.value:
         raise SettlementError("只有管理员可以强制关闭", 403)
@@ -171,9 +171,10 @@ def force_close(db: Session, expense_id: int, current_user: User, *, reason: str
         raise SettlementError("仅已登记待领取的报销单可以强制关闭", 409)
 
     now = datetime.now()
-    expense.status = ExpenseStatus.PAID
-    expense.paid_at = now
-    expense.confirmed_at = now
+    expense.status = ExpenseStatus.CLOSED
+    expense.closed_at = now
+    expense.paid_at = None
+    expense.confirmed_at = None
     db.add(ExpenseSettlement(
         expense_id=expense.id,
         action=ACTION_FORCE_CLOSE,
