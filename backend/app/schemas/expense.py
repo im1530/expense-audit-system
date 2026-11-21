@@ -217,6 +217,7 @@ class ExpenseResponse(ExpenseBase):
     """
     id: int                                     # 报销单ID
     user_id: int                                # 提交人ID(后端填入)
+    department_id: Optional[int] = None         # 提交时部门快照
     expense_no: str                             # 报销单号(后端生成)
     total_amount: Decimal                       # 报销总金额(后端汇总,前端不传)
     status: ExpenseStatus                       # 报销状态(后端流转,前端不传)

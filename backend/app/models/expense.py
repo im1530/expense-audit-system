@@ -104,6 +104,15 @@ class Expense(Base):
         comment="提交人ID"           # 字段备注，写进数据库
     )
 
+    # department_id:提交时的部门快照；人员调部门后，历史报表仍按提交时归属统计
+    department_id = Column(
+        BigInteger,                     # 与 departments.id 同类型
+        ForeignKey("departments.id"),   # 外键：关联部门表
+        nullable=True,                  # boss/admin 等可无部门
+        index=True,                     # 按部门统计/筛选
+        comment="提交时部门快照ID"       # 字段备注，写进数据库
+    )
+
 
     # ===== 外键:关联审批流表 =====
     # flow_id:这张单走哪条审批流,外键→approval_flows.id,可空

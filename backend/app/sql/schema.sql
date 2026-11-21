@@ -170,6 +170,7 @@ DROP TABLE IF EXISTS `expenses`;
 CREATE TABLE `expenses` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '报销单ID',
   `user_id` bigint(20) NOT NULL COMMENT '提交人ID',
+  `department_id` bigint(20) DEFAULT NULL COMMENT '提交时部门快照ID',
   `expense_no` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '报销单号',
   `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '报销标题',
   `total_amount` decimal(12,2) NOT NULL COMMENT '总金额',
@@ -197,12 +198,14 @@ CREATE TABLE `expenses` (
   UNIQUE KEY `ix_expenses_expense_no` (`expense_no`),
   KEY `ix_expenses_id` (`id`),
   KEY `ix_expenses_user_id` (`user_id`),
+  KEY `ix_expenses_department_id` (`department_id`),
   KEY `ix_expenses_status` (`status`),
   KEY `idx_flow` (`flow_id`),
   KEY `idx_expenses_created_at` (`created_at`),
   KEY `idx_expenses_registered_at` (`registered_at`),
   CONSTRAINT `expenses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `expenses_ibfk_2` FOREIGN KEY (`flow_id`) REFERENCES `approval_flows` (`id`),
+  CONSTRAINT `fk_expenses_department` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_expenses_registered_by` FOREIGN KEY (`registered_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

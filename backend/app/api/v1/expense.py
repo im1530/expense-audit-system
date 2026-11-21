@@ -1295,6 +1295,10 @@ def submit_expense(
         raise HTTPException(status_code=409, detail="该报销单无费用明细,无法提交,请先添加明细")
 
 
+    # 3.1 固化提交时部门快照：后续人员调部门，历史报表仍按提交时归属统计
+    expense.department_id = current_user.department_id
+
+
     # 4.挂载审批流
     # 获取与规则匹配成功的审批流ID
     flow_id = match_approval_flow(  # 匹配审批流
@@ -1465,6 +1469,10 @@ def resubmit_expense(
     # 3.明细非空校验:报销单必须至少包含一条明细,不允许提交无明细的报销单
     if len(expense.items) == 0:
         raise HTTPException(status_code=409, detail="该报销单无费用明细,无法提交,请先添加明细")
+
+
+    # 3.1 固化提交时部门快照：后续人员调部门，历史报表仍按提交时归属统计
+    expense.department_id = current_user.department_id
 
 
     # 4.挂载审批流

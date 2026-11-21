@@ -22,10 +22,11 @@ from app.api.v1.expense import (
 )
 from app.schemas.common import BusinessFilter, PageParams
 from app.schemas.settlement import ExpenseRegisterRequest
-from app.models import Approval, ApprovalFlow, Expense
+from app.models import Approval, ApprovalFlow, Department, Expense
 from app.models.approval import ApprovalStatus
 from app.models.expense import ExpenseStatus
 from app.schemas.approval import ApprovalAction
+from app.services.report_service import get_department_report
 from tests.support import BaseTestCase, make_expense
 
 
@@ -56,6 +57,7 @@ class ExpenseStateMachineTest(BaseTestCase, unittest.TestCase):
         self.assertEqual(result.flow_id, self.fx["flows"]["mgr"].id)
         self.assertIsNotNone(result.submitted_at)
         self.assertEqual(result.current_level, 1)
+        self.assertEqual(result.department_id, phone.department_id)  # 提交时固化部门快照
 
         records = self.db.query(Approval).filter(Approval.expense_id == expense.id).all()
         self.assertEqual(len(records), 1)
@@ -315,6 +317,27 @@ class ExpenseStateMachineTest(BaseTestCase, unittest.TestCase):
                         db=self.db, current_user=finance2)
         self.db.refresh(expense)
         self.assertEqual(expense.status, ExpenseStatus.APPROVED)
+
+    def test_department_report_uses_submission_snapshot(self):
+        """员工调部门后，历史单据仍统计在原提交部门"""
+        employee = self.fx["users"]["employee"]
+        original_department_id = employee.department_id
+        other_department = self.db.query(Department).filter(
+            Department.id != original_department_id
+        ).first()
+        expense = make_expense(self.db, employee, status=ExpenseStatus.DRAFT,
+                               amount=Decimal("100.00"))
+        submit_expense(expense_id=expense.id, db=self.db, current_user=employee)
+
+        # 模拟调部门：只改 users.department_id，不改已提交单据的快照
+        employee.department_id = other_department.id
+        self.db.commit()
+
+        rows = get_department_report(self.db)
+        original_row = next(row for row in rows if row["department_id"] == original_department_id)
+        self.assertEqual(original_row["expense_count"], 1)
+        self.assertEqual(original_row["gross_amount"], Decimal("100.00"))
+        self.assertEqual(original_row["net_amount"], Decimal("0"))
 
     def test_inactive_flow_cannot_approve(self):
         """审批流提交后被停用：审批动作 400，待办列表也不再展示"""

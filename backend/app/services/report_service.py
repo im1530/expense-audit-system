@@ -1,14 +1,14 @@
 """
 报表服务（管理端统计与导出）
     提供四类聚合视图 + 一份明细导出数据，全部只读：
-        - overview：总览（单据数、总金额、各状态分布、待审批数量与金额）
-        - monthly：按月趋势（单据数、总金额、已支付金额）
-        - by_department：按部门分布（单据数、总金额、已支付、待审批）
+        - overview：总览（单据数、申报总额/有效金额、各状态分布、待审批数量与金额）
+        - monthly：按月趋势（单据数、申报总额/有效金额、已报销金额）
+        - by_department：按部门分布（单据数、申报总额/有效金额、已报销、待审批）
         - by_category：按费用类别分布（明细条数、金额）
         - export_rows：明细级导出数据（供 Excel 使用）
     口径说明：
         - 日期区间按报销单 created_at 过滤，且用"次日 0 点之前"的半开区间，避免漏掉结束日白天的单据；
-        - 部门维度按"提交人当前所属部门"统计（报销单没有部门快照，人员调部门后历史单据会随之变化）；
+        - 部门维度按"报销单提交时固化的 department_id 快照"统计，人员调部门后历史报表不漂移；
         - 金额一律用 Decimal，避免浮点误差；数据库函数用 MySQL 的 date_format（项目只跑 MySQL）。
 """
 from datetime import date, timedelta
@@ -67,7 +67,7 @@ def _apply_expense_filters(
     给报销单维度的查询追加日期区间与部门筛选
         日期用半开区间：created_at >= start_date 且 created_at < end_date + 1 天，
         这样结束日 00:00 之后创建的单据也能被统计到。
-        :param query: 已 join 好 User 的查询对象（部门筛选需要 User.department_id）
+        :param query: 已 join 好 User 的查询对象（部门筛选使用 Expense.department_id 快照）
         :param start_date: 可选，起始日期
         :param end_date: 可选，结束日期（含当天）
         :param department_id: 可选，按提交人所属部门过滤
@@ -79,9 +79,9 @@ def _apply_expense_filters(
     # 2.结束日：用"次日 0 点之前"的半开区间，避免漏掉结束日白天的单据
     if end_date is not None:
         query = query.filter(Expense.created_at < end_date + timedelta(days=1))   # 结束日条件
-    # 3.部门：按提交人所属部门过滤（调用方需已 join User）
+    # 3.部门：按提交时固化的部门快照过滤，避免人员调部门后历史报表漂移
     if department_id is not None:
-        query = query.filter(User.department_id == department_id)   # 部门条件
+        query = query.filter(Expense.department_id == department_id)   # 部门快照条件
     # 4.返回追加条件后的查询（链式调用，不改入参）
     return query
 
@@ -242,7 +242,7 @@ def get_department_report(
         paid_amount,                    # 已报销金额
         pending_count,                  # 待审批数
     ).join(User, Expense.user_id == User.id).outerjoin(
-        Department, User.department_id == Department.id
+        Department, Expense.department_id == Department.id
     )
     # 3.追加日期区间筛选
     query = _apply_expense_filters(query, start_date=start_date, end_date=end_date)   # 追加筛选
@@ -361,7 +361,7 @@ def get_export_rows(
     ).join(
         User, Expense.user_id == User.id
     ).outerjoin(
-        Department, User.department_id == Department.id
+        Department, Expense.department_id == Department.id
     ).join(
         ExpenseItem, ExpenseItem.expense_id == Expense.id
     ).outerjoin(
