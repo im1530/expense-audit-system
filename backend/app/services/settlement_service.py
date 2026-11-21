@@ -38,9 +38,12 @@ class SettlementError(Exception):
         self.status_code = status_code
 
 
-def _get_expense(db: Session, expense_id: int) -> Expense:
-    """查单据，不存在抛 404"""
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+def _get_expense(db: Session, expense_id: int, *, for_update: bool = False) -> Expense:
+    """查单据，不存在抛 404；写操作传 for_update=True 行锁，防止并发重复登记/确认"""
+    query = db.query(Expense).filter(Expense.id == expense_id)
+    if for_update:
+        query = query.with_for_update()
+    expense = query.first()
     if not expense:
         raise SettlementError("报销单不存在", 404)
     return expense
@@ -72,7 +75,7 @@ def register(
     """
     if not current_user.has_permission("pay"):
         raise SettlementError("无支付/登记权限", 403)
-    expense = _get_expense(db, expense_id)
+    expense = _get_expense(db, expense_id, for_update=True)
     if expense.status != ExpenseStatus.APPROVED:
         raise SettlementError("仅审批通过的报销单可以登记", 409)
     if expense.user_id == current_user.id:
@@ -109,7 +112,7 @@ def cancel_registration(
     """撤销登记：registered → approved"""
     if not current_user.has_permission("pay"):
         raise SettlementError("无支付/登记权限", 403)
-    expense = _get_expense(db, expense_id)
+    expense = _get_expense(db, expense_id, for_update=True)
     if expense.status != ExpenseStatus.REGISTERED:
         raise SettlementError("仅已登记待领取的报销单可以撤销登记", 409)
     if expense.user_id == current_user.id:
@@ -136,7 +139,7 @@ def cancel_registration(
 
 def confirm_received(db: Session, expense_id: int, current_user: User) -> Expense:
     """提交人确认领取：registered → paid"""
-    expense = _get_expense(db, expense_id)
+    expense = _get_expense(db, expense_id, for_update=True)
     if expense.user_id != current_user.id:
         raise SettlementError("只有提交人本人可以确认领取", 403)
     if expense.status != ExpenseStatus.REGISTERED:
@@ -166,7 +169,7 @@ def force_close(db: Session, expense_id: int, current_user: User, *, reason: str
     role = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
     if role != UserRole.ADMIN.value:
         raise SettlementError("只有管理员可以强制关闭", 403)
-    expense = _get_expense(db, expense_id)
+    expense = _get_expense(db, expense_id, for_update=True)
     if expense.status != ExpenseStatus.REGISTERED:
         raise SettlementError("仅已登记待领取的报销单可以强制关闭", 409)
 
