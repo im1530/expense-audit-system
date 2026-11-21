@@ -5,11 +5,12 @@
     说明：直接调用路由函数（不经过 HTTP），既能覆盖业务逻辑，又不依赖 httpx。
 """
 import unittest
+from datetime import datetime
 from decimal import Decimal
 
 from fastapi import HTTPException
 
-from app.api.v1.approval import approval_action
+from app.api.v1.approval import approval_action, get_pending_approval_list
 from app.api.v1.expense import (
     cancel_expense,
     confirm_received as confirm_received_route,
@@ -19,8 +20,9 @@ from app.api.v1.expense import (
     resubmit_expense,
     submit_expense,
 )
+from app.schemas.common import BusinessFilter, PageParams
 from app.schemas.settlement import ExpenseRegisterRequest
-from app.models import Approval, Expense
+from app.models import Approval, ApprovalFlow, Expense
 from app.models.approval import ApprovalStatus
 from app.models.expense import ExpenseStatus
 from app.schemas.approval import ApprovalAction
@@ -314,6 +316,33 @@ class ExpenseStateMachineTest(BaseTestCase, unittest.TestCase):
         self.db.refresh(expense)
         self.assertEqual(expense.status, ExpenseStatus.APPROVED)
 
+    def test_inactive_flow_cannot_approve(self):
+        """审批流提交后被停用：审批动作 400，待办列表也不再展示"""
+        employee = self.fx["users"]["employee"]
+        manager = self.fx["users"]["manager"]
+        expense = make_expense(self.db, employee, status=ExpenseStatus.PENDING,
+                               flow_id=self.fx["flows"]["mgr"].id)
+        expense.submitted_at = datetime.now()
+        flow = self.db.query(ApprovalFlow).filter(ApprovalFlow.id == expense.flow_id).one()
+        flow.is_active = False
+        self.db.commit()
+
+        with self.assertRaises(HTTPException) as ctx:
+            approval_action(expense_id=expense.id,
+                            action=ApprovalAction(status="approved"),
+                            db=self.db, current_user=manager)
+        self.assert_http_error(ctx, 400)
+        self.assertIn("停用", ctx.exception.detail)
+
+        response = get_pending_approval_list(
+            page_params=PageParams(page=1, page_size=10),
+            common_filter=BusinessFilter(),
+            user_id=None,
+            department_id=None,
+            db=self.db,
+            current_user=manager,
+        )
+        self.assertEqual(response.total, 0)
 
 
 if __name__ == "__main__":

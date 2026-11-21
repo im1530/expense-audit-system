@@ -83,8 +83,13 @@ def approval_action(
         raise HTTPException(status_code=403, detail="无审批权限")
 
 
-    # 2.查报销单,不存在则404
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()  # 查询报销单
+    # 2.查报销单,不存在则404；加行锁，避免两个审批人并发推进同一张单
+    expense = (
+        db.query(Expense)
+        .filter(Expense.id == expense_id)
+        .with_for_update()
+        .first()
+    )
     if not expense:
         raise HTTPException(status_code=404, detail="报销单不存在")
 
@@ -103,8 +108,8 @@ def approval_action(
     if not expense.flow_id:
         raise HTTPException(status_code=400, detail="未配置审批流")
     flow = db.query(ApprovalFlow).filter(ApprovalFlow.id == expense.flow_id).first()    # 加载审批流
-    if not flow or not flow.levels:
-        raise HTTPException(status_code=400, detail="审批流配置无效")
+    if not flow or not flow.is_active or not flow.levels:
+        raise HTTPException(status_code=400, detail="审批流已停用或配置无效")
     levels = flow.levels  #     取出级别配置列表: [{"level":1,"role":"manager"},...]
 
 
@@ -333,7 +338,7 @@ def get_pending_approval_list(
     for expense, applicant_department_id in filtered_rows:
         # 6.1 从预加载的字典里取该报销单绑定的审批流模板,取不到或没配层级则跳过该报销单
         flow = flow_map.get(expense.flow_id)  # 单据审批流
-        if not flow or not flow.levels:
+        if not flow or not flow.is_active or not flow.levels:
             continue
 
         # 6.2 定位当前审批层级对应的配置项,若不存在则跳过该报销单
