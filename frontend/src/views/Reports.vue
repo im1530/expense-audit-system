@@ -29,20 +29,21 @@
       </el-col>
       <el-col :span="6">
         <el-card shadow="never" class="stat">
-          <div class="label">金额合计</div>
-          <div class="value">{{ formatMoney(overview.total_amount) }}</div>
+          <div class="label">申报总额</div>
+          <div class="value">{{ formatMoney(overview.gross_amount) }}</div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="never" class="stat">
+          <div class="label">有效金额</div>
+          <div class="value success">{{ formatMoney(overview.net_amount) }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="never" class="stat">
           <div class="label">待审批</div>
           <div class="value warning">{{ overview.pending_count ?? '-' }}</div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="never" class="stat">
-          <div class="label">待审批金额</div>
-          <div class="value warning">{{ formatMoney(overview.pending_amount) }}</div>
+          <div class="sub">金额 {{ formatMoney(overview.pending_amount) }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -53,8 +54,11 @@
       <el-table :data="monthly" size="small" border>
         <el-table-column prop="month" label="月份" width="120" />
         <el-table-column prop="expense_count" label="单据数" width="120" />
-        <el-table-column label="总金额" width="150">
-          <template #default="{ row }">{{ formatMoney(row.total_amount) }}</template>
+        <el-table-column label="申报总额" width="150">
+          <template #default="{ row }">{{ formatMoney(row.gross_amount) }}</template>
+        </el-table-column>
+        <el-table-column label="有效金额" width="150">
+          <template #default="{ row }">{{ formatMoney(row.net_amount) }}</template>
         </el-table-column>
         <el-table-column label="已报销" width="150">
           <template #default="{ row }">{{ formatMoney(row.paid_amount) }}</template>
@@ -70,8 +74,11 @@
           <el-table :data="departments" size="small" border>
             <el-table-column prop="department_name" label="部门" />
             <el-table-column prop="expense_count" label="单据数" width="90" />
-            <el-table-column label="总金额" width="130">
-              <template #default="{ row }">{{ formatMoney(row.total_amount) }}</template>
+            <el-table-column label="申报总额" width="130">
+              <template #default="{ row }">{{ formatMoney(row.gross_amount) }}</template>
+            </el-table-column>
+            <el-table-column label="有效金额" width="130">
+              <template #default="{ row }">{{ formatMoney(row.net_amount) }}</template>
             </el-table-column>
           </el-table>
         </el-card>
@@ -195,5 +202,15 @@ onMounted(load)
 
 .value.warning {
   color: #e6a23c;
+}
+
+.value.success {
+  color: #67c23a;
+}
+
+.sub {
+  margin-top: 4px;
+  color: #909399;
+  font-size: 12px;
 }
 </style>

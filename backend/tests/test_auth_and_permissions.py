@@ -8,6 +8,7 @@
         - 报表接口的 view_all 权限
 """
 import unittest
+from decimal import Decimal
 
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
@@ -19,7 +20,8 @@ from app.api.v1.report import report_export, report_overview
 from app.core.security import create_user_token
 from app.schemas.common import PageParams
 from app.schemas.user import UserResponse
-from tests.support import BaseTestCase, TEST_PASSWORD, make_request
+from app.models.expense import ExpenseStatus
+from tests.support import BaseTestCase, TEST_PASSWORD, make_expense, make_request
 
 
 
@@ -192,6 +194,33 @@ class AuthAndPermissionTest(BaseTestCase, unittest.TestCase):
             response.media_type,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+
+    def test_overview_gross_and_net_amount(self):
+        """总览金额口径：gross 排除草稿，net 只算已通过/待领取/已报销"""
+        employee = self.fx["users"]["employee"]
+        finance = self.fx["users"]["finance"]
+        cases = [
+            (ExpenseStatus.DRAFT, "1.00"),
+            (ExpenseStatus.PENDING, "2.00"),
+            (ExpenseStatus.APPROVED, "3.00"),
+            (ExpenseStatus.REGISTERED, "4.00"),
+            (ExpenseStatus.REJECTED, "5.00"),
+            (ExpenseStatus.PAID, "6.00"),
+            (ExpenseStatus.CLOSED, "7.00"),
+            (ExpenseStatus.CANCELLED, "8.00"),
+        ]
+        for status, amount in cases:
+            make_expense(self.db, employee, status=status, amount=Decimal(amount))
+        self.db.commit()
+
+        overview = report_overview(start_date=None, end_date=None, department_id=None,
+                                   db=self.db, current_user=finance)
+        self.assertEqual(overview["total_count"], 8)
+        self.assertEqual(overview["gross_amount"], Decimal("35.00"))
+        self.assertEqual(overview["net_amount"], Decimal("13.00"))
+        self.assertEqual(overview["total_amount"], Decimal("35.00"))  # 兼容字段
+        self.assertEqual(overview["pending_count"], 1)
+        self.assertEqual(overview["pending_amount"], Decimal("2.00"))
 
 
 

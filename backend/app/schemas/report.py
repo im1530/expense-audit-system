@@ -36,13 +36,17 @@ class ReportOverview(BaseModel):
     """
     报表总览
         :ivar total_count: 单据总数（区间内、筛选后）
-        :ivar total_amount: 金额合计
+        :ivar gross_amount: 申报总额，所有非草稿单据（含待审批/已驳回/已撤销等）
+        :ivar net_amount: 有效金额，已通过 + 待领取 + 已报销（不含草稿/驳回/关闭）
+        :ivar total_amount: 兼容字段，等于 gross_amount（旧客户端仍可用）
         :ivar pending_count: 待审批单据数
         :ivar pending_amount: 待审批金额
         :ivar status_items: 各状态分布（固定按订单状态顺序输出，含 0 的项）
     """
     total_count: int                        # 单据总数
-    total_amount: Decimal                   # 金额合计
+    gross_amount: Decimal                   # 申报总额（非草稿）
+    net_amount: Decimal                     # 有效金额（已通过/待领取/已报销）
+    total_amount: Decimal                   # 兼容字段 = gross_amount
     pending_count: int                      # 待审批数
     pending_amount: Decimal                 # 待审批金额
     status_items: List[ReportStatusItem]    # 状态分布
@@ -55,13 +59,17 @@ class ReportMonthlyItem(BaseModel):
     按月统计项
         :ivar month: 月份，格式 YYYY-MM
         :ivar expense_count: 单据数
-        :ivar total_amount: 总金额
-        :ivar paid_amount: 已支付金额
+        :ivar gross_amount: 申报总额（非草稿）
+        :ivar net_amount: 有效金额（已通过/待领取/已报销）
+        :ivar total_amount: 兼容字段 = gross_amount
+        :ivar paid_amount: 已报销金额
     """
     month: str                  # 月份 YYYY-MM
     expense_count: int          # 单据数
-    total_amount: Decimal       # 总金额
-    paid_amount: Decimal        # 已支付金额
+    gross_amount: Decimal       # 申报总额（非草稿）
+    net_amount: Decimal         # 有效金额
+    total_amount: Decimal       # 兼容字段 = gross_amount
+    paid_amount: Decimal        # 已报销金额
 
 
 
@@ -72,15 +80,19 @@ class ReportDepartmentItem(BaseModel):
         :ivar department_id: 部门ID；没挂部门的用户数据为 null
         :ivar department_name: 部门名称，未分配时显示"未分配"
         :ivar expense_count: 单据数
-        :ivar total_amount: 总金额
-        :ivar paid_amount: 已支付金额
+        :ivar gross_amount: 申报总额（非草稿）
+        :ivar net_amount: 有效金额（已通过/待领取/已报销）
+        :ivar total_amount: 兼容字段 = gross_amount
+        :ivar paid_amount: 已报销金额
         :ivar pending_count: 待审批单据数
     """
     department_id: Optional[int] = None     # 部门ID
     department_name: str                    # 部门名称
     expense_count: int                      # 单据数
-    total_amount: Decimal                   # 总金额
-    paid_amount: Decimal                    # 已支付金额
+    gross_amount: Decimal                   # 申报总额（非草稿）
+    net_amount: Decimal                     # 有效金额
+    total_amount: Decimal                   # 兼容字段 = gross_amount
+    paid_amount: Decimal                    # 已报销金额
     pending_count: int                      # 待审批数
 
 

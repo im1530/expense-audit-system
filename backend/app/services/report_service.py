@@ -35,6 +35,14 @@ STATUS_LABELS = {                               # 状态→中文名
 }
 
 
+# 有效金额口径：已通过 + 待领取 + 已报销（不含草稿/驳回/关闭）
+NET_AMOUNT_STATUSES = (
+    ExpenseStatus.APPROVED,
+    ExpenseStatus.REGISTERED,
+    ExpenseStatus.PAID,
+)
+
+
 
 # 费用大类中文名：与字典接口保持一致
 EXPENSE_TYPE_LABELS = {                         # 大类→中文名
@@ -118,12 +126,22 @@ def get_overview(
 
     # 3.总览汇总
     total_count = sum(item["count"] for item in status_items)   # 单据总数
-    total_amount = sum((item["amount"] for item in status_items), Decimal("0"))   # 总金额
+    gross_amount = sum(
+        (item["amount"] for item in status_items if item["status"] != ExpenseStatus.DRAFT.value),
+        Decimal("0"),
+    )                                                           # 申报总额：排除草稿
+    net_statuses = {status.value for status in NET_AMOUNT_STATUSES}
+    net_amount = sum(
+        (item["amount"] for item in status_items if item["status"] in net_statuses),
+        Decimal("0"),
+    )                                                           # 有效金额：已通过/待领取/已报销
     pending = next((item for item in status_items if item["status"] == ExpenseStatus.PENDING.value), None)   # 待审批行
 
     return {
         "total_count": total_count,
-        "total_amount": total_amount,
+        "gross_amount": gross_amount,
+        "net_amount": net_amount,
+        "total_amount": gross_amount,   # 兼容旧客户端
         "pending_count": pending["count"] if pending else 0,
         "pending_amount": pending["amount"] if pending else Decimal("0"),
         "status_items": status_items,
@@ -151,14 +169,19 @@ def get_monthly_trend(
     # MySQL 的 date_format：把 created_at 截成 YYYY-MM
     month_expr = func.date_format(Expense.created_at, "%Y-%m")   # 月份表达式
 
-    # 2.按月聚合：单据数、总金额、已支付金额
+    # 2.按月聚合：单据数、申报总额（非草稿）、有效金额、已报销金额
     query = db.query(                                # 按月统计查询
         month_expr.label("month"),                                  # 月份
         func.count(Expense.id),                                     # 单据数
-        func.coalesce(func.sum(Expense.total_amount), 0),           # 总金额
+        func.coalesce(func.sum(case(
+            (Expense.status != ExpenseStatus.DRAFT, Expense.total_amount), else_=0
+        )), 0),                                                     # 申报总额（排除草稿）
+        func.coalesce(func.sum(case(
+            (Expense.status.in_(NET_AMOUNT_STATUSES), Expense.total_amount), else_=0
+        )), 0),                                                     # 有效金额
         func.coalesce(func.sum(case(
             (Expense.status == ExpenseStatus.PAID, Expense.total_amount), else_=0
-        )), 0),                                                     # 已支付金额
+        )), 0),                                                     # 已报销金额
     ).join(User, Expense.user_id == User.id)
     # 3.追加日期区间/部门筛选
     query = _apply_expense_filters(query, start_date=start_date, end_date=end_date, department_id=department_id)   # 追加筛选
@@ -170,8 +193,10 @@ def get_monthly_trend(
         {
             "month": row[0],
             "expense_count": int(row[1]),
-            "total_amount": Decimal(str(row[2])),
-            "paid_amount": Decimal(str(row[3])),
+            "gross_amount": Decimal(str(row[2])),
+            "net_amount": Decimal(str(row[3])),
+            "total_amount": Decimal(str(row[2])),   # 兼容旧客户端
+            "paid_amount": Decimal(str(row[4])),
         }
         for row in rows
     ]
@@ -193,9 +218,14 @@ def get_department_report(
         :param end_date: 可选，结束日期（含当天）
         :return: 列表，按金额倒序
     """
-    # 1.定义三个聚合表达式：总金额、已支付金额、待审批单据数
-    total_amount = func.coalesce(func.sum(Expense.total_amount), 0)   # 总金额
-    paid_amount = func.coalesce(func.sum(case(      # 已支付金额
+    # 1.定义聚合表达式：申报总额（非草稿）、有效金额、已报销金额、待审批单据数
+    gross_amount = func.coalesce(func.sum(case(      # 申报总额（排除草稿）
+        (Expense.status != ExpenseStatus.DRAFT, Expense.total_amount), else_=0
+    )), 0)
+    net_amount = func.coalesce(func.sum(case(       # 有效金额
+        (Expense.status.in_(NET_AMOUNT_STATUSES), Expense.total_amount), else_=0
+    )), 0)
+    paid_amount = func.coalesce(func.sum(case(      # 已报销金额
         (Expense.status == ExpenseStatus.PAID, Expense.total_amount), else_=0
     )), 0)
     pending_count = func.coalesce(func.sum(case(    # 待审批数
@@ -207,8 +237,9 @@ def get_department_report(
         Department.id,                  # 部门ID
         Department.name,                # 部门名称
         func.count(Expense.id),         # 单据数
-        total_amount,                   # 总金额
-        paid_amount,                    # 已支付金额
+        gross_amount,                   # 申报总额
+        net_amount,                     # 有效金额
+        paid_amount,                    # 已报销金额
         pending_count,                  # 待审批数
     ).join(User, Expense.user_id == User.id).outerjoin(
         Department, User.department_id == Department.id
@@ -216,7 +247,7 @@ def get_department_report(
     # 3.追加日期区间筛选
     query = _apply_expense_filters(query, start_date=start_date, end_date=end_date)   # 追加筛选
     # 4.按部门分组，金额高的排前面
-    rows = query.group_by(Department.id, Department.name).order_by(total_amount.desc()).all()   # 部门统计行
+    rows = query.group_by(Department.id, Department.name).order_by(gross_amount.desc()).all()   # 部门统计行
 
     # 5.转成前端直接可用的字典列表
     return [
@@ -224,9 +255,11 @@ def get_department_report(
             "department_id": row[0],
             "department_name": row[1] or "未分配",
             "expense_count": int(row[2]),
-            "total_amount": Decimal(str(row[3])),
-            "paid_amount": Decimal(str(row[4])),
-            "pending_count": int(row[5]),
+            "gross_amount": Decimal(str(row[3])),
+            "net_amount": Decimal(str(row[4])),
+            "total_amount": Decimal(str(row[3])),   # 兼容旧客户端
+            "paid_amount": Decimal(str(row[5])),
+            "pending_count": int(row[6]),
         }
         for row in rows
     ]
