@@ -67,12 +67,12 @@ def _build_hit(rule: Rule, level: str, message: str, evidence: dict) -> dict:
 # 取规则配置的级别
 def _rule_level(rule: Rule) -> str:
     """
-    从规则 action 字段取提示级别（warn/block/review），非法值按 warn 处理
+    从规则 severity 字段取提示级别（warn/block/review），非法值按 warn 处理
         :param rule: 规则实体
         :return: 级别字符串
     """
-    action = (rule.action or "warn").strip().lower()   # 规则动作
-    return action if action in LEVEL_ORDER else "warn"
+    severity = (rule.severity or "warn").strip().lower()   # 检查规则风险级别
+    return severity if severity in LEVEL_ORDER else "warn"
 
 
 
@@ -87,7 +87,7 @@ def _check_category_limit(db: Session, expense: Expense, rule: Rule) -> list[dic
         :param rule: 规则配置
         :return: 命中列表
     """
-    # 1.取这条规则配置的级别（规则 action = warn/review/block）
+    # 1.取这条规则配置的级别（规则 severity = warn/review/block）
     hits = []                                       # 命中列表
     level = _rule_level(rule)                       # 规则级别
     # 2.逐条明细比对"明细金额 > 所属类别单次限额"

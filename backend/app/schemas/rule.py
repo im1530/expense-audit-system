@@ -149,7 +149,8 @@ class AdminRuleItem(BaseModel):
         :ivar name: 规则名称
         :ivar rule_type: 规则类型，目前审批流匹配只用 "amount"
         :ivar condition: 触发条件的可读描述（给管理员看的文字说明）
-        :ivar action: 命中后的动作，如 assign_chain（绑定审批链）
+        :ivar action: 引擎动作：amount 规则为 assign_chain，check_* 规则为 check
+        :ivar severity: 检查规则风险级别：warn/review/block；amount 规则为 null
         :ivar config: 规则参数（JSON），amount 类型含 submitter_roles / min_amount / max_amount / flow_id
         :ivar is_active: 是否启用（停用的规则不参与匹配）
         :ivar flow_id: 从 config 中解析出的目标审批流ID，非 amount 规则为 null
@@ -162,7 +163,8 @@ class AdminRuleItem(BaseModel):
     name: str                                   # 规则名称
     rule_type: str                              # 规则类型
     condition: str                              # 触发条件描述
-    action: str                                 # 命中动作
+    action: str                                 # 引擎动作
+    severity: Optional[str] = None              # 检查规则风险级别
     config: Optional[dict] = None               # 规则参数
     is_active: bool                             # 是否启用
     flow_id: Optional[int] = None               # 目标审批流ID
@@ -198,14 +200,16 @@ class AdminRuleCreate(BaseModel):
         :ivar name: 规则名称，最长 100（同一类型下建议唯一）
         :ivar rule_type: 规则类型，审批流匹配固定用 "amount"
         :ivar condition: 触发条件的可读描述（必填，便于审计与前端展示）
-        :ivar action: 命中动作，amount 规则固定 "assign_chain"
+        :ivar action: 引擎动作：amount 规则固定 assign_chain，check_* 规则固定 check
+        :ivar severity: 检查规则风险级别（warn/review/block），amount 规则留空
         :ivar config: 规则参数；amount 类型必须包含 submitter_roles / min_amount / max_amount / flow_id
         :ivar is_active: 是否启用，默认启用
     """
     name: str = Field(..., min_length=1, max_length=100, description="规则名称")        # 必填，最长 100
     rule_type: str = Field("amount", max_length=50, description="规则类型,审批流匹配用 amount")  # 默认 amount
     condition: str = Field(..., min_length=1, description="触发条件描述")               # 必填，给管理员看的说明
-    action: str = Field("assign_chain", max_length=50, description="命中动作")          # 默认 assign_chain
+    action: str = Field("assign_chain", max_length=50, description="引擎动作")          # 默认 assign_chain
+    severity: Optional[str] = Field(None, max_length=20, description="检查规则级别 warn/review/block")
     config: dict = Field(..., description="规则参数(amount 类型必须含 submitter_roles/min_amount/max_amount/flow_id)")  # 必填，JSON 参数
     is_active: bool = Field(True, description="是否启用")                               # 默认启用
 
@@ -218,13 +222,15 @@ class AdminRuleUpdate(BaseModel):
         :ivar name: 规则名称
         :ivar rule_type: 规则类型
         :ivar condition: 触发条件描述
-        :ivar action: 命中动作
+        :ivar action: 引擎动作
+        :ivar severity: 检查规则风险级别
         :ivar config: 规则参数
         :ivar is_active: 是否启用（改为启用时会重新校验金额区间是否与其他启用规则重叠）
     """
     name: str = Field(..., min_length=1, max_length=100, description="规则名称")        # 必填，最长 100
     rule_type: str = Field("amount", max_length=50, description="规则类型")               # 默认 amount
     condition: str = Field(..., min_length=1, description="触发条件描述")               # 必填，给管理员看的说明
-    action: str = Field("assign_chain", max_length=50, description="命中动作")          # 默认 assign_chain
+    action: str = Field("assign_chain", max_length=50, description="引擎动作")          # 默认 assign_chain
+    severity: Optional[str] = Field(None, max_length=20, description="检查规则级别 warn/review/block")
     config: dict = Field(..., description="规则参数")                                   # 必填，JSON 参数
     is_active: bool = Field(..., description="是否启用")                                # 必填，全量语义下不可省略

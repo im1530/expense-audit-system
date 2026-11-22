@@ -9,7 +9,8 @@
             · check_period_late         —— 检查规则：费用发生日距提交日超过 N 天
         - condition：触发条件的可读描述，用于后台展示与人工审核
         - config：机器可读的参数，JSON 结构随 rule_type 变化
-        - action：命中后的动作（warn / block / review），由规则引擎解释
+        - action：引擎动作：amount 规则为 assign_chain，check_* 规则为 check
+        - severity：检查规则风险级别（warn / block / review）；amount 规则为空
         - is_active：支持停用而不删除，便于灰度与回滚
     ExpenseRuleHit 存放每次提交时算出的命中结果（规则名/级别/提示/证据），供审批页展示与统计。
     说明：本模块只负责"配置与结果存储"，解析与执行逻辑在 services/rule_engine.py 与 rule_service.py。
@@ -73,11 +74,18 @@ class Rule(Base):
         comment="触发条件"   # 字段备注，写进数据库
     )
 
-    # action:命中后执行的动作,如 reject / warn / pass
+    # action:引擎动作；amount 规则固定 assign_chain，check_* 规则固定 check
     action = Column(
         String(50),             # 字段类型：字符串，长度为50
-        nullable=False,         # 非空：每条规则必须有命中后的执行动作
-        comment="触发动作"       # 字段备注，写进数据库
+        nullable=False,         # 非空：每条规则必须有引擎动作
+        comment="引擎动作"       # 字段备注，写进数据库
+    )
+
+    # severity:检查规则的严重级别（warn/review/block）；amount 规则为空
+    severity = Column(
+        String(20),             # 字段类型：字符串，长度为20
+        nullable=True,          # amount 规则没有严重级别
+        comment="风险级别"       # 字段备注，写进数据库
     )
 
 

@@ -276,7 +276,8 @@ class RuleEngineTest(BaseTestCase, unittest.TestCase):
         expense = make_expense(self.db, employee, status=ExpenseStatus.DRAFT, item_count=1)
 
         rule = self.db.query(Rule).filter(Rule.rule_type == "check_invoice_missing").first()
-        rule.action = "block"
+        rule.action = "check"
+        rule.severity = "block"
         self.db.commit()
 
         with self.assertRaises(HTTPException) as ctx:
@@ -303,10 +304,16 @@ class RuleEngineTest(BaseTestCase, unittest.TestCase):
 
     # ---------- 管理端规则校验 ----------
     def test_check_rule_requires_valid_action(self):
-        """检查规则的 action 只能是 warn/review/block"""
+        """检查规则的 action 固定 check，severity 只能是 warn/review/block"""
         with self.assertRaises(HTTPException) as ctx:
             create_rule(self.db, name="非法检查规则", rule_type="check_duplicate",
                         condition="测试", action="reject", config={}, is_active=True)
+        self.assertEqual(ctx.exception.status_code, 400)
+
+        with self.assertRaises(HTTPException) as ctx:
+            create_rule(self.db, name="非法级别规则", rule_type="check_duplicate",
+                        condition="测试", action="check", severity="fatal",
+                        config={}, is_active=True)
         self.assertEqual(ctx.exception.status_code, 400)
 
     def test_amount_rule_action_must_be_assign_chain(self):
@@ -322,12 +329,14 @@ class RuleEngineTest(BaseTestCase, unittest.TestCase):
     def test_check_rule_normalizes_config(self):
         """检查规则的 config 只保留引擎认识的参数，并有默认值"""
         rule = create_rule(self.db, name="30天重复提醒", rule_type="check_duplicate",
-                           condition="30天内重复", action="warn",
+                           condition="30天内重复", action="check", severity="warn",
                            config={"window_days": 30, "unknown": "ignored"}, is_active=True)
         self.assertEqual(rule.config, {"window_days": 30})
+        self.assertEqual(rule.severity, "warn")
 
         rule2 = create_rule(self.db, name="默认跨期提醒", rule_type="check_period_late",
-                            condition="默认 60 天", action="warn", config={}, is_active=False)
+                            condition="默认 60 天", action="check", severity="warn",
+                            config={}, is_active=False)
         self.assertEqual(rule2.config, {"max_days": 60})
 
 

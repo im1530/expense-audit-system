@@ -82,19 +82,19 @@ INSERT INTO `users` (`id`,`username`,`email`,`password_hash`,`full_name`,`phone`
 -- ------------------------------------------------------------
 -- 审批规则（7 条金额类 + 5 条检查类：四类提交检查 + 凭证强度提醒）
 -- ------------------------------------------------------------
-INSERT INTO `rules` (`id`,`name`,`rule_type`,`condition`,`action`,`config`,`is_active`,`created_at`,`updated_at`) VALUES
-(1,'员工小额-经理','amount','employee/admin 且金额<1000,部门经理审批','assign_chain','{"flow_id": 2, "max_amount": 999.99, "min_amount": 0, "submitter_roles": ["employee", "admin"]}',1,'2026-10-27 02:04:30',NULL),
-(2,'员工中额-经理→财务','amount','employee/admin 且1000≤金额<20000,经理→财务','assign_chain','{"flow_id": 3, "max_amount": 19999.99, "min_amount": 1000, "submitter_roles": ["employee", "admin"]}',1,'2026-10-27 02:04:30',NULL),
-(3,'员工大额-经理→财务→老板','amount','employee/admin 且金额≥20000,经理→财务→boss','assign_chain','{"flow_id": 4, "max_amount": null, "min_amount": 20000, "submitter_roles": ["employee", "admin"]}',1,'2026-10-27 02:04:30',NULL),
-(4,'经理小额-财务','amount','manager 且金额<30000,财务审批','assign_chain','{"flow_id": 5, "max_amount": 29999.99, "min_amount": 0, "submitter_roles": ["manager"]}',1,'2026-10-27 02:04:30',NULL),
-(5,'经理大额-财务→老板','amount','manager 且金额≥30000,财务→boss','assign_chain','{"flow_id": 6, "max_amount": null, "min_amount": 30000, "submitter_roles": ["manager"]}',1,'2026-10-27 02:04:30',NULL),
-(6,'财务小额-其他财务','amount','finance 且金额<20000,其他财务审批','assign_chain','{"flow_id": 7, "max_amount": 19999.99, "min_amount": 0, "submitter_roles": ["finance"]}',1,'2026-10-27 02:04:30',NULL),
-(7,'财务大额-其他财务→老板','amount','finance 且金额≥20000,其他财务→boss','assign_chain','{"flow_id": 8, "max_amount": null, "min_amount": 20000, "submitter_roles": ["finance"]}',1,'2026-10-27 02:04:30',NULL),
-(8,'类别单次限额提醒','check_category_limit','单条明细金额超过该费用小类的单次报销限额','warn','{}',1,'2026-11-04 15:20:00',NULL),
-(9,'发票缺失提醒','check_invoice_missing','明细未上传发票且未填写无票说明','warn','{}',1,'2026-11-04 15:20:00',NULL),
-(10,'重复报销提醒','check_duplicate','同一提交人、同一费用日期、同一类别、同一金额在 60 天内重复出现','warn','{"window_days": 60}',1,'2026-11-04 15:20:00',NULL),
-(11,'跨期报销提醒','check_period_late','费用发生日期距提交日期超过 60 天','warn','{"max_days": 60}',1,'2026-11-04 15:20:00',NULL),
-(12,'弱凭证金额提醒','check_evidence_strength','支付截图等弱凭证金额超过免复核阈值时提示人工复核','review','{"weak_max_amount": 200, "medium_max_amount": 1000, "category_overrides": {"transportation": 300}}',1,'2026-11-07 02:00:00',NULL);
+INSERT INTO `rules` (`id`,`name`,`rule_type`,`condition`,`action`,`severity`,`config`,`is_active`,`created_at`,`updated_at`) VALUES
+(1,'员工小额-经理','amount','employee/admin 且金额<1000,部门经理审批','assign_chain',NULL,'{"flow_id": 2, "max_amount": 999.99, "min_amount": 0, "submitter_roles": ["employee", "admin"]}',1,'2026-10-27 02:04:30',NULL),
+(2,'员工中额-经理→财务','amount','employee/admin 且1000≤金额<20000,经理→财务','assign_chain',NULL,'{"flow_id": 3, "max_amount": 19999.99, "min_amount": 1000, "submitter_roles": ["employee", "admin"]}',1,'2026-10-27 02:04:30',NULL),
+(3,'员工大额-经理→财务→老板','amount','employee/admin 且金额≥20000,经理→财务→boss','assign_chain',NULL,'{"flow_id": 4, "max_amount": null, "min_amount": 20000, "submitter_roles": ["employee", "admin"]}',1,'2026-10-27 02:04:30',NULL),
+(4,'经理小额-财务','amount','manager 且金额<30000,财务审批','assign_chain',NULL,'{"flow_id": 5, "max_amount": 29999.99, "min_amount": 0, "submitter_roles": ["manager"]}',1,'2026-10-27 02:04:30',NULL),
+(5,'经理大额-财务→老板','amount','manager 且金额≥30000,财务→boss','assign_chain',NULL,'{"flow_id": 6, "max_amount": null, "min_amount": 30000, "submitter_roles": ["manager"]}',1,'2026-10-27 02:04:30',NULL),
+(6,'财务小额-其他财务','amount','finance 且金额<20000,其他财务审批','assign_chain',NULL,'{"flow_id": 7, "max_amount": 19999.99, "min_amount": 0, "submitter_roles": ["finance"]}',1,'2026-10-27 02:04:30',NULL),
+(7,'财务大额-其他财务→老板','amount','finance 且金额≥20000,其他财务→boss','assign_chain',NULL,'{"flow_id": 8, "max_amount": null, "min_amount": 20000, "submitter_roles": ["finance"]}',1,'2026-10-27 02:04:30',NULL),
+(8,'类别单次限额提醒','check_category_limit','单条明细金额超过该费用小类的单次报销限额','check','warn','{}',1,'2026-11-04 15:20:00',NULL),
+(9,'发票缺失提醒','check_invoice_missing','明细未上传发票且未填写无票说明','check','warn','{}',1,'2026-11-04 15:20:00',NULL),
+(10,'重复报销提醒','check_duplicate','同一提交人、同一费用日期、同一类别、同一金额在 60 天内重复出现','check','warn','{"window_days": 60}',1,'2026-11-04 15:20:00',NULL),
+(11,'跨期报销提醒','check_period_late','费用发生日期距提交日期超过 60 天','check','warn','{"max_days": 60}',1,'2026-11-04 15:20:00',NULL),
+(12,'弱凭证金额提醒','check_evidence_strength','支付截图等弱凭证金额超过免复核阈值时提示人工复核','check','review','{"weak_max_amount": 200, "medium_max_amount": 1000, "category_overrides": {"transportation": 300}}',1,'2026-11-07 02:00:00',NULL);
 
 -- ------------------------------------------------------------
 -- 演示单据（5 张）：覆盖 approved / pending / draft 三种状态

@@ -69,7 +69,8 @@ def _build_rule_item(rule: Rule, flow_map: dict) -> dict:
         "name": rule.name,                              # 规则名称
         "rule_type": rule.rule_type,                    # 规则类型
         "condition": rule.condition,                    # 触发条件描述
-        "action": rule.action,                          # 命中动作
+        "action": rule.action,                          # 引擎动作
+        "severity": rule.severity,                      # 检查规则风险级别
         "config": rule.config,                          # 规则参数
         "is_active": rule.is_active,                    # 是否启用
         "flow_id": int(flow_id) if flow_id is not None else None,  # 目标审批流ID
@@ -300,7 +301,8 @@ def create_new_rule(
         name=payload.name,                      # 规则名称
         rule_type=payload.rule_type,            # 规则类型（amount / check_*）
         condition=payload.condition,            # 触发条件描述
-        action=payload.action,                  # 命中动作（warn/review/block 或 assign_chain）
+        action=payload.action,                  # 引擎动作
+        severity=payload.severity,              # 检查规则风险级别
         config=payload.config,                  # 规则参数（JSON）
         is_active=payload.is_active,            # 是否启用
     )
@@ -351,7 +353,8 @@ def update_existing_rule(
         name=payload.name,                      # 规则名称
         rule_type=payload.rule_type,            # 规则类型
         condition=payload.condition,            # 触发条件描述
-        action=payload.action,                  # 命中动作
+        action=payload.action,                  # 引擎动作
+        severity=payload.severity,              # 检查规则风险级别
         config=payload.config,                  # 规则参数（JSON）
         is_active=payload.is_active,            # 是否启用
     )

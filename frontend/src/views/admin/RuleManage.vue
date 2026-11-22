@@ -30,7 +30,8 @@
     <el-table :data="rows" v-loading="loading" border stripe>
       <el-table-column prop="name" label="规则名称" min-width="180" show-overflow-tooltip />
       <el-table-column prop="rule_type" label="类型" width="190" />
-      <el-table-column prop="action" label="动作" width="130" />
+      <el-table-column prop="action" label="引擎动作" width="130" />
+      <el-table-column prop="severity" label="风险级别" width="110" />
       <el-table-column prop="condition" label="条件说明" min-width="200" show-overflow-tooltip />
       <el-table-column label="状态" width="90">
         <template #default="{ row }">
@@ -63,7 +64,7 @@
           <el-input v-model="form.name" />
         </el-form-item>
         <el-form-item label="规则类型">
-          <el-select v-model="form.rule_type">
+          <el-select v-model="form.rule_type" @change="onRuleTypeChange">
             <el-option label="金额类（amount）" value="amount" />
             <el-option label="类别限额提醒" value="check_category_limit" />
             <el-option label="发票缺失提醒" value="check_invoice_missing" />
@@ -72,9 +73,14 @@
             <el-option label="弱凭证金额提醒" value="check_evidence_strength" />
           </el-select>
         </el-form-item>
-        <el-form-item label="动作">
+        <el-form-item label="引擎动作">
           <el-select v-model="form.action">
             <el-option label="指派审批链（assign_chain）" value="assign_chain" />
+            <el-option label="产出检查提示（check）" value="check" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="form.rule_type !== 'amount'" label="风险级别">
+          <el-select v-model="form.severity">
             <el-option label="提示（warn）" value="warn" />
             <el-option label="需复核（review）" value="review" />
             <el-option label="阻止提交（block）" value="block" />
@@ -121,7 +127,23 @@ const dialogVisible = ref(false)
 const editing = ref(false)
 const currentId = ref<number>()
 const configText = ref('{}')
-const form = reactive<any>({ name: '', rule_type: 'amount', action: 'assign_chain', condition: '', is_active: true })
+const form = reactive<any>({
+  name: '', rule_type: 'amount', action: 'assign_chain', severity: '',
+  condition: '', is_active: true,
+})
+
+/**
+ * 规则类型切换：自动设置引擎动作与默认风险级别
+ */
+function onRuleTypeChange(value: string) {
+  if (value === 'amount') {
+    form.action = 'assign_chain'
+    form.severity = ''
+  } else {
+    form.action = 'check'
+    form.severity = form.severity || 'warn'
+  }
+}
 
 /**
  * 拉取规则列表
@@ -151,7 +173,10 @@ function reload() {
 function openCreate() {
   editing.value = false
   currentId.value = undefined
-  Object.assign(form, { name: '', rule_type: 'amount', action: 'assign_chain', condition: '', is_active: true })
+  Object.assign(form, {
+    name: '', rule_type: 'amount', action: 'assign_chain', severity: '',
+    condition: '', is_active: true,
+  })
   configText.value = '{}'
   dialogVisible.value = true
 }
@@ -167,6 +192,7 @@ function openEdit(row: any) {
     name: row.name,
     rule_type: row.rule_type,
     action: row.action,
+    severity: row.severity || (row.rule_type === 'amount' ? '' : 'warn'),
     condition: row.condition,
     is_active: row.is_active,
   })
@@ -193,6 +219,7 @@ async function onSave() {
       name: form.name,
       rule_type: form.rule_type,
       action: form.action,
+      severity: form.rule_type === 'amount' ? null : (form.severity || 'warn'),
       condition: form.condition,
       config,
       is_active: form.is_active,

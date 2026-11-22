@@ -8,7 +8,7 @@
         - amount：submitter_roles 合法且非空、min_amount >= 0、max_amount 为空表示不设上限、
           flow_id 必须指向"存在且启用"的流程、同角色的启用规则金额区间不能重叠
           （匹配是"第一条命中即生效"，重叠会让后面的规则永远命中不到）；
-        - check_*：action 只能是 warn / block / review，config 里只保留引擎认识的参数
+        - check_*：action 固定 check，severity 只能是 warn / block / review，config 里只保留引擎认识的参数
           （check_duplicate.window_days、check_period_late.max_days、
            check_evidence_strength 的弱/中等凭证金额阈值）；
           其中 check_evidence_strength 由 AI 预审阶段的 document_service 执行，不在提交时执行；
@@ -315,31 +315,52 @@ def normalize_config(db: Session, rule_type: str, config: dict) -> dict:
 
 
 
-# 校验规则动作
+# 校验规则引擎动作
 def validate_action(rule_type: str, action: str) -> str:
     """
-    校验规则 action 字段
+    校验规则 action 字段（只表示引擎动作）
         - amount（路由规则）：固定 assign_chain（命中后绑定审批链）；
-        - check_*（检查规则）：只能是 warn / review / block。
+        - check_*（检查规则）：固定 check（命中后产出风险提示）。
         :param rule_type: 规则类型
         :param action: 前端传入的动作
         :return: 规范化后的动作
         :raises HTTPException: 400 动作不合法
     """
-    # 1.统一去空格 + 转小写，避免 "WARN" / " warn " 这类写法
     normalized = (action or "").strip().lower()     # 规范化动作
-    # 2.路由规则：动作固定为 assign_chain
     if rule_type == "amount":
         if normalized != "assign_chain":
             raise HTTPException(status_code=400, detail="amount（路由）规则的 action 必须是 assign_chain")
         return normalized
-    # 3.检查规则：动作只能是 warn / review / block
+    if not rule_type.startswith("check_"):
+        raise HTTPException(status_code=400, detail="不支持的规则类型")
+    if normalized != "check":
+        raise HTTPException(status_code=400, detail="检查规则的 action 必须是 check")
+    return normalized
+
+
+# 校验检查规则的风险级别
+def validate_severity(rule_type: str, severity: str | None) -> str | None:
+    """
+    校验规则 severity 字段
+        - amount 规则没有风险级别，必须为空；
+        - check_* 规则只能是 warn / review / block，未填默认 warn。
+        :param rule_type: 规则类型
+        :param severity: 前端传入的风险级别
+        :return: 规范化后的级别；amount 返回 None
+        :raises HTTPException: 400 级别不合法
+    """
+    normalized = (severity or "").strip().lower()
+    if rule_type == "amount":
+        if normalized:
+            raise HTTPException(status_code=400, detail="amount（路由）规则不能设置 severity")
+        return None
+    if not normalized:
+        return "warn"
     if normalized not in CHECK_LEVELS:
         raise HTTPException(
-            status_code=400,                        # 参数不合法
-            detail=f"检查规则的 action 只能是 {'/'.join(CHECK_LEVELS)}（warn 提示/review 强制复核/block 阻止提交）",   # 错误提示
+            status_code=400,
+            detail=f"检查规则的 severity 只能是 {'/'.join(CHECK_LEVELS)}（warn 提示/review 强制复核/block 阻止提交）",
         )
-    # 4.返回规范化后的动作
     return normalized
 
 
@@ -371,7 +392,8 @@ def create_rule(
     name: str,                                      # 规则名称
     rule_type: str,                                 # 规则类型
     condition: str,                                 # 触发条件
-    action: str,                                    # 命中动作
+    action: str,                                    # 引擎动作
+    severity: str | None = None,                    # 检查规则风险级别
     config: dict,                                   # 规则配置
     is_active: bool,                                # 是否启用
 ) -> Rule:
@@ -394,7 +416,8 @@ def create_rule(
     _ensure_name_unique(db, clean_name)
 
     # 2.动作与配置校验（按类型分别校验）
-    normalized_action = validate_action(rule_type, action)          # 规范化动作
+    normalized_action = validate_action(rule_type, action)          # 引擎动作
+    normalized_severity = validate_severity(rule_type, severity)    # 检查规则风险级别
     normalized_config = normalize_config(db, rule_type, config or {})   # 规范化配置
 
     # 3.路由规则启用时才校验区间重叠（停用的规则不参与匹配；检查规则没有区间概念）
@@ -411,7 +434,8 @@ def create_rule(
         name=clean_name,                    # 规则名称（已去空格并查重）
         rule_type=rule_type,                # 规则类型
         condition=condition,                # 触发条件描述
-        action=normalized_action,           # 校验并规范化后的命中动作
+        action=normalized_action,           # 引擎动作
+        severity=normalized_severity,       # 检查规则风险级别
         config=normalized_config,           # 校验并规范化后的规则参数
         is_active=is_active,                # 是否启用
     )
@@ -431,7 +455,8 @@ def update_rule(
     name: str,                                      # 新名称
     rule_type: str,                                 # 新类型
     condition: str,                                 # 新条件描述
-    action: str,                                    # 新动作
+    action: str,                                    # 新引擎动作
+    severity: str | None = None,                    # 新风险级别
     config: dict,                                   # 新配置
     is_active: bool,                                # 新启用状态
 ) -> Rule:
@@ -456,7 +481,8 @@ def update_rule(
     _ensure_name_unique(db, clean_name, exclude_rule_id=rule.id)
 
     # 2.动作与配置校验（按类型分别校验）
-    normalized_action = validate_action(rule_type, action)          # 规范化动作
+    normalized_action = validate_action(rule_type, action)          # 引擎动作
+    normalized_severity = validate_severity(rule_type, severity)    # 检查规则风险级别
     normalized_config = normalize_config(db, rule_type, config or {})   # 规范化配置
 
     # 3.路由规则启用时才校验区间重叠（检查规则没有区间概念）
@@ -473,7 +499,8 @@ def update_rule(
     rule.name = clean_name                          # 规则名称
     rule.rule_type = rule_type                      # 规则类型
     rule.condition = condition                      # 触发条件
-    rule.action = normalized_action                 # 命中动作
+    rule.action = normalized_action                 # 引擎动作
+    rule.severity = normalized_severity             # 检查规则风险级别
     rule.config = normalized_config                 # 规则配置
     rule.is_active = is_active                      # 启用状态
 

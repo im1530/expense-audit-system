@@ -275,6 +275,7 @@ def seed_base(session) -> dict:
             rule_type="amount",
             condition=f"{roles} 且金额 {min_amount}~{max_amount}",
             action="assign_chain",
+            severity=None,
             config={
                 "submitter_roles": roles,
                 "min_amount": min_amount,
@@ -297,16 +298,16 @@ def seed_base(session) -> dict:
     session.add_all([
         Rule(name="类别单次限额提醒", rule_type="check_category_limit",
              condition="单条明细金额超过该费用小类的单次报销限额",
-             action="warn", config={}, is_active=True),
+             action="check", severity="warn", config={}, is_active=True),
         Rule(name="发票缺失提醒", rule_type="check_invoice_missing",
              condition="明细未上传发票且未填写无票说明",
-             action="warn", config={}, is_active=True),
+             action="check", severity="warn", config={}, is_active=True),
         Rule(name="重复报销提醒", rule_type="check_duplicate",
              condition="同一提交人、同一费用日期、同一类别、同一金额在 60 天内重复出现",
-             action="warn", config={"window_days": 60}, is_active=True),
+             action="check", severity="warn", config={"window_days": 60}, is_active=True),
         Rule(name="跨期报销提醒", rule_type="check_period_late",
              condition="费用发生日期距提交日期超过 60 天",
-             action="warn", config={"max_days": 60}, is_active=True),
+             action="check", severity="warn", config={"max_days": 60}, is_active=True),
     ])
 
     # 6.费用类别
