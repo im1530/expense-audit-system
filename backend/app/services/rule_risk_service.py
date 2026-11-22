@@ -89,6 +89,7 @@ def build_risk_mark(hit) -> dict:
         "rule_label": RULE_TYPE_LABELS.get(hit.rule_type, hit.rule_type),   # 列表短标签
         "rule_hint": RULE_TYPE_HINTS.get(hit.rule_type, ""),                # 规则解释
         "rule_name": hit.rule_name,                                         # 规则名称快照
+        "clause_id": getattr(hit, "clause_id", None),                       # 制度条款ID
         "level": hit.level,                                                 # warn/review/block
         "level_label": LEVEL_LABELS.get(hit.level, hit.level),              # 级别中文名
         "message": hit.message,                                             # 具体提示文案

@@ -172,6 +172,13 @@ class ExpenseRuleHit(Base):
         comment="规则名称快照"                # 字段备注
     )
 
+    # clause_id:命中的制度条款快照（如 3.7），让规则结论和 AI 引用一样可追溯
+    clause_id = Column(
+        String(20),                         # 制度条款ID
+        nullable=True,                      # 兼容历史命中；新区则规则都有映射
+        comment="制度条款ID"                 # 字段备注
+    )
+
     # ===== 命中结果 =====
     level = Column(
         String(20),                         # 级别：warn / block / review

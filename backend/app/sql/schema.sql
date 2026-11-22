@@ -93,6 +93,7 @@ CREATE TABLE `expense_rule_hits` (
   `rule_id` bigint(20) DEFAULT NULL COMMENT '规则ID(规则删除后仍保留名称快照)',
   `rule_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '规则类型快照',
   `rule_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '规则名称快照',
+  `clause_id` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '命中的制度条款ID',
   `level` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '级别 warn/block/review',
   `message` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '给审批人看的提示',
   `evidence` json DEFAULT NULL COMMENT '命中证据(实际值/阈值/关联单据)',

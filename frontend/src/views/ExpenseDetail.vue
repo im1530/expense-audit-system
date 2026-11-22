@@ -90,6 +90,25 @@
       </el-table>
     </el-card>
 
+    <!-- 规则命中：规则结论也带制度条款，便于审批人追溯 -->
+    <el-card v-if="(expense.rule_hits || []).length" shadow="never" class="page-card" style="margin-top: 16px">
+      <template #header><span>规则命中</span></template>
+      <el-table :data="expense.rule_hits" border size="small">
+        <el-table-column prop="rule_name" label="规则" min-width="180" />
+        <el-table-column label="级别" width="100">
+          <template #default="{ row }">
+            <el-tag size="small" :type="RULE_LEVEL[row.level]?.type">
+              {{ RULE_LEVEL[row.level]?.label || row.level }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="制度条款" width="110">
+          <template #default="{ row }">{{ row.clause_id ? `第 ${row.clause_id} 条` : '-' }}</template>
+        </el-table-column>
+        <el-table-column prop="message" label="提示" min-width="260" />
+      </el-table>
+    </el-card>
+
     <!-- AI 预审结论 -->
     <el-card shadow="never" class="page-card" style="margin-top: 16px">
       <template #header>
@@ -272,6 +291,7 @@ import {
   APPROVAL_STATUS,
   EXPENSE_STATUS,
   RISK_LEVEL,
+  RULE_LEVEL,
   formatDate,
   formatMoney,
   formatTime,

@@ -28,6 +28,7 @@ class RuleHitItem(BaseModel):
         :ivar rule_id: 规则ID；规则被删除后仍保留名称快照
         :ivar rule_type: 规则类型，如 check_invoice_missing
         :ivar rule_name: 规则名称
+        :ivar clause_id: 命中的制度条款ID，如 2.5
         :ivar level: 级别：warn（提示，允许提交）/ block（阻止提交）/ review（强制人工复核）
         :ivar message: 给审批人看的提示文案
         :ivar evidence: 命中证据（实际值、阈值、关联单据等）
@@ -36,6 +37,7 @@ class RuleHitItem(BaseModel):
     rule_id: Optional[int] = None               # 规则ID
     rule_type: str                              # 规则类型
     rule_name: str                              # 规则名称
+    clause_id: Optional[str] = None             # 制度条款ID
     level: str                                  # warn/block/review
     message: str                                # 提示文案
     evidence: Optional[dict] = None             # 命中证据
@@ -67,6 +69,7 @@ class RuleRiskMark(BaseModel):
         :ivar rule_label: 列表短标签，如"明细超类别限额"（前端徽标直接显示）
         :ivar rule_hint: 这条规则在查什么（tooltip 解释用）
         :ivar rule_name: 规则名称快照
+        :ivar clause_id: 命中的制度条款ID
         :ivar level: 级别：warn（提示）/ review（需复核）/ block（阻止提交）
         :ivar level_label: 级别中文名：提示 / 需复核 / 阻止提交
         :ivar message: 具体提示，已包含明细名称、金额、阈值等细节
@@ -79,6 +82,7 @@ class RuleRiskMark(BaseModel):
     rule_label: str                             # 列表短标签
     rule_hint: str = ""                         # 规则解释
     rule_name: str                              # 规则名称快照
+    clause_id: Optional[str] = None             # 制度条款ID
     level: str                                  # warn/review/block
     level_label: str                            # 级别中文名
     message: str                                # 具体提示文案

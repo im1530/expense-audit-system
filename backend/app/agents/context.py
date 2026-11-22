@@ -173,6 +173,7 @@ def build_review_context(db: Session, expense_id: int) -> dict:
             "rule_type": hit.rule_type,                                             # 规则类型
             "rule_label": RULE_TYPE_LABELS.get(hit.rule_type, hit.rule_type),       # 中文短标签
             "rule_name": clean_text(hit.rule_name, 100),                            # 规则名称
+            "clause_id": hit.clause_id,                                             # 制度条款ID
             "level": hit.level,                                                     # warn/review/block
             "message": clean_text(hit.message, 500),                                # 提示文案
         })

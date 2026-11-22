@@ -38,6 +38,15 @@ CHECK_RULE_TYPES = (                            # 检查型规则类型
     "check_period_late",
 )
 
+# 检查规则 → 制度条款映射：让规则结论和 AI 引用一样可追溯
+RULE_CLAUSE_MAP = {
+    "check_category_limit": "3.7",       # 超限/限额
+    "check_invoice_missing": "2.5",      # 凭证缺失
+    "check_duplicate": "4.3",            # 重复报销
+    "check_period_late": "4.2",          # 跨期报销
+    "check_evidence_strength": "2.2",    # 有效凭证
+}
+
 # 级别优先级：数字越大越严重，用于汇总单据整体风险级别
 LEVEL_ORDER = {"warn": 1, "review": 2, "block": 3}   # 级别优先级
 
@@ -57,6 +66,7 @@ def _build_hit(rule: Rule, level: str, message: str, evidence: dict) -> dict:
         "rule_id": rule.id,                     # 规则ID
         "rule_type": rule.rule_type,            # 规则类型
         "rule_name": rule.name,                 # 规则名称
+        "clause_id": RULE_CLAUSE_MAP.get(rule.rule_type),  # 制度条款ID
         "level": level,                         # 命中级别
         "message": message,                     # 提示文案
         "evidence": evidence,                   # 命中证据
@@ -378,6 +388,7 @@ def save_rule_hits(db: Session, expense: Expense, hits: list[dict]) -> list[Expe
             rule_id=hit["rule_id"],                 # 规则ID
             rule_type=hit["rule_type"],             # 规则类型快照
             rule_name=hit["rule_name"],             # 规则名称快照
+            clause_id=hit.get("clause_id"),         # 制度条款快照
             level=hit["level"],                     # 命中级别（warn/review/block）
             message=hit["message"],                 # 给审批人看的提示
             evidence=hit["evidence"],               # 命中证据（金额/阈值/关联单据）

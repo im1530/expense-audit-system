@@ -74,6 +74,7 @@ class RuleEngineTest(BaseTestCase, unittest.TestCase):
 
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]["level"], "warn")
+        self.assertEqual(hits[0]["clause_id"], "3.7")   # 对应制度 3.7 超限
         self.assertIn("超过", hits[0]["message"])
         self.assertEqual(hits[0]["evidence"]["max_amount"], "2000.00")
         self.assertEqual(hits[0]["evidence"]["amount"], "2500.00")
@@ -166,6 +167,7 @@ class RuleEngineTest(BaseTestCase, unittest.TestCase):
 
         self.assertEqual(len(hits), 1)
         matches = hits[0]["evidence"]["matches"]
+        self.assertEqual(hits[0]["clause_id"], "4.3")   # 对应制度 4.3 重复报销
         self.assertTrue(any(match["expense_no"] == historic.expense_no for match in matches))
 
     def test_duplicate_history_query_is_not_n_plus_one(self):
