@@ -170,6 +170,16 @@ class RuleEngineTest(BaseTestCase, unittest.TestCase):
         self.assertEqual(hits[0]["clause_id"], "4.3")   # 对应制度 4.3 重复报销
         self.assertTrue(any(match["expense_no"] == historic.expense_no for match in matches))
 
+    def test_duplicate_ignores_draft_history(self):
+        """草稿从未进入报销，不作为重复报销的历史证据"""
+        employee = self.fx["users"]["employee"]
+        make_expense(self.db, employee, status=ExpenseStatus.DRAFT,
+                     amount=Decimal("100.00"), item_count=1)
+        current = make_expense(self.db, employee, amount=Decimal("100.00"), item_count=1)
+
+        hits = self.hits_of(run_rule_checks(self.db, current), "check_duplicate")
+        self.assertEqual(hits, [])
+
     def test_duplicate_history_query_is_not_n_plus_one(self):
         """重复检查只查一次历史明细，不再每条当前明细查一遍历史单据"""
         employee = self.fx["users"]["employee"]

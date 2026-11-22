@@ -210,7 +210,11 @@ def _check_duplicate(db: Session, expense: Expense, rule: Rule) -> list[dict]:
         .filter(
             Expense.user_id == expense.user_id,          # 同一提交人
             Expense.id != expense.id,                    # 排除本单
-            Expense.status.notin_([ExpenseStatus.CANCELLED, ExpenseStatus.REJECTED]),
+            Expense.status.notin_([
+                ExpenseStatus.DRAFT,                      # 草稿未进入报销，不算已报过
+                ExpenseStatus.CANCELLED,
+                ExpenseStatus.REJECTED,
+            ]),
             ExpenseItem.expense_date >= earliest,        # 只取窗口内明细
         )
         .order_by(Expense.id.asc(), ExpenseItem.id.asc())
