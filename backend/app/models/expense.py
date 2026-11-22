@@ -340,7 +340,7 @@ class ExpenseItem(Base):
         字段分组：
             - 归属：expense_id（所属报销单）、category_id（费用小类，指向 categories）
             - 内容：description（费用说明）、amount（金额）、expense_date（费用发生日期）
-            - 票据：invoice_no（发票号）、invoice_url（发票文件地址，可为图片或 PDF）
+            - 票据：invoice_no（发票号）；凭证文件走 attachments 关联表，不再在明细上存 URL
         约束：amount / expense_date / description / expense_id 必填；日期不得晚于今天由 schema 层校验。
         一致性要求：本表任何增删改之后，都要重算所属报销单的 total_amount。
     """
@@ -407,12 +407,6 @@ class ExpenseItem(Base):
     invoice_no = Column(
         String(100),            # 字段类型：字符串，长度为100
         comment="发票编号"       # 字段备注，写进数据库
-    )
-
-    # invoice_url:发票图片/PDF 的存储地址
-    invoice_url = Column(
-        String(500),             # 字段类型：字符串，长度为500
-        comment="发票文件URL"     # 字段备注，写进数据库
     )
 
     # no_invoice_reason:无票说明(没有发票时填写原因,规则引擎据此判断是否提示)

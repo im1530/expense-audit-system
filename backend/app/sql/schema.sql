@@ -151,7 +151,6 @@ CREATE TABLE `expense_items` (
   `amount` decimal(12,2) NOT NULL COMMENT '金额',
   `expense_date` date NOT NULL COMMENT '费用发生日期',
   `invoice_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '发票编号',
-  `invoice_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '发票文件URL',
   `no_invoice_reason` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '无票说明(无发票时填写原因)',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime DEFAULT NULL COMMENT '更新时间',

@@ -33,7 +33,6 @@ class ExpenseItemBase(BaseModel):
         :ivar amount: 明细金额，Decimal 类型且必须大于 0，避免浮点误差
         :ivar expense_date: 费用发生日期，不得晚于今天（见 validate_expense_date）
         :ivar invoice_no: 发票编号，选填，最长 100
-        :ivar invoice_url: 发票文件地址（图片/PDF），选填，最长 500
         :ivar no_invoice_reason: 无票说明，选填，最长 200；填写后"发票缺失"规则不再提示
     """
     category_id: int = Field(..., description="费用类别ID")                     # 必填，类别必须存在且启用
@@ -41,7 +40,6 @@ class ExpenseItemBase(BaseModel):
     amount: Decimal = Field(..., gt=0, description="费用金额")      # Decimal（金额类型）;  gt=0 → 必须正数
     expense_date: date = Field(..., description="费用发生日期")                 # 必填，不得晚于今天
     invoice_no:Optional[str] = Field(None, max_length=100, description="发票编号")  # 选填，最长 100
-    invoice_url:Optional[str] = Field(None, max_length=500, description="发票文件URL")  # 可以是字符串，也可以是 None]
     no_invoice_reason: Optional[str] = Field(None, max_length=200, description="无票说明(没有发票时填写原因)")  # 选填，填了就不再提示缺票
 
     # 校验费用发生日期不能晚于今天
@@ -84,7 +82,6 @@ class ExpenseItemUpdate(BaseModel):
         :ivar amount: 明细金额，必须大于 0
         :ivar expense_date: 费用发生日期
         :ivar invoice_no: 发票编号
-        :ivar invoice_url: 发票文件地址
         :ivar no_invoice_reason: 无票说明，填写后"发票缺失"规则不再提示
     """
     category_id: Optional[int] = None                  # 费用类型ID
@@ -92,7 +89,6 @@ class ExpenseItemUpdate(BaseModel):
     amount: Optional[Decimal] = Field(None, gt=0)      # 费用金额
     expense_date: Optional[date] = None                # 费用发生日期
     invoice_no: Optional[str] = Field(None, max_length=100)  # 发票编号
-    invoice_url: Optional[str] = Field(None, max_length=500)    # 发票文件URL
     no_invoice_reason: Optional[str] = Field(None, max_length=200)  # 无票说明
 
 
