@@ -8,11 +8,12 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from fastapi import HTTPException
+from sqlalchemy import event
 
 from app.api.v1.expense import precheck_expense, submit_expense
 from app.models import Attachment, ExpenseItem, ExpenseRuleHit, Rule
 from app.models.expense import ExpenseStatus
-from app.services.rule_engine import run_rule_checks, summarize_level
+from app.services.rule_engine import _check_duplicate, run_rule_checks, summarize_level
 from app.services.rule_service import create_rule
 from tests.support import BaseTestCase, make_expense
 
@@ -166,6 +167,31 @@ class RuleEngineTest(BaseTestCase, unittest.TestCase):
         self.assertEqual(len(hits), 1)
         matches = hits[0]["evidence"]["matches"]
         self.assertTrue(any(match["expense_no"] == historic.expense_no for match in matches))
+
+    def test_duplicate_history_query_is_not_n_plus_one(self):
+        """重复检查只查一次历史明细，不再每条当前明细查一遍历史单据"""
+        employee = self.fx["users"]["employee"]
+        for _ in range(20):
+            make_expense(self.db, employee, status=ExpenseStatus.APPROVED,
+                         amount=Decimal("100.00"), item_count=1)
+        current = make_expense(self.db, employee, amount=Decimal("100.00"), item_count=1)
+        self.db.commit()
+        rule = self.db.query(Rule).filter(Rule.rule_type == "check_duplicate").one()
+        current.items  # 预加载，避免把懒加载算进统计
+
+        statements = []
+
+        def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            if statement.lstrip().upper().startswith("SELECT"):
+                statements.append(statement)
+
+        event.listen(self.db.get_bind(), "before_cursor_execute", before_cursor_execute)
+        try:
+            _check_duplicate(self.db, current, rule)
+        finally:
+            event.remove(self.db.get_bind(), "before_cursor_execute", before_cursor_execute)
+
+        self.assertEqual(len(statements), 1)
 
     def test_duplicate_ignores_other_category(self):
         """金额相同但类别不同 → 不算重复"""

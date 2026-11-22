@@ -19,7 +19,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.models import Expense, ExpenseRuleHit, Rule
+from app.models import Expense, ExpenseRuleHit, ExpenseItem, Rule
 from app.models.expense import ExpenseStatus
 
 
@@ -178,46 +178,63 @@ def _check_duplicate(db: Session, expense: Expense, rule: Rule) -> list[dict]:
     earliest = date.today() - timedelta(days=window_days)   # 窗口起始日
     level = _rule_level(rule)                       # 规则级别
 
+    # 1.先筛出窗口内的当前明细；没有候选直接返回，避免无谓查询
+    current_items = [
+        item for item in expense.items
+        if item.category_id is not None and item.expense_date >= earliest
+    ]
+    if not current_items:
+        return []
+
+    # 2.一次 join 查出所有历史候选明细（不再"每条当前明细查一遍历史单据"）
+    rows = (
+        db.query(
+            Expense.id,
+            Expense.expense_no,
+            ExpenseItem.id,
+            ExpenseItem.category_id,
+            ExpenseItem.amount,
+            ExpenseItem.expense_date,
+        )
+        .join(ExpenseItem, ExpenseItem.expense_id == Expense.id)
+        .filter(
+            Expense.user_id == expense.user_id,          # 同一提交人
+            Expense.id != expense.id,                    # 排除本单
+            Expense.status.notin_([ExpenseStatus.CANCELLED, ExpenseStatus.REJECTED]),
+            ExpenseItem.expense_date >= earliest,        # 只取窗口内明细
+        )
+        .order_by(Expense.id.asc(), ExpenseItem.id.asc())
+        .all()
+    )
+
+    # 3.按（类别、金额、费用日期）建索引，匹配时 O(1) 取历史候选
+    historical_map: dict[tuple, list[dict]] = {}
+    for expense_id, expense_no, item_id, category_id, amount, expense_date in rows:
+        key = (category_id, amount, expense_date)
+        historical_map.setdefault(key, []).append({
+            "expense_id": expense_id,
+            "expense_no": expense_no,
+            "item_id": item_id,
+        })
+
+    # 4.当前单据内部也按同一个 key 分组，先处理"同单内重复"
+    current_map: dict[tuple, list] = {}
+    for item in current_items:
+        current_map.setdefault((item.category_id, item.amount, item.expense_date), []).append(item)
+
     hits = []                                       # 命中列表
-    for item in expense.items:
-        # 1.窗口外的费用不再比对（约定："60 天内出现重复才算重复"）
-        if item.category_id is None or item.expense_date < earliest:
-            continue
-
-        matches = []                                # 重复匹配项
-
-        # 2.同一张单内的其他明细
-        for other in expense.items:
-            if (
-                other.id != item.id
-                and other.category_id == item.category_id
-                and other.amount == item.amount
-                and other.expense_date == item.expense_date
-            ):
-                matches.append({
-                    "expense_id": expense.id,
-                    "expense_no": expense.expense_no,
-                    "item_id": other.id,
-                })
-
-        # 3.历史单据（排除本单、排除已取消/已驳回）
-        rows = db.query(Expense).filter(            # 历史单据查询
-            Expense.user_id == expense.user_id,     # 同一提交人
-            Expense.id != expense.id,               # 排除本单
-            Expense.status.notin_([ExpenseStatus.CANCELLED, ExpenseStatus.REJECTED]),   # 排除已取消/已驳回
-        ).all()
-        for other_expense in rows:
-            for other_item in other_expense.items:
-                if (
-                    other_item.category_id == item.category_id
-                    and other_item.amount == item.amount
-                    and other_item.expense_date == item.expense_date
-                ):
-                    matches.append({
-                        "expense_id": other_expense.id,
-                        "expense_no": other_expense.expense_no,
-                        "item_id": other_item.id,
-                    })
+    for item in current_items:
+        key = (item.category_id, item.amount, item.expense_date)
+        matches = [
+            {
+                "expense_id": expense.id,
+                "expense_no": expense.expense_no,
+                "item_id": other.id,
+            }
+            for other in current_map.get(key, [])
+            if other.id != item.id
+        ]
+        matches.extend(historical_map.get(key, []))
 
         if not matches:
             continue
