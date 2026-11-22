@@ -16,9 +16,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.api.deps import get_current_user, get_current_user_allow_pending_password
 from app.api.v1.admin_user import list_users
 from app.api.v1.auth import login, read_current_user
+from app.api.v1.expense import list_company_expenses
 from app.api.v1.report import report_export, report_overview
 from app.core.security import create_user_token
-from app.schemas.common import PageParams
+from app.schemas.common import BusinessFilter, PageParams
 from app.schemas.user import UserResponse
 from app.models.expense import ExpenseStatus
 from tests.support import BaseTestCase, TEST_PASSWORD, make_expense, make_request
@@ -194,6 +195,28 @@ class AuthAndPermissionTest(BaseTestCase, unittest.TestCase):
             response.media_type,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+
+    def test_company_list_uses_view_all_permission(self):
+        """全公司列表与报表统一走 view_all 权限，不再写角色元组"""
+        boss = self.fx["users"]["boss"]
+        employee = self.fx["users"]["employee"]
+
+        response = list_company_expenses(
+            page_params=PageParams(page=1, page_size=10),
+            common_filter=BusinessFilter(),
+            status=None, user_id=None, department_id=None,
+            db=self.db, current_user=boss,
+        )
+        self.assertEqual(response.total, 0)
+
+        with self.assertRaises(HTTPException) as ctx:
+            list_company_expenses(
+                page_params=PageParams(page=1, page_size=10),
+                common_filter=BusinessFilter(),
+                status=None, user_id=None, department_id=None,
+                db=self.db, current_user=employee,
+            )
+        self.assert_http_error(ctx, 403)
 
     def test_overview_gross_and_net_amount(self):
         """总览金额口径：gross 排除草稿，net 只算已通过/待领取/已报销"""

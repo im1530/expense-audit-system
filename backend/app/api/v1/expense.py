@@ -331,9 +331,9 @@ def list_company_expenses(
         current_user: User = Depends(get_current_user)                          # 当前登录人（验签）
 ):
     """
-    分页查询"全公司"报销单列表（仅 finance / boss / admin 可用）
+    分页查询"全公司"报销单列表（需 view_all 权限：finance / boss / admin）
     权限说明:
-        - 需登录鉴权，角色必须是 finance、boss、admin 之一，否则 403
+        - 需登录鉴权，且必须拥有 view_all 权限，否则 403
         - 数据范围覆盖全公司所有部门，不做部门隔离（这是财务与高层的工作视图）
     筛选能力:
         - 通用筛选：费用大类、费用小类、创建日期区间、报销金额区间
@@ -347,13 +347,13 @@ def list_company_expenses(
         :param user_id: 可选，只看指定提交人的单据
         :param department_id: 可选，只看指定部门的单据
         :param db: 数据库会话
-        :param current_user: 当前登录用户（须为 finance/boss/admin）
+        :param current_user: 当前登录用户（须拥有 view_all）
         :return: ExpenseListResponse 实例
-        :raises HTTPException: 403 角色不符合
+        :raises HTTPException: 403 无 view_all 权限
     """
-    # 1.角色校验
-    if current_user.role not in (UserRole.FINANCE, UserRole.BOSS, UserRole.ADMIN):
-        raise HTTPException(status_code=403, detail="仅finance/boss/admin可查询全公司报销单列表")
+    # 1.权限校验：统一走 view_all，与报表/审批轨迹的数据范围保持一致
+    if not current_user.has_permission("view_all"):
+        raise HTTPException(status_code=403, detail="无权限查询全公司报销单列表")
 
 
     # 2.构建基础查询:默认无强制数据范围,返回全公司报销单
@@ -648,9 +648,9 @@ def list_company_expense_items(
         current_user: User = Depends(get_current_user)      # 当前登录人（验签）
 ):
     """
-    分页查询"全公司"报销明细列表（仅 finance / boss / admin 可用）
+    分页查询"全公司"报销明细列表（需 view_all 权限：finance / boss / admin）
     权限说明:
-        - 需登录鉴权，角色必须是 finance、boss、admin 之一，否则 403
+        - 需登录鉴权，且必须拥有 view_all 权限，否则 403
         - 数据范围覆盖全公司，不做部门隔离
     筛选能力:
         - 通用筛选：费用大类、费用小类、费用发生日期区间、单条明细金额区间
@@ -661,13 +661,13 @@ def list_company_expense_items(
         :param user_id: 可选，只看指定员工的明细
         :param department_id: 可选，只看指定部门的明细
         :param db: 数据库会话
-        :param current_user: 当前登录用户（须为 finance/boss/admin）
+        :param current_user: 当前登录用户（须拥有 view_all）
         :return: ExpenseItemListResponse 实例
-        :raises HTTPException: 403 角色不符合
+        :raises HTTPException: 403 无 view_all 权限
     """
-    # 1.角色校验：非授权角色直接拦截
-    if current_user.role not in (UserRole.FINANCE, UserRole.BOSS, UserRole.ADMIN):
-        raise HTTPException(status_code=403, detail="仅finance/boss/admin可查询全公司报销明细")
+    # 1.权限校验：统一走 view_all，与报表/审批轨迹的数据范围保持一致
+    if not current_user.has_permission("view_all"):
+        raise HTTPException(status_code=403, detail="无权限查询全公司报销明细")
 
 
     # 2.构建基础查询:关联报销单表、费用类别表，补全展示与筛选所需字段
