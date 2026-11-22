@@ -8,6 +8,7 @@
         - 报表接口的 view_all 权限
 """
 import unittest
+from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import HTTPException
@@ -20,6 +21,7 @@ from app.api.v1.expense import list_company_expenses
 from app.api.v1.report import report_export, report_overview
 from app.core.security import create_user_token
 from app.schemas.common import BusinessFilter, PageParams
+from app.services.report_service import get_monthly_trend
 from app.schemas.user import UserResponse
 from app.models.expense import ExpenseStatus
 from tests.support import BaseTestCase, TEST_PASSWORD, make_expense, make_request
@@ -217,6 +219,36 @@ class AuthAndPermissionTest(BaseTestCase, unittest.TestCase):
                 db=self.db, current_user=employee,
             )
         self.assert_http_error(ctx, 403)
+
+    def test_report_uses_submission_date(self):
+        """报表按 submitted_at 归月：1 月建草稿、3 月提交应算 3 月"""
+        employee = self.fx["users"]["employee"]
+        finance = self.fx["users"]["finance"]
+        expense = make_expense(
+            self.db, employee, status=ExpenseStatus.PENDING, amount=Decimal("100.00"),
+        )
+        expense.created_at = datetime(2026, 1, 15, 10, 0, 0)
+        expense.submitted_at = datetime(2026, 3, 10, 10, 0, 0)
+        self.db.commit()
+
+        march = get_monthly_trend(
+            self.db, start_date=date(2026, 3, 1), end_date=date(2026, 3, 31),
+        )
+        self.assertEqual(len(march), 1)
+        self.assertEqual(march[0]["month"], "2026-03")
+        self.assertEqual(march[0]["expense_count"], 1)
+
+        february = get_monthly_trend(
+            self.db, start_date=date(2026, 2, 1), end_date=date(2026, 2, 28),
+        )
+        self.assertEqual(february, [])
+
+        overview = report_overview(
+            start_date=date(2026, 3, 1), end_date=date(2026, 3, 31),
+            department_id=None, db=self.db, current_user=finance,
+        )
+        self.assertEqual(overview["total_count"], 1)
+        self.assertEqual(overview["gross_amount"], Decimal("100.00"))
 
     def test_overview_gross_and_net_amount(self):
         """总览金额口径：gross 排除草稿，net 只算已通过/待领取/已报销"""

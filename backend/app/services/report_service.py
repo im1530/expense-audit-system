@@ -7,7 +7,7 @@
         - by_category：按费用类别分布（明细条数、金额）
         - export_rows：明细级导出数据（供 Excel 使用）
     口径说明：
-        - 日期区间按报销单 created_at 过滤，且用"次日 0 点之前"的半开区间，避免漏掉结束日白天的单据；
+        - 日期区间按报销单 submitted_at（提交时间）过滤；草稿没有提交时间，不进入月报/区间报表；
         - 部门维度按"报销单提交时固化的 department_id 快照"统计，人员调部门后历史报表不漂移；
         - 金额一律用 Decimal，避免浮点误差；数据库函数用 MySQL 的 date_format（项目只跑 MySQL）。
 """
@@ -65,20 +65,20 @@ def _apply_expense_filters(
 ):
     """
     给报销单维度的查询追加日期区间与部门筛选
-        日期用半开区间：created_at >= start_date 且 created_at < end_date + 1 天，
-        这样结束日 00:00 之后创建的单据也能被统计到。
+        日期用半开区间：submitted_at >= start_date 且 submitted_at < end_date + 1 天；
+        使用提交时间而不是创建时间：草稿不算报表，1 月建草稿、3 月提交应计入 3 月。
         :param query: 已 join 好 User 的查询对象（部门筛选使用 Expense.department_id 快照）
         :param start_date: 可选，起始日期
         :param end_date: 可选，结束日期（含当天）
-        :param department_id: 可选，按提交人所属部门过滤
+        :param department_id: 可选，按提交时部门快照过滤
         :return: 追加完条件的查询对象
     """
     # 1.起始日：含当天 00:00 起（DateTime >= date 会自动补 00:00:00）
     if start_date is not None:
-        query = query.filter(Expense.created_at >= start_date)   # 起始日条件
+        query = query.filter(Expense.submitted_at >= start_date)   # 提交日条件
     # 2.结束日：用"次日 0 点之前"的半开区间，避免漏掉结束日白天的单据
     if end_date is not None:
-        query = query.filter(Expense.created_at < end_date + timedelta(days=1))   # 结束日条件
+        query = query.filter(Expense.submitted_at < end_date + timedelta(days=1))   # 提交日条件
     # 3.部门：按提交时固化的部门快照过滤，避免人员调部门后历史报表漂移
     if department_id is not None:
         query = query.filter(Expense.department_id == department_id)   # 部门快照条件
@@ -165,9 +165,9 @@ def get_monthly_trend(
         :param department_id: 可选，按部门过滤
         :return: 列表，每项含 month / expense_count / total_amount / paid_amount
     """
-    # 1.把创建时间截成 YYYY-MM，作为分组维度
-    # MySQL 的 date_format：把 created_at 截成 YYYY-MM
-    month_expr = func.date_format(Expense.created_at, "%Y-%m")   # 月份表达式
+    # 1.把提交时间截成 YYYY-MM，作为分组维度
+    # MySQL 的 date_format：把 submitted_at 截成 YYYY-MM；草稿没有提交时间，不进入月报
+    month_expr = func.date_format(Expense.submitted_at, "%Y-%m")   # 月份表达式
 
     # 2.按月聚合：单据数、申报总额（非草稿）、有效金额、已报销金额
     query = db.query(                                # 按月统计查询
@@ -182,7 +182,7 @@ def get_monthly_trend(
         func.coalesce(func.sum(case(
             (Expense.status == ExpenseStatus.PAID, Expense.total_amount), else_=0
         )), 0),                                                     # 已报销金额
-    ).join(User, Expense.user_id == User.id)
+    ).join(User, Expense.user_id == User.id).filter(Expense.submitted_at.isnot(None))
     # 3.追加日期区间/部门筛选
     query = _apply_expense_filters(query, start_date=start_date, end_date=end_date, department_id=department_id)   # 追加筛选
     # 4.按月份分组并升序排序（趋势图按时间从左到右）
