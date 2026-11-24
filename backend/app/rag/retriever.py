@@ -197,7 +197,14 @@ def build_retriever(document: PolicyDocument) -> PolicyRetriever:
             if backend == "hybrid":
                 from app.rag.hybrid_retriever import HybridPolicyRetriever
 
-                return HybridPolicyRetriever(document)
+                return HybridPolicyRetriever(
+                    document,
+                    keyword=BM25PolicyRetriever(
+                        document,
+                        k1=float(settings.BM25_K1),
+                        b=float(settings.BM25_B),
+                    ),
+                )
 
             from app.rag.chroma_retriever import ChromaPolicyRetriever
 
@@ -206,7 +213,11 @@ def build_retriever(document: PolicyDocument) -> PolicyRetriever:
             logger.warning("%s 检索初始化失败，本次降级为 BM25", backend, exc_info=True)
 
     # 2.默认 BM25（零依赖，保证预审不被检索后端拖垮）
-    return BM25PolicyRetriever(document)
+    return BM25PolicyRetriever(
+        document,
+        k1=float(settings.BM25_K1),
+        b=float(settings.BM25_B),
+    )
 
 
 

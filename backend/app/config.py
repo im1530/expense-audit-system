@@ -132,6 +132,8 @@ class Settings(BaseSettings):
     POLICY_TOP_K: int = 4                                # 单次最多注入多少条制度条款
     POLICY_MIN_SCORE: float = 0.6                        # BM25 绝对分数下限，低于该值不返回
     POLICY_MIN_RELATIVE_SCORE: float = 0.35              # 相对最高分的比例下限，过滤明显不相关条款
+    BM25_K1: float = 1.5                                 # BM25 词频饱和参数；通用默认值，未针对短条款专门调优
+    BM25_B: float = 0.75                                 # BM25 文档长度归一化参数；通用默认值
     POLICY_CHROMA_DIR: str = "chroma_policy"             # 向量库持久化目录（相对 backend 或绝对路径）
     POLICY_CHROMA_COLLECTION: str = "policy_clauses"     # 向量集合名
     POLICY_CHROMA_MIN_SIMILARITY: float = 0.20           # 余弦相似度下限（低于不返回）

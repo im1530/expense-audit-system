@@ -143,6 +143,7 @@ expense-audit-system/
 | [`docs/GO_LIVE_CHECKLIST.md`](docs/GO_LIVE_CHECKLIST.md) | 上线前逐项检查（P0/P1）与已知边界 |
 | [`docs/CITATION_RECALL_PLAN.md`](docs/CITATION_RECALL_PLAN.md) | 引用漏引的定位过程与收口方案 |
 | [`docs/policies/expense_policy_v1_3.md`](docs/policies/expense_policy_v1_3.md) | 制度原文（v1.3，33 条；v1.2 保留在 `expense_policy_v1.md` 仅用于 blind_v2 冻结复现） |
+| [`docs/policies/README.md`](docs/policies/README.md) | 制度文件维护约定（运行时版本 / 冻结版本 / keywords 要求） |
 
 ## 界面截图
 
