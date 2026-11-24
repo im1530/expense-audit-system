@@ -108,6 +108,8 @@ cd ../frontend && npm test                                      # 30 个，jsdom
 
 - 后端测试**不联网、不调真实 LLM**：LLM 用假客户端/录制回放，Chroma 用假 embedding + 内存 client；
 - 使用独立测试库 `expense_audit_test`，用例前清表、灌最小种子数据，进程退出删除；
+- HTTP 契约：`tests/test_http_contracts.py` 覆盖状态码、鉴权、422 错误码与响应字段裁剪；
+- 并发压测：`scripts/load_test.py` 手动压待办列表，输出 p50/p95 与错误率，不进入 CI 门禁（见 [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)）；
 - 真实模型评测：`scripts/evaluate.py --mode real`（会产生费用），指标口径与历史结论见 [`backend/evaluation/README.md`](backend/evaluation/README.md)。
 
 ## 真实数据验证（自采集，2026-11-15）
@@ -144,6 +146,7 @@ expense-audit-system/
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | 部署步骤、内网自签 HTTPS、最小权限账号、常见坑 |
 | [`docs/GO_LIVE_CHECKLIST.md`](docs/GO_LIVE_CHECKLIST.md) | 上线前逐项检查（P0/P1）与已知边界 |
 | [`docs/CITATION_RECALL_PLAN.md`](docs/CITATION_RECALL_PLAN.md) | 引用漏引的定位过程与收口方案 |
+| [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) | 并发压测脚本用法、p95/错误率口径与已知边界 |
 | [`docs/policies/expense_policy_v1_3.md`](docs/policies/expense_policy_v1_3.md) | 制度原文（v1.3，33 条；v1.2 保留在 `expense_policy_v1.md` 仅用于 blind_v2 冻结复现） |
 | [`docs/policies/README.md`](docs/policies/README.md) | 制度文件维护约定（运行时版本 / 冻结版本 / keywords 要求） |
 
