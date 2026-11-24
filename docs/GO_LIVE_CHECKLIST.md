@@ -167,7 +167,7 @@ python scripts/verify_restore.py --backup "D:\MySQLBackup\expense_audit__develop
 
 ## 7. 上线验收（逐条执行并记录）
 
-- [ ] `python -m unittest discover -s tests` 全部通过（当前 491 个，2026-11-21 实测：Ran 491 tests OK）
+- [ ] `python -m unittest discover -s tests` 全部通过（当前 493 个，2026-11-24 实测：Ran 493 tests OK）
 - [ ] 冒烟链路：登录 → 建草稿 → 加明细 → 上传发票 → 提交 → AI 预审 → 审批 → 支付
   - 2026-11-15 已在 `expense_audit_test` + 8001 临时后端跑通两轮（含两级审批、凭证识别、支付），生产入口（443/8000 + Celery）待上线后复跑；见 `backend/evaluation/reports/e2e_smoke_20261115.md`
 - [ ] `GET /api/v1/agent/review/{id}/trace` 返回节点耗时、决策、引用、凭证结论

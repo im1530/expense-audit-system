@@ -1,7 +1,7 @@
 # 后端（FastAPI + SQLAlchemy + MySQL + Chroma + LangGraph + Celery）
 
 AI Agent 财务报销审核系统的服务端：报销单全生命周期、逐级审批、规则引擎、制度 RAG、
-凭证识别、LangGraph 预审工作流、审计与降级。**79 个 REST 接口，491 个离线单测。**
+凭证识别、LangGraph 预审工作流、审计与降级。**79 个 REST 接口，493 个离线单测。**
 
 ## 五分钟跑起来
 
@@ -275,7 +275,7 @@ backend/
 ## 测试
 
 ```bash
-..\.venv\Scripts\python.exe -m unittest discover -s tests          # 全部（当前 491 个）
+..\.venv\Scripts\python.exe -m unittest discover -s tests          # 全部（当前 493 个）
 ..\.venv\Scripts\python.exe -m unittest tests.test_rule_engine -v  # 单个文件
 ```
 

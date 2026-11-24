@@ -6,8 +6,6 @@
         - 任何 high / 降级 / 中风险 finding 都不允许 fast_track；
         - 仅有 low finding（提示性信息）不阻断 fast_track，由审批人快速确认。
 """
-from decimal import Decimal
-
 from app.agents.risk_agent import ReviewOutcome
 
 
@@ -38,18 +36,18 @@ def decide_review(
             "reason": f"AI 预审降级为规则兜底（{fallback_reason or '未知原因'}），需人工复核",
         }
 
-    # 2.高风险：建议退回/补正
+    # 2.高风险：建议退回/补正（等级由 risk_agent 按分数统一换算，决策不再重复阈值）
     high_findings = [item for item in outcome.findings if item.get("level") == "high"]
-    if high_findings or outcome.risk_level == "high" or outcome.risk_score >= Decimal("70"):
+    if high_findings or outcome.risk_level == "high":
         first = str(high_findings[0].get("message") or "")[:200] if high_findings else ""
-        reason = f"存在高风险项 {len(high_findings)} 条" if high_findings else "风险分数达到高风险阈值"
+        reason = f"存在高风险项 {len(high_findings)} 条" if high_findings else "风险等级为高风险"
         if first:
             reason = f"{reason}：{first}"
         return {"decision": DECISION_SUGGEST_REJECT, "reason": reason[:500]}
 
     # 3.中风险/中高风险 finding：人工复核；仅有 low finding 不在此列
     mid_findings = [item for item in outcome.findings if item.get("level") in ("mid", "high")]
-    if mid_findings or outcome.risk_level == "mid" or outcome.risk_score >= Decimal("40"):
+    if mid_findings or outcome.risk_level == "mid":
         reason = "存在需要人工核对的疑点"
         if mid_findings:
             reason = f"存在 {len(mid_findings)} 条中高风险提示，需人工复核"

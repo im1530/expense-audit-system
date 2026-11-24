@@ -5,6 +5,7 @@ Phase D 工作流测试（离线，不联网；使用测试库）
 import asyncio
 import unittest
 from decimal import Decimal
+from unittest.mock import patch
 
 import tests  # noqa: F401  必须先执行 tests/__init__，把 DATABASE_URL 指向测试库
 from app.agents.risk_agent import ReviewOutcome
@@ -18,6 +19,7 @@ from app.workflow.decision import (
     DECISION_SUGGEST_REJECT,
     decide_review,
 )
+from app.workflow.nodes import document_node
 from app.workflow.service import resume_review_workflow, run_review_workflow
 from tests.support import BaseTestCase, make_expense
 
@@ -103,6 +105,13 @@ class DecisionTest(unittest.TestCase):
         """低风险无 finding → 建议快速审批"""
         self.assertEqual(decide_review(make_outcome())["decision"], DECISION_FAST_TRACK)
 
+    def test_decision_uses_risk_level_not_duplicate_thresholds(self):
+        """决策以 outcome.risk_level 为准，不再重复 70/40 阈值"""
+        high = make_outcome(score="10", level="high")
+        mid = make_outcome(score="90", level="mid")
+        self.assertEqual(decide_review(high)["decision"], DECISION_SUGGEST_REJECT)
+        self.assertEqual(decide_review(mid)["decision"], DECISION_MANUAL_REVIEW)
+
     def test_low_only_findings_fast_track(self):
         """低风险且只有 low finding：提示性信息不阻断 fast_track"""
         outcome = make_outcome(
@@ -139,6 +148,15 @@ class WorkflowServiceTest(BaseTestCase, unittest.TestCase):
             amount=Decimal("100.00"),
             category_id=self.fx["categories"]["rail"].id,
         )
+
+    def test_document_node_failure_raises(self):
+        """凭证节点整单异常不能再静默吞掉，交给工作流失败/规则兜底"""
+        with patch(
+            "app.workflow.nodes.extract_for_expense_with_usage",
+            side_effect=RuntimeError("ocr down"),
+        ):
+            with self.assertRaises(RuntimeError):
+                document_node({"expense_id": 1}, db=self.db)
 
     def test_workflow_success_and_steps(self):
         """无附件：跳过 document，跑完 rule/rag/risk/decision"""

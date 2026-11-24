@@ -68,13 +68,11 @@ def document_node(state: WorkflowState, *, db) -> dict:
             "document_usage": usage,
             "context": context,
         }
-    except Exception as exc:
-        logger.warning("凭证节点失败，降级为无凭证结论 expense_id=%s error=%s", expense_id, exc)
-        return {
-            "document_findings": [],
-            "document_usage": {"prompt_tokens": 0, "completion_tokens": 0},
-            "errors": list(state.get("errors") or []) + [f"document: {exc}"],
-        }
+    except Exception:
+        # 整单凭证节点异常不能静默降级：抛给工作流引擎，由 run 失败/外层规则兜底显式暴露，
+        # 否则审批人看到的是“正常 AI 结论”，却少了整类凭证风险。
+        logger.exception("凭证节点失败 expense_id=%s", expense_id)
+        raise
 
 
 
