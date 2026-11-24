@@ -235,14 +235,16 @@ def build_document_findings(
     policy: EvidencePolicy,
     company_identities: list[dict] | None = None,
     duplicate_identifier: bool = False,
+    total_amount: Decimal | None = None,
 ) -> list[dict]:
     """
     把凭证事实与明细进行一致性比对
-        :param facts: 凭证事实
+        :param facts: 凭证事实（主凭证，用于类型/日期/发票号等字段）
         :param item: 明细上下文（amount/expense_date/invoice_no/category_type/description）
         :param policy: 证据阈值策略
         :param company_identities: 允许的公司抬头
         :param duplicate_identifier: 该凭证号是否已在其他单据出现
+        :param total_amount: 同一明细下多张凭证的合计金额；为空时退回 facts.amount
         :return: 风险点列表
     """
     findings: list[dict] = []                                   # 风险点
@@ -251,6 +253,7 @@ def build_document_findings(
     item_invoice_no = normalize_identifier(item.get("invoice_no") or "")   # 明细填写的发票号
     expense_type = str(item.get("category_type") or "")         # 费用大类
     tolerance = _to_decimal(settings.DOCUMENT_AMOUNT_TOLERANCE, Decimal("0.01")) or Decimal("0.01")   # 金额容差
+    compare_amount = total_amount if total_amount is not None else facts.amount   # 多票合计优先
 
     # 1.无法识别/类型未知：只提示人工核对
     if facts.document_type == "unreadable":
@@ -262,20 +265,20 @@ def build_document_findings(
         ))
         return findings
 
-    # 2.金额比对：任何凭证类型都适用
-    if facts.amount is not None and item_amount > 0:
-        difference = item_amount - facts.amount                # 明细金额 - 票面金额
+    # 2.金额比对：任何凭证类型都适用；同一明细多张票时用合计金额
+    if compare_amount is not None and item_amount > 0:
+        difference = item_amount - compare_amount               # 明细金额 - 凭证金额
         if difference > tolerance:
             findings.append(_finding(
                 "high",
-                f"凭证金额 {facts.amount} 元低于明细金额 {item_amount} 元，差额 {difference} 元",
+                f"凭证金额 {compare_amount} 元低于明细金额 {item_amount} 元，差额 {difference} 元",
                 f"凭证类型 {facts.document_type}，凭证号 {facts.identifier or '未识别'}",
                 "核对发票/支付记录，确认是否上传错票或金额填写有误",
             ))
         elif -difference > tolerance:
             findings.append(_finding(
                 "mid",
-                f"凭证金额 {facts.amount} 元高于明细金额 {item_amount} 元",
+                f"凭证金额 {compare_amount} 元高于明细金额 {item_amount} 元",
                 f"差额 {-difference} 元",
                 "确认是否为部分报销、同一凭证覆盖多条明细，或金额填写有误",
             ))

@@ -530,6 +530,9 @@ def collect_document_findings(
             confidence=float(primary.confidence or 0),
             needs_manual_review=bool(primary.needs_manual_review),
         )                                                # 比对事实
+        # 同一明细可能拆成多张发票：金额比对用合计，单票证据强度仍用 primary.amount
+        amounts = [r.amount for r in item_records if r.amount is not None]
+        total_amount = sum(amounts, Decimal("0")) if amounts else None
         duplicate = _has_duplicate_identifier(db, primary, expense_id)   # 凭证号重复
         findings.extend(build_document_findings(
             facts,
@@ -537,6 +540,7 @@ def collect_document_findings(
             policy=policy,
             company_identities=identities,
             duplicate_identifier=duplicate,
+            total_amount=total_amount,
         ))
 
     logger.info(

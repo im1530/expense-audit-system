@@ -159,6 +159,7 @@ CREATE TABLE `expense_items` (
   KEY `ix_expense_items_id` (`id`),
   KEY `ix_expense_items_expense_id` (`expense_id`),
   KEY `ix_expense_items_category_id` (`category_id`),
+  KEY `ix_expense_items_invoice_no` (`invoice_no`),
   CONSTRAINT `expense_items_ibfk_1` FOREIGN KEY (`expense_id`) REFERENCES `expenses` (`id`),
   CONSTRAINT `expense_items_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

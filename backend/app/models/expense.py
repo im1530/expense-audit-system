@@ -412,6 +412,7 @@ class ExpenseItem(Base):
     # invoice_no:发票编号，可空
     invoice_no = Column(
         String(100),            # 字段类型：字符串，长度为100
+        index=True,             # 发票号查重/比对按编号过滤
         comment="发票编号"       # 字段备注，写进数据库
     )
 

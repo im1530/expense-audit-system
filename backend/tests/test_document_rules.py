@@ -117,6 +117,16 @@ class DocumentRulesTest(unittest.TestCase):
         )
         self.assertTrue(any(item["level"] == "mid" and "高于" in item["message"] for item in findings))
 
+    def test_multi_invoice_total_amount_covers_item(self):
+        """同一明细两张 500 发票：按合计 1000 比对，不误报金额不足"""
+        findings = build_document_findings(
+            make_facts(amount="500.00"),
+            make_item("1000.00"),
+            policy=self.policy,
+            total_amount=Decimal("1000.00"),
+        )
+        self.assertFalse(any(item["level"] == "high" and "低于" in item["message"] for item in findings))
+
     def test_invoice_no_mismatch_is_high(self):
         """发票号不一致 → high"""
         findings = build_document_findings(
