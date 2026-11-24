@@ -195,6 +195,7 @@ class AIReviewServiceTest(BaseTestCase, unittest.TestCase):
         self.db.commit()
         refreshed = self.db.query(Expense).filter(Expense.id == expense.id).first()
         self.assertEqual(refreshed.risk_level, "high")
+        self.assertEqual(refreshed.risk_source, "ai")
         self.assertEqual(refreshed.ai_reviewed_result, "高风险结论")
 
     def test_execute_twice_only_claimed_once(self):
@@ -303,6 +304,9 @@ class AIReviewServiceTest(BaseTestCase, unittest.TestCase):
         self.assertTrue(result.is_fallback)
         self.assertEqual(result.risk_level, "low")
         self.assertEqual(result.error_message, "超时")
+        self.db.rollback()          # 结束本会话旧快照，读取 execute_review 独立会话的提交
+        refreshed = self.db.query(Expense).filter(Expense.id == expense.id).first()
+        self.assertEqual(refreshed.risk_source, "rules")
 
     def test_disabled_falls_back_without_agent(self):
         """AI 开关关闭：不调 Agent，直接兜底"""

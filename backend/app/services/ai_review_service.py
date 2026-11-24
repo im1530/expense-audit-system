@@ -464,6 +464,7 @@ def _update_expense_if_latest(db: Session, log: AIReviewLog, outcome: ReviewOutc
         return
     expense.risk_score = outcome.risk_score
     expense.risk_level = outcome.risk_level
+    expense.risk_source = "rules" if outcome.is_fallback else "ai"
     expense.ai_reviewed_result = outcome.summary
 
 

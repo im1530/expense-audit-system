@@ -22,6 +22,12 @@ export const RISK_LEVEL: Record<string, { label: string; type: string }> = {
   high: { label: '高风险', type: 'danger' },
 }
 
+// 风险结论来源
+export const RISK_SOURCE: Record<string, { label: string; type: string }> = {
+  ai: { label: 'AI 判断', type: 'success' },
+  rules: { label: '规则兜底', type: 'info' },
+}
+
 // AI 建议决策
 export const DECISION: Record<string, { label: string; type: string }> = {
   fast_track: { label: '建议快速审批', type: 'success' },

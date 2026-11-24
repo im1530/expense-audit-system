@@ -11,6 +11,7 @@
             </el-tag>
             <el-tag v-if="expense.risk_level" :type="RISK_LEVEL[expense.risk_level]?.type" size="small" effect="plain">
               AI {{ RISK_LEVEL[expense.risk_level]?.label }} {{ expense.risk_score || '' }}
+              <span class="muted">（{{ RISK_SOURCE[expense.risk_source]?.label || 'AI' }}）</span>
             </el-tag>
           </div>
           <div class="actions">
@@ -291,6 +292,7 @@ import {
   APPROVAL_STATUS,
   EXPENSE_STATUS,
   RISK_LEVEL,
+  RISK_SOURCE,
   RULE_LEVEL,
   formatDate,
   formatMoney,

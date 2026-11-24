@@ -218,6 +218,7 @@ class ExpenseResponse(ExpenseBase):
     total_amount: Decimal                       # 报销总金额(后端汇总,前端不传)
     status: ExpenseStatus                       # 报销状态(后端流转,前端不传)
     risk_level: Optional[str] = None            # AI风险等级
+    risk_source: Optional[str] = None           # 风险来源：ai/rules
     risk_score: Optional[Decimal] = None        # AI风险分数
     ai_reviewed_result: Optional[str] = None    # AI审核结论
     submitted_at: Optional[datetime] = None     # 提交时间

@@ -270,6 +270,12 @@ class Expense(Base):
         comment="风险等级"       # 字段备注，写进数据库
     )
 
+    # risk_source:风险结论来源：ai（模型判断）/ rules（规则兜底）
+    risk_source = Column(
+        String(20),             # 字段类型：字符串，长度为20
+        comment="风险结论来源"    # 字段备注，写进数据库
+    )
+
     # ai_reviewed_result: AI 给出的审核结论文本
     ai_reviewed_result = Column(
         Text,                          # 字段类型：Text

@@ -191,6 +191,7 @@ CREATE TABLE `expenses` (
   `cancelled_at` datetime DEFAULT NULL COMMENT '撤销时间',
   `risk_score` decimal(5,2) DEFAULT NULL COMMENT '风险分数',
   `risk_level` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '风险等级',
+  `risk_source` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '风险结论来源：ai/rules',
   `ai_reviewed_result` text COLLATE utf8mb4_unicode_ci COMMENT 'AI审核结果',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT NULL,
