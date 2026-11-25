@@ -25,7 +25,7 @@ class FakeGraph:
                     content="",
                     tool_calls=[{
                         "name": "get_expense_overview",
-                        "args": {"expense_id": self.expense_id},
+                        "args": {},
                         "id": "call-1",
                         "type": "tool_call",
                     }],
@@ -57,8 +57,8 @@ class InvestigationAgentTest(BaseTestCase, unittest.TestCase):
     def test_parse_tool_trace_and_report(self):
         """工具调用与最终报告能被解析成结构化轨迹"""
         expense = self.pending_expense()
-        agent = InvestigationAgent(self.Session, graph=FakeGraph(expense.id))
-        result = asyncio.run(agent.run(expense.id, "请核查"))
+        agent = InvestigationAgent(self.Session, expense_id=expense.id, graph=FakeGraph(expense.id))
+        result = asyncio.run(agent.run("请核查"))
 
         self.assertIn("核查完成", result["report"])
         self.assertEqual(len(result["trace"]), 1)
@@ -69,7 +69,7 @@ class InvestigationAgentTest(BaseTestCase, unittest.TestCase):
     def test_investigation_is_persisted(self):
         """服务层把成功结果写入 agent_investigations"""
         expense = self.pending_expense()
-        agent = InvestigationAgent(self.Session, graph=FakeGraph(expense.id))
+        agent = InvestigationAgent(self.Session, expense_id=expense.id, graph=FakeGraph(expense.id))
         record = asyncio.run(investigate_expense(
             self.db,
             expense=expense,
@@ -86,10 +86,17 @@ class InvestigationAgentTest(BaseTestCase, unittest.TestCase):
     def test_tools_are_read_only_and_return_json(self):
         """只读工具可以直接被 ReAct 调用，返回 JSON 字符串"""
         expense = self.pending_expense()
-        tools = {tool.name: tool for tool in build_tools(self.Session)}
-        raw = tools["get_expense_overview"].invoke({"expense_id": expense.id})
+        tools = {tool.name: tool for tool in build_tools(self.Session, expense_id=expense.id)}
+        raw = tools["get_expense_overview"].invoke({})
         self.assertIn("expense", raw)
         self.assertIn(expense.expense_no, raw)
+
+    def test_tools_do_not_expose_expense_id_to_model(self):
+        """安全边界：单据ID由服务端闭包绑定，工具参数里不能出现 expense_id"""
+        expense = self.pending_expense()
+        tools = build_tools(self.Session, expense_id=expense.id)
+        for item in tools:
+            self.assertNotIn("expense_id", item.args, item.name)
 
 
 if __name__ == "__main__":

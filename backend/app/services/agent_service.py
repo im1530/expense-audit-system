@@ -58,10 +58,10 @@ async def investigate_expense(
     db.commit()
     db.refresh(record)
 
-    runner = agent or InvestigationAgent(SessionLocal)
+    runner = agent or InvestigationAgent(SessionLocal, expense_id=expense.id)
     started = time.perf_counter()
     try:
-        result = await runner.run(expense.id, question)
+        result = await runner.run(question)
         record.status = AgentInvestigationStatus.SUCCESS
         record.report = (result.get("report") or "")[:20000]
         record.trace = result.get("trace") or []

@@ -73,31 +73,33 @@ def _json(data: Any) -> str:
     return json.dumps(data, ensure_ascii=False, default=str)
 
 
-def build_tools(session_factory: Callable[[], Session]) -> list:
+def build_tools(session_factory: Callable[[], Session], *, expense_id: int) -> list:
     """
     构造只读工具集
         :param session_factory: 会话工厂；每个工具独立开关会话，避免跨线程共享 Session
+        :param expense_id: 服务端已授权并绑定的单据ID；模型不能修改
         :return: LangChain Tool 列表
     """
+    target_id = int(expense_id)
 
     @tool
-    def get_expense_overview(expense_id: int) -> str:
-        """查看报销单概览：标题、状态、金额、明细、已有规则命中。"""
+    def get_expense_overview() -> str:
+        """查看当前报销单概览：标题、状态、金额、明细、已有规则命中。"""
         try:
             with session_factory() as db:
-                context = build_review_context(db, expense_id)
+                context = build_review_context(db, target_id)
             return _json(context)
         except Exception as exc:
             return _json({"error": f"读取单据失败: {exc}"})
 
     @tool
-    def search_policy(expense_id: int, query: str) -> str:
+    def search_policy(query: str) -> str:
         """按自然语言问题检索制度条款，返回 clause_id、条款原文和匹配分数。"""
         try:
             with session_factory() as db:
                 expense = (
                     db.query(Expense)
-                    .filter(Expense.id == expense_id)
+                    .filter(Expense.id == target_id)
                     .first()
                 )
                 if expense is None:
@@ -127,11 +129,11 @@ def build_tools(session_factory: Callable[[], Session]) -> list:
             return _json({"error": f"制度检索失败: {exc}"})
 
     @tool
-    def find_similar_expenses(expense_id: int) -> str:
-        """查找同一提交人、同费用日期、同类别、同金额的历史明细（排除草稿/取消/驳回）。"""
+    def find_similar_expenses() -> str:
+        """查找当前单据提交人的同日期、同类别、同金额历史明细（排除草稿/取消/驳回）。"""
         try:
             with session_factory() as db:
-                current = db.query(Expense).filter(Expense.id == expense_id).first()
+                current = db.query(Expense).filter(Expense.id == target_id).first()
                 if current is None:
                     return _json({"error": "报销单不存在"})
                 conditions = [
@@ -178,14 +180,14 @@ def build_tools(session_factory: Callable[[], Session]) -> list:
             return _json({"error": f"历史单据查询失败: {exc}"})
 
     @tool
-    def get_approval_trail(expense_id: int) -> str:
-        """查看该单据的审批层级、审批状态、审批人和意见。"""
+    def get_approval_trail() -> str:
+        """查看当前单据的审批层级、审批状态、审批人和意见。"""
         try:
             with session_factory() as db:
                 rows = (
                     db.query(Approval, User.full_name)
                     .outerjoin(User, Approval.approver_id == User.id)
-                    .filter(Approval.expense_id == expense_id)
+                    .filter(Approval.expense_id == target_id)
                     .order_by(Approval.level.asc(), Approval.id.asc())
                     .all()
                 )
@@ -203,17 +205,20 @@ def build_tools(session_factory: Callable[[], Session]) -> list:
             return _json({"error": f"审批轨迹查询失败: {exc}"})
 
     @tool
-    def check_invoice_duplicate(expense_id: int) -> str:
-        """检查本单凭证号是否已在其他报销单出现。"""
+    def check_invoice_duplicate() -> str:
+        """检查当前单据的凭证号是否在同一提交人的其他报销单出现。"""
         try:
             with session_factory() as db:
+                current = db.query(Expense).filter(Expense.id == target_id).first()
+                if current is None:
+                    return _json({"error": "报销单不存在"})
                 identifiers = [
                     row[0]
                     for row in (
                         db.query(DocumentExtraction.identifier)
                         .join(ExpenseItem, DocumentExtraction.expense_item_id == ExpenseItem.id)
                         .filter(
-                            ExpenseItem.expense_id == expense_id,
+                            ExpenseItem.expense_id == target_id,
                             DocumentExtraction.identifier.isnot(None),
                             DocumentExtraction.identifier != "",
                         )
@@ -229,7 +234,9 @@ def build_tools(session_factory: Callable[[], Session]) -> list:
                     .join(Expense, ExpenseItem.expense_id == Expense.id)
                     .filter(
                         DocumentExtraction.identifier.in_(identifiers),
-                        Expense.id != expense_id,
+                        Expense.id != target_id,
+                        # 不跨提交人暴露凭证号/单号，避免核查工具成为信息泄露通道
+                        Expense.user_id == current.user_id,
                     )
                     .limit(10)
                     .all()
@@ -257,11 +264,13 @@ class InvestigationAgent:
         self,
         session_factory: Callable[[], Session],
         *,
+        expense_id: int,
         graph: Any | None = None,
         max_steps: int = MAX_TOOL_STEPS,
         timeout_seconds: float | None = None,
     ):
         self.session_factory = session_factory
+        self.expense_id = int(expense_id)
         self._graph = graph
         self.max_steps = max_steps
         self.timeout_seconds = float(
@@ -288,14 +297,13 @@ class InvestigationAgent:
         )
         return create_react_agent(
             model,
-            build_tools(self.session_factory),
+            build_tools(self.session_factory, expense_id=self.expense_id),
             prompt=SYSTEM_PROMPT,
         )
 
-    async def run(self, expense_id: int, question: str) -> dict:
+    async def run(self, question: str) -> dict:
         """
         执行一次核查
-            :param expense_id: 报销单ID
             :param question: 核查问题
             :return: {report, trace, model, prompt_tokens, completion_tokens}
         """
