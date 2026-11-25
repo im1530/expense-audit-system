@@ -32,6 +32,8 @@ deploy/certs/
 .dsh-acl-recovery/
 .dsh-write-test.txt
 .idea/
+# 本地数据库备份（可能含真实数据，不入库）
+backup_*.sql
 
 # ===== 编辑器/系统 =====
 .DS_Store

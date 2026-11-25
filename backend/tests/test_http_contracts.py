@@ -7,12 +7,15 @@ HTTP 契约测试（离线）
         - 响应模型裁剪：不能把 password_hash 等内部字段带出去。
 """
 import unittest
+from unittest.mock import AsyncMock, patch
 
 import tests  # noqa: F401  必须先执行 tests/__init__，把 DATABASE_URL 指向测试库
 from fastapi.testclient import TestClient
 
 from app.main import app
-from tests.support import TEST_PASSWORD, BaseTestCase
+from app.models import AgentInvestigation
+from app.models.expense import ExpenseStatus
+from tests.support import TEST_PASSWORD, BaseTestCase, make_expense
 
 
 class HttpContractTest(BaseTestCase, unittest.TestCase):
@@ -103,6 +106,45 @@ class HttpContractTest(BaseTestCase, unittest.TestCase):
         self.assertEqual(body.get("code"), "VALIDATION_ERROR")
         self.assertEqual(body.get("message"), "请求参数校验失败")
         self.assertTrue(body.get("errors"))
+
+    def test_investigate_contract(self):
+        """AI 核查接口：200 + 报告/轨迹字段，不改变单据状态"""
+        token = self._login()
+        expense = make_expense(
+            self.db,
+            self.fx["users"]["employee"],
+            status=ExpenseStatus.PENDING,
+            flow_id=self.fx["flows"]["mgr"].id,
+            amount="100.00",
+            category_id=self.fx["categories"]["rail"].id,
+        )
+        record = AgentInvestigation(
+            expense_id=expense.id,
+            created_by=self.fx["users"]["employee"].id,
+            status="success",
+            question="请核查",
+            report="核查完成：未发现异常",
+            trace=[{"tool": "get_expense_overview", "args": {"expense_id": expense.id}, "status": "success"}],
+            model="fake-model",
+        )
+        self.db.add(record)
+        self.db.commit()
+        self.db.refresh(record)
+
+        with patch(
+            "app.api.v1.expense.investigate_expense",
+            new=AsyncMock(return_value=record),
+        ):
+            response = self.client.post(
+                f"/api/v1/expense/{expense.id}/investigate",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"question": "请核查"},
+            )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        body = response.json()
+        self.assertEqual(body["report"], "核查完成：未发现异常")
+        self.assertEqual(body["trace"][0]["tool"], "get_expense_overview")
 
 
 if __name__ == "__main__":

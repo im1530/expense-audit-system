@@ -5,7 +5,7 @@
 一个**可运行**的报销审核平台：Vue 3 前端 + FastAPI 后端，核心是把「制度条款」变成可检索、可引用的依据，把「规则」变成确定性结论，再让 LLM 补充规则覆盖不到的疑点。
 **AI 只出建议、人工做决定；AI 失败自动降级为规则结论，绝不阻断审批。**
 
-- 后端 79 个 REST 接口 · 497 个离线单测
+- 后端 80 个 REST 接口 · 501 个离线单测
 - 前端 13 个页面（含 4 个管理端）· 30 个单测
 - 制度检索核心条款覆盖 82.4% → **100%**（96 条评测案例中 68 条要求引用，离线可复现）
 - 96 条标注集（剔除 4 条 `ai_fallback` 模拟降级场景）：决策一致率 100%、风险等级 100%、高危漏放 0
@@ -98,11 +98,23 @@ docker compose up --build
 - **单 worker**：Chroma 本地持久化（SQLite + 文件锁）不支持多进程并发写，多 worker 会在启动时并发重建集合；LangGraph 的 MySQL checkpoint 在多 worker 并发写同一 `thread_id` 时也有竞争，当前按单 worker 部署，多 worker 需要额外分布式锁；
 - **引用指标有噪声**：同一 Prompt、`temperature=0` 重跑 11 条，仅 6/11 一致（±5pp），所以文档只把"检索覆盖率 100%"当稳定指标，版本优劣需要多次取中位数。
 
+## AI 核查 Agent（ReAct）
+
+除了固定的预审工作流，详情页还提供「AI 补充核查」：
+
+- 入口：`POST /api/v1/expense/{id}/investigate`；
+- 编排：LangGraph `create_react_agent` + 5 个只读工具（单据概览、制度检索、历史同类单、审批轨迹、凭证号查重）；
+- 模型通过原生 tool calling 自己决定查什么，最多 4 步；
+- 只输出核查报告 + 工具轨迹，**不改单据状态、不写审批结论**；
+- 每次结果落 `agent_investigations`，记录模型、token、耗时、失败原因。
+
+需要 `DEEPSEEK_API_KEY`；未配置时接口返回 503，不影响原审批和规则兜底。
+
 ## 测试与评测
 
 ```bash
 cd backend
-.venv/Scripts/python.exe -m unittest discover -s tests          # 497 个，离线
+.venv/Scripts/python.exe -m unittest discover -s tests          # 501 个，离线
 cd ../frontend && npm test                                      # 30 个，jsdom
 ```
 

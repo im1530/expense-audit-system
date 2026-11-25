@@ -23,6 +23,7 @@ from app.dependencies import get_db                       # 数据库会话依�
 from app.api.deps import get_current_user                 # 当前登录用户依赖
 from app.schemas.expense import ExpenseCreate, ExpenseResponse, ExpenseListResponse, ExpenseUpdate, ExpenseItemCreate, \
     ExpenseItemUpdate, CategoryResponse, DictOption, ExpenseItemListResponse
+from app.schemas.agent import InvestigationRequest, InvestigationResponse
 from app.models import User, Expense, ExpenseItem, Rule, ApprovalFlow, Approval, UserRole, Category, ApprovalStatus
 from app.models.expense import ExpenseStatus, ExpenseType
 import uuid
@@ -35,6 +36,7 @@ from app.services.expense_service import apply_business_filters, match_approval_
     apply_item_business_filters
 from app.services.rule_engine import run_rule_checks, save_rule_hits, summarize_level
 from app.services.review_queue import trigger_auto_review
+from app.services.agent_service import investigate_expense
 from app.schemas.rule import RulePrecheckResponse
 from app.schemas.settlement import (
     CancelRegistrationRequest,
@@ -974,6 +976,48 @@ def get_expense(
 
     # 4. 返回单据详情
     return expense
+
+
+
+# AI 补充核查（ReAct Agent：只读工具，不改审批结果）
+@router.post(
+    "/{expense_id}/investigate",
+    response_model=InvestigationResponse,
+    tags=["报销"],
+    summary="AI 补充核查（只读调查，不审批）",
+)
+async def investigate_expense_endpoint(
+    expense_id: int,
+    payload: InvestigationRequest | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    让 Agent 自己决定查哪些数据：单据、制度、历史同类单、审批轨迹、凭证号。
+
+    权限与详情接口一致：employee 仅本人；manager 本人 + 本部门；finance/boss/admin 全公司。
+    只返回核查报告与工具轨迹，不修改单据状态、不写审批结论。
+    """
+    query = db.query(Expense).filter(Expense.id == expense_id)
+    if current_user.role == UserRole.EMPLOYEE:
+        query = query.filter(Expense.user_id == current_user.id)
+    elif current_user.role == UserRole.MANAGER:
+        query = query.join(User, Expense.user_id == User.id).filter(
+            (Expense.user_id == current_user.id) |
+            (User.department_id == current_user.department_id)
+        )
+    expense = query.first()
+    if expense is None:
+        raise HTTPException(status_code=404, detail="报销单不存在或无权查看")
+    if expense.status != ExpenseStatus.PENDING:
+        raise HTTPException(status_code=400, detail="只有待审批状态的报销单可以执行 AI 核查")
+
+    return await investigate_expense(
+        db,
+        expense=expense,
+        user=current_user,
+        question=payload.question if payload else None,
+    )
 
 
 

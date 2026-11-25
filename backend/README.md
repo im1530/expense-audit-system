@@ -1,7 +1,7 @@
 # 后端（FastAPI + SQLAlchemy + MySQL + Chroma + LangGraph + Celery）
 
 AI Agent 财务报销审核系统的服务端：报销单全生命周期、逐级审批、规则引擎、制度 RAG、
-凭证识别、LangGraph 预审工作流、审计与降级。**79 个 REST 接口，497 个离线单测。**
+凭证识别、LangGraph 预审工作流、审计与降级。**79 个 REST 接口，501 个离线单测。**
 
 ## 五分钟跑起来
 
@@ -112,6 +112,7 @@ backend/
 │   │   ├── retention_service.py # 附件/原文/检查点过期清理（支持 dry-run）
 │   │   ├── maintenance_service.py # 运维任务 begin_run/finish_run
 │   │   ├── privacy_service.py   # AI 影像授权判断（版本变化需重新授权）
+│   │   ├── agent_service.py     # AI 核查记录落库、超时/配置/失败处理
 │   │   ├── workflow_trace_service.py # 组装 run/steps/引用/凭证结论
 │   │   └── workflow_recovery_service.py # 僵尸 run 收尾为 failed（不自动重跑）
 │   │
@@ -119,6 +120,7 @@ backend/
 │   │   ├── context.py           # 上下文构造：脱敏、控制字符清洗、边界逃逸防护、截断
 │   │   ├── risk_agent.py        # Prompt→LLM→Schema→归一化→引用校验→ReviewOutcome
 │   │   ├── document_agent.py    # 多模态凭证识别：类型归一、金额/日期解析、置信度
+│   │   ├── investigation_agent.py # ReAct 核查 Agent：5 个只读工具 + 工具轨迹（不审批）
 │   │   ├── prompts.py           # v3 基线 + v4 校准 + v4.2 引用守卫（版本号同步）
 │   │   └── prompts_v4.py        # 兼容别名，避免维护两份 Prompt
 │   │
@@ -262,7 +264,7 @@ backend/
 | 服务 | `app/services/` | 一个领域一个文件；写操作的规则集中在这里，直接 `commit` 或由调用方控制事务 |
 | 模型 | `app/models/` | 只描述表结构与关系；枚举用 `native_enum=False`，改取值不用 ALTER |
 | 契约 | `app/schemas/` | 入参校验 + 出参裁剪；出参模型不声明 `password_hash` 即为脱敏 |
-| Agent | `app/agents/` | 只产出结论，不写库；模型输出一律先过 Pydantic 再归一化 |
+| Agent | `app/agents/` | 只产出结论；工具只读；模型输出先过 Pydantic/结构化校验；核查记录由 service 落库 |
 | 编排 | `app/workflow/` | 节点只调 service；失败重试与审计由引擎负责 |
 | 检索 | `app/rag/` | 业务只依赖 `PolicyRetriever` 协议，换后端零改动 |
 
@@ -275,7 +277,7 @@ backend/
 ## 测试
 
 ```bash
-..\.venv\Scripts\python.exe -m unittest discover -s tests          # 全部（当前 497 个）
+..\.venv\Scripts\python.exe -m unittest discover -s tests          # 全部（当前 501 个）
 ..\.venv\Scripts\python.exe -m unittest tests.test_rule_engine -v  # 单个文件
 ```
 

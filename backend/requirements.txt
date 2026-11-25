@@ -40,6 +40,8 @@ pypdfium2>=4.30.0
 # ===== Phase D：工作流编排 =====
 # LangGraph：节点、条件边、checkpoint（Phase D）
 langgraph>=1.2.0
+# ReAct 工具调用：DeepSeek 走 OpenAI 兼容协议
+langchain-openai>=0.3
 
 # ===== 制度检索（可选）：Chroma + Embedding =====
 # 向量检索后端；默认 POLICY_RETRIEVER=bm25 时不会导入。自带 ONNX MiniLM 模型，无需 GPU。

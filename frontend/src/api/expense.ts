@@ -222,3 +222,12 @@ export function listInvoices(itemId: number) {
 export function deleteInvoice(attachmentId: number) {
   return request.delete(`/attachment/${attachmentId}`)
 }
+
+/**
+ * AI 补充核查（只读 ReAct Agent，不改变审批结果）
+ * @param id 报销单ID
+ * @param question 可选核查问题
+ */
+export function investigateExpense(id: number, question?: string) {
+  return request.post(`/expense/${id}/investigate`, question ? { question } : {})
+}

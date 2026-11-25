@@ -22,6 +22,9 @@
             <el-button v-if="canCancelRegistration" type="warning" @click="openCancelRegister">撤销登记</el-button>
             <el-button v-if="canConfirmReceived" type="success" @click="onConfirmReceived">确认已报销</el-button>
             <el-button v-if="canForceClose" type="danger" plain @click="onForceClose">强制关闭</el-button>
+            <el-button v-if="expense.status === 'pending'" type="primary" plain :loading="investigating" @click="onInvestigate">
+              AI 补充核查
+            </el-button>
             <el-button v-if="canApproveNow" type="primary" @click="router.push('/approvals')">去审批</el-button>
           </div>
         </div>
@@ -108,6 +111,37 @@
         </el-table-column>
         <el-table-column prop="message" label="提示" min-width="260" />
       </el-table>
+    </el-card>
+
+    <!-- AI 核查 Agent：模型自主选择只读工具，输出调查轨迹与建议 -->
+    <el-card v-if="investigation" shadow="never" class="page-card" style="margin-top: 16px">
+      <template #header>
+        <div class="card-header">
+          <span>AI 核查轨迹</span>
+          <el-tag size="small" type="success">只读调查，不改变审批结果</el-tag>
+        </div>
+      </template>
+      <el-alert v-if="investigation.status === 'failed'" type="error" :closable="false" show-icon
+        :title="investigation.error_message || '核查失败'" />
+      <template v-else>
+        <p class="summary">{{ investigation.report || '未生成结论' }}</p>
+        <el-timeline v-if="(investigation.trace || []).length">
+          <el-timeline-item
+            v-for="(step, index) in investigation.trace"
+            :key="index"
+            :type="step.status === 'error' ? 'danger' : 'primary'"
+          >
+            <b>{{ step.tool }}</b>
+            <span class="muted"> {{ JSON.stringify(step.args) }}</span>
+            <div v-if="step.result" class="agent-result">{{ step.result }}</div>
+          </el-timeline-item>
+        </el-timeline>
+        <div class="muted">
+          模型 {{ investigation.model || '-' }} ·
+          耗时 {{ investigation.latency_ms || 0 }} ms ·
+          token {{ (investigation.prompt_tokens || 0) + (investigation.completion_tokens || 0) }}
+        </div>
+      </template>
     </el-card>
 
     <!-- AI 预审结论 -->
@@ -276,6 +310,7 @@ import {
   forceCloseExpense,
   getApprovalHistory,
   getExpense,
+  investigateExpense,
   listCategories,
   listInvoices as apiListInvoices,
   listSettlements,
@@ -307,6 +342,8 @@ const expenseId = Number(route.params.id)
 const loading = ref(false)
 const expense = ref<any>({})
 const review = ref<any>(null)
+const investigation = ref<any>(null)
+const investigating = ref(false)
 const history = ref<any[]>([])
 const reviewing = ref(false)
 const categoryNames = ref<Record<number, string>>({})
@@ -502,8 +539,23 @@ async function onForceClose() {
 }
 
 /**
- * 触发 AI 预审并轮询结果
+ * 触发 AI 补充核查（同步返回工具轨迹）
  */
+async function onInvestigate() {
+  investigating.value = true
+  try {
+    investigation.value = await investigateExpense(expenseId)
+    if (investigation.value?.status === 'failed') {
+      ElMessage.warning('核查未完成，请查看失败原因')
+    } else {
+      ElMessage.success('核查完成')
+    }
+  } finally {
+    investigating.value = false
+  }
+}
+
+/**
 async function onTriggerReview() {
   reviewing.value = true
   try {
@@ -629,6 +681,17 @@ onMounted(load)
 .summary {
   margin: 10px 0;
   color: #303133;
+}
+
+.agent-result {
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  color: #606266;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .citations {
