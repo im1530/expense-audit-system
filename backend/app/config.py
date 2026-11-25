@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_LOGIN_PER_WINDOW: int = 10        # 登录：每窗口最多尝试次数（防爆破）
     RATE_LIMIT_REGISTER_PER_WINDOW: int = 5      # 注册：每窗口最多建号次数
     RATE_LIMIT_AI_TRIGGER_PER_WINDOW: int = 5    # AI 预审触发：每窗口最多触发次数（会调 LLM）
+    RATE_LIMIT_INVESTIGATE_PER_WINDOW: int = 5    # AI 补充核查：一次最多 4 轮工具调用，单独限流
     RATE_LIMIT_UPLOAD_PER_WINDOW: int = 30       # 附件上传：每窗口最多上传次数
     RATE_LIMIT_EXEMPT_PATHS: list[str] = [       # 不限流的路径（探活与文档）
         "/",

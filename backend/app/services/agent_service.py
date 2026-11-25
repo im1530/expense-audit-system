@@ -14,9 +14,11 @@ from app.agents.investigation_agent import (
     INVESTIGATION_PROMPT_VERSION,
     InvestigationAgent,
     InvestigationConfigError,
+    InvestigationRunError,
 )
 from app.dependencies import SessionLocal
 from app.models import AgentInvestigation, AgentInvestigationStatus, Expense, User
+from app.services.cost_service import review_budget_reason
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,15 @@ async def investigate_expense(
         :raises HTTPException: 503 未配置/502 调用失败/504 超时
     """
     question = (question or DEFAULT_QUESTION).strip()[:500]
+
+    # 与 AI 预审共用每日调用/token/费用预算；核查最多 4 轮工具调用，不能绕过预算
+    budget_reason = review_budget_reason(db)
+    if budget_reason:
+        raise HTTPException(
+            status_code=429,
+            detail=f"今日 AI 预算已用完（{budget_reason}），请稍后再试或联系管理员",
+        )
+
     record = AgentInvestigation(
         expense_id=expense.id,
         created_by=user.id,
@@ -75,6 +86,15 @@ async def investigate_expense(
     except InvestigationConfigError as exc:
         _mark_failed(db, record, str(exc), started)
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except InvestigationRunError as exc:
+        partial = exc.partial or {}
+        record.trace = partial.get("trace") or []
+        record.model = partial.get("model")
+        record.prompt_tokens = int(partial.get("prompt_tokens") or 0)
+        record.completion_tokens = int(partial.get("completion_tokens") or 0)
+        record.report = (partial.get("report") or "")[:20000] or None
+        _mark_failed(db, record, str(exc), started)
+        raise HTTPException(status_code=502, detail="AI 核查未完成，已保留工具轨迹") from exc
     except asyncio.TimeoutError as exc:
         _mark_failed(db, record, "AI 核查超时", started)
         raise HTTPException(status_code=504, detail="AI 核查超时，请稍后重试") from exc

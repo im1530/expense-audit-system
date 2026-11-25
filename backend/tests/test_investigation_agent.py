@@ -3,9 +3,14 @@ import asyncio
 import unittest
 
 import tests  # noqa: F401
+from fastapi import HTTPException
 from langchain_core.messages import AIMessage, ToolMessage
 
-from app.agents.investigation_agent import InvestigationAgent, build_tools
+from app.agents.investigation_agent import (
+    InvestigationAgent,
+    InvestigationRunError,
+    build_tools,
+)
 from app.models import AgentInvestigation, AgentInvestigationStatus
 from app.models.expense import ExpenseStatus
 from app.services.agent_service import investigate_expense
@@ -14,7 +19,6 @@ from tests.support import BaseTestCase, make_expense
 
 class FakeGraph:
     """不调用 LLM 的 ReAct 图：模拟一次工具调用 + 最终报告"""
-
     def __init__(self, expense_id: int):
         self.expense_id = expense_id
 
@@ -36,6 +40,21 @@ class FakeGraph:
                     name="get_expense_overview",
                 ),
                 AIMessage(content="核查完成：该单金额与制度条款一致，暂未发现异常。"),
+            ]
+        }
+
+
+class NoFinalGraph:
+    """只发起工具调用、不给最终报告的异常图"""
+
+    async def ainvoke(self, payload, config):
+        return {
+            "messages": [
+                AIMessage(
+                    content="",
+                    tool_calls=[{"name": "get_expense_overview", "args": {}, "id": "call-1", "type": "tool_call"}],
+                ),
+                ToolMessage(content='{"expense": {}}', tool_call_id="call-1", name="get_expense_overview"),
             ]
         }
 
@@ -65,6 +84,36 @@ class InvestigationAgentTest(BaseTestCase, unittest.TestCase):
         self.assertEqual(result["trace"][0]["tool"], "get_expense_overview")
         self.assertEqual(result["trace"][0]["status"], "success")
         self.assertIn("EXP-TEST", result["trace"][0]["result"])
+
+    def test_no_final_report_raises_with_partial_trace(self):
+        """只调工具没输出结论：必须失败，且保留已发生轨迹"""
+        expense = self.pending_expense()
+        agent = InvestigationAgent(self.Session, expense_id=expense.id, graph=NoFinalGraph())
+        with self.assertRaises(InvestigationRunError) as ctx:
+            asyncio.run(agent.run("请核查"))
+        self.assertEqual(len(ctx.exception.partial["trace"]), 1)
+        self.assertEqual(ctx.exception.partial["trace"][0]["tool"], "get_expense_overview")
+
+    def test_failed_run_persists_partial_trace(self):
+        """失败时也落库已发生的工具轨迹，状态不能是 success"""
+        expense = self.pending_expense()
+        agent = InvestigationAgent(self.Session, expense_id=expense.id, graph=NoFinalGraph())
+        with self.assertRaises(HTTPException):
+            asyncio.run(investigate_expense(
+                self.db,
+                expense=expense,
+                user=self.fx["users"]["employee"],
+                agent=agent,
+            ))
+        stored = (
+            self.db.query(AgentInvestigation)
+            .filter(AgentInvestigation.expense_id == expense.id)
+            .order_by(AgentInvestigation.id.desc())
+            .first()
+        )
+        self.assertEqual(stored.status, AgentInvestigationStatus.FAILED)
+        self.assertEqual(len(stored.trace), 1)
+        self.assertIn("Agent 未输出最终报告", stored.error_message)
 
     def test_investigation_is_persisted(self):
         """服务层把成功结果写入 agent_investigations"""
@@ -97,6 +146,18 @@ class InvestigationAgentTest(BaseTestCase, unittest.TestCase):
         tools = build_tools(self.Session, expense_id=expense.id)
         for item in tools:
             self.assertNotIn("expense_id", item.args, item.name)
+
+    def test_tool_calls_have_hard_limit(self):
+        """硬上限：并行/连续 tool_calls 也不能超过 max_tool_calls"""
+        expense = self.pending_expense()
+        tools = {
+            tool.name: tool
+            for tool in build_tools(self.Session, expense_id=expense.id, max_tool_calls=1)
+        }
+        first = tools["get_expense_overview"].invoke({})
+        second = tools["get_expense_overview"].invoke({})
+        self.assertIn("expense", first)
+        self.assertIn("上限", second)
 
 
 if __name__ == "__main__":

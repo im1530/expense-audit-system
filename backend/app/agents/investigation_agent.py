@@ -19,6 +19,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import threading
 from decimal import Decimal
 from typing import Any, Callable
 
@@ -37,9 +38,9 @@ from app.models import (
     ExpenseItem,
     User,
 )
-from app.models.expense import ExpenseStatus
 from app.rag.retriever import get_retriever
 from app.rag.schema import PolicyQuery
+from app.services.duplicate_service import DUPLICATE_EXCLUDED_STATUSES
 
 logger = logging.getLogger(__name__)
 
@@ -68,23 +69,49 @@ class InvestigationConfigError(RuntimeError):
     """Agent 未配置或依赖不可用"""
 
 
+class InvestigationRunError(RuntimeError):
+    """Agent 运行失败，但保留已经发生的工具轨迹/token，供服务层落库"""
+
+    def __init__(self, message: str, *, partial: dict | None = None):
+        super().__init__(message)
+        self.partial = partial or {}
+
+
 def _json(data: Any) -> str:
     """工具返回值统一转 JSON 字符串，Decimal/date 等交给 default=str"""
     return json.dumps(data, ensure_ascii=False, default=str)
 
 
-def build_tools(session_factory: Callable[[], Session], *, expense_id: int) -> list:
+def build_tools(
+    session_factory: Callable[[], Session],
+    *,
+    expense_id: int,
+    max_tool_calls: int = MAX_TOOL_STEPS,
+) -> list:
     """
     构造只读工具集
         :param session_factory: 会话工厂；每个工具独立开关会话，避免跨线程共享 Session
         :param expense_id: 服务端已授权并绑定的单据ID；模型不能修改
+        :param max_tool_calls: 工具执行硬上限；并行 tool_calls 也计数
         :return: LangChain Tool 列表
     """
     target_id = int(expense_id)
+    used = {"count": 0}
+    budget_lock = threading.Lock()
+
+    def _claim_tool_call() -> bool:
+        """原子领取一次工具额度；超过上限后工具只返回错误，不再读库"""
+        with budget_lock:
+            if used["count"] >= max_tool_calls:
+                return False
+            used["count"] += 1
+            return True
 
     @tool
     def get_expense_overview() -> str:
         """查看当前报销单概览：标题、状态、金额、明细、已有规则命中。"""
+        if not _claim_tool_call():
+            return _json({"error": "工具调用次数已达上限，请直接汇总已有结果"})
         try:
             with session_factory() as db:
                 context = build_review_context(db, target_id)
@@ -95,6 +122,8 @@ def build_tools(session_factory: Callable[[], Session], *, expense_id: int) -> l
     @tool
     def search_policy(query: str) -> str:
         """按自然语言问题检索制度条款，返回 clause_id、条款原文和匹配分数。"""
+        if not _claim_tool_call():
+            return _json({"error": "工具调用次数已达上限，请直接汇总已有结果"})
         try:
             with session_factory() as db:
                 expense = (
@@ -131,6 +160,8 @@ def build_tools(session_factory: Callable[[], Session], *, expense_id: int) -> l
     @tool
     def find_similar_expenses() -> str:
         """查找当前单据提交人的同日期、同类别、同金额历史明细（排除草稿/取消/驳回）。"""
+        if not _claim_tool_call():
+            return _json({"error": "工具调用次数已达上限，请直接汇总已有结果"})
         try:
             with session_factory() as db:
                 current = db.query(Expense).filter(Expense.id == target_id).first()
@@ -153,11 +184,7 @@ def build_tools(session_factory: Callable[[], Session], *, expense_id: int) -> l
                     .filter(
                         Expense.user_id == current.user_id,
                         Expense.id != current.id,
-                        Expense.status.notin_([
-                            ExpenseStatus.DRAFT,
-                            ExpenseStatus.CANCELLED,
-                            ExpenseStatus.REJECTED,
-                        ]),
+                        Expense.status.notin_(DUPLICATE_EXCLUDED_STATUSES),
                         or_(*conditions),
                     )
                     .order_by(Expense.id.desc())
@@ -182,6 +209,8 @@ def build_tools(session_factory: Callable[[], Session], *, expense_id: int) -> l
     @tool
     def get_approval_trail() -> str:
         """查看当前单据的审批层级、审批状态、审批人和意见。"""
+        if not _claim_tool_call():
+            return _json({"error": "工具调用次数已达上限，请直接汇总已有结果"})
         try:
             with session_factory() as db:
                 rows = (
@@ -207,6 +236,8 @@ def build_tools(session_factory: Callable[[], Session], *, expense_id: int) -> l
     @tool
     def check_invoice_duplicate() -> str:
         """检查当前单据的凭证号是否在同一提交人的其他报销单出现。"""
+        if not _claim_tool_call():
+            return _json({"error": "工具调用次数已达上限，请直接汇总已有结果"})
         try:
             with session_factory() as db:
                 current = db.query(Expense).filter(Expense.id == target_id).first()
@@ -297,7 +328,11 @@ class InvestigationAgent:
         )
         return create_react_agent(
             model,
-            build_tools(self.session_factory, expense_id=self.expense_id),
+            build_tools(
+                self.session_factory,
+                expense_id=self.expense_id,
+                max_tool_calls=self.max_steps,
+            ),
             prompt=SYSTEM_PROMPT,
         )
 
@@ -306,18 +341,40 @@ class InvestigationAgent:
         执行一次核查
             :param question: 核查问题
             :return: {report, trace, model, prompt_tokens, completion_tokens}
+            :raises InvestigationRunError: 运行失败/超时/未输出报告；partial 保留已发生的轨迹
         """
         graph = self._graph or self._build_graph()
-        # 每次工具调用约 2 个 superstep（AI 决策 + 工具执行），留一点余量
+        # 每次工具调用约 2 个 superstep（AI 决策 + 工具执行），留一点余量；
+        # 工具内部另有 max_tool_calls 硬计数，防止并行 tool_calls 绕过。
         config = {"recursion_limit": max(6, self.max_steps * 2 + 2)}
-        result = await asyncio.wait_for(
-            graph.ainvoke(
-                {"messages": [{"role": "user", "content": question}]},
-                config=config,
-            ),
-            timeout=self.timeout_seconds,
-        )
-        return self._parse_result(result)
+        messages: list = []
+        payload = {"messages": [{"role": "user", "content": question}]}
+
+        async def consume() -> None:
+            nonlocal messages
+            if hasattr(graph, "astream"):
+                # 用 values 流式收集消息，异常时还能保留已执行的工具轨迹
+                async for snapshot in graph.astream(payload, config=config, stream_mode="values"):
+                    if isinstance(snapshot, dict) and snapshot.get("messages") is not None:
+                        messages = snapshot["messages"]
+            else:
+                result = await graph.ainvoke(payload, config=config)
+                messages = result.get("messages") or []
+
+        try:
+            # 兼容 Python 3.10：不用 3.11 才有的 asyncio.timeout
+            await asyncio.wait_for(consume(), timeout=self.timeout_seconds)
+        except Exception as exc:
+            partial = self._parse_result({"messages": messages})
+            raise InvestigationRunError(
+                f"AI 核查运行失败: {type(exc).__name__}: {exc}",
+                partial=partial,
+            ) from exc
+
+        parsed = self._parse_result({"messages": messages})
+        if not parsed["report"].strip():
+            raise InvestigationRunError("Agent 未输出最终报告", partial=parsed)
+        return parsed
 
     @staticmethod
     def _parse_result(result: dict) -> dict:

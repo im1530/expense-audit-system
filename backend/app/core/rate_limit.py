@@ -89,6 +89,7 @@ def _limit_for(scope: str) -> int:
         "login": settings.RATE_LIMIT_LOGIN_PER_WINDOW,          # 登录
         "register": settings.RATE_LIMIT_REGISTER_PER_WINDOW,    # 注册
         "ai_trigger": settings.RATE_LIMIT_AI_TRIGGER_PER_WINDOW,   # AI 触发
+        "investigate": settings.RATE_LIMIT_INVESTIGATE_PER_WINDOW,  # AI 补充核查
         "upload": settings.RATE_LIMIT_UPLOAD_PER_WINDOW,        # 上传
     }.get(scope, settings.RATE_LIMIT_DEFAULT_PER_WINDOW)
 
@@ -106,7 +107,11 @@ def _resolve_scope(method: str, path: str) -> str:
     for rule_method, prefix, scope in SCOPE_RULES:
         if method == rule_method and path.startswith(prefix):
             return scope
-    # 2.未命中任何专项规则：走默认限流
+    # 2.AI 补充核查是动态路径 /api/v1/expense/{id}/investigate，
+    #   不能用 /api/v1/expense/ 前缀（会把创建/提交等普通接口一起限成 5 次）
+    if method == "POST" and path.startswith("/api/v1/expense/") and path.rstrip("/").endswith("/investigate"):
+        return "investigate"
+    # 3.未命中任何专项规则：走默认限流
     return "default"
 
 

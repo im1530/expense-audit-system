@@ -17,7 +17,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models import AIReviewLog, AIReviewStatus, DocumentExtraction
+from app.models import AgentInvestigation, AIReviewLog, AIReviewStatus, DocumentExtraction
 
 
 
@@ -110,7 +110,26 @@ def daily_review_usage(db: Session, *, exclude_id: int | None = None) -> dict:
     prompt_tokens += int(doc_prompt or 0)
     completion_tokens += int(doc_completion or 0)
 
-    # 4.费用按当前单价估算
+    # 4.AI 核查 Agent 也消耗 token：并入同一份每日预算，避免绕过预算护栏
+    agent_calls = int(
+        db.query(func.count(AgentInvestigation.id))
+        .filter(AgentInvestigation.created_at >= start)
+        .scalar()
+        or 0
+    )
+    agent_prompt, agent_completion = (
+        db.query(
+            func.coalesce(func.sum(func.coalesce(AgentInvestigation.prompt_tokens, 0)), 0),
+            func.coalesce(func.sum(func.coalesce(AgentInvestigation.completion_tokens, 0)), 0),
+        )
+        .filter(AgentInvestigation.created_at >= start)
+        .one()
+    )
+    calls += agent_calls
+    prompt_tokens += int(agent_prompt or 0)
+    completion_tokens += int(agent_completion or 0)
+
+    # 5.费用按当前单价估算
     return {
         "calls": calls,
         "tokens": prompt_tokens + completion_tokens,

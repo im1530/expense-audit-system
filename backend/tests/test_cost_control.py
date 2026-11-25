@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 import tests  # noqa: F401  必须先执行 tests/__init__，把 DATABASE_URL 指向测试库
 from app.agents.risk_agent import ReviewOutcome
 from app.config import settings
-from app.models import AIReviewLog, AIReviewStatus, WorkflowRun, WorkflowStep
+from app.models import AgentInvestigation, AIReviewLog, AIReviewStatus, WorkflowRun, WorkflowStep
 from app.models.expense import ExpenseStatus
 from app.services.ai_review_service import create_review
 from app.services.document_service import DocumentRunResult, extract_for_expense_with_usage
@@ -91,6 +91,21 @@ class BudgetTest(BaseTestCase, unittest.TestCase):
     def test_token_budget(self):
         """token 超预算：返回 daily_token_limit"""
         self.make_log(prompt_tokens=100, completion_tokens=50)
+        with patch.object(settings, "AI_REVIEW_DAILY_TOKEN_LIMIT", 100):
+            self.assertEqual(review_budget_reason(self.db), "daily_token_limit")
+
+    def test_agent_tokens_share_daily_budget(self):
+        """AI 核查 Agent 的 token 也计入同一份每日预算"""
+        expense = make_expense(self.db, self.fx["users"]["employee"], status=ExpenseStatus.PENDING)
+        record = AgentInvestigation(
+            expense_id=expense.id,
+            status="success",
+            prompt_tokens=100,
+            completion_tokens=50,
+            created_at=datetime.now(),
+        )
+        self.db.add(record)
+        self.db.commit()
         with patch.object(settings, "AI_REVIEW_DAILY_TOKEN_LIMIT", 100):
             self.assertEqual(review_budget_reason(self.db), "daily_token_limit")
 

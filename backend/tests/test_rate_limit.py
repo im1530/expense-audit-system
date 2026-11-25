@@ -21,6 +21,7 @@ from app.core.rate_limit import (
     RateLimitMiddleware,
     RedisSlidingWindowLimiter,
     SlidingWindowLimiter,
+    _resolve_scope,
     build_limiter,
     get_limiter,
     reset_limiter,
@@ -97,6 +98,17 @@ class RateLimitMiddlewareTest(unittest.TestCase):
         payload = response.body.decode("utf-8")
         self.assertIn("TOO_MANY_REQUESTS", payload)
         self.assertIn("request_id", payload)
+
+    def test_investigate_scope_not_default(self):
+        """AI 核查走独立限流，但普通报销 POST 不能被误伤"""
+        self.assertEqual(
+            _resolve_scope("POST", "/api/v1/expense/12/investigate"),
+            "investigate",
+        )
+        self.assertEqual(
+            _resolve_scope("POST", "/api/v1/expense/"),
+            "default",
+        )
 
     def test_exempt_path_not_limited(self):
         """探活路径不限流"""
